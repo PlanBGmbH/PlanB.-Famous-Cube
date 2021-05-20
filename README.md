@@ -1,5 +1,5 @@
 # PlanB. Famous Cube for Mixed Reality Devices
-PlanB. Famous Cube is a implementation of the all known puzzle Rubiks Cube/ Magic Cube Mixed Reality/ Augmented Reality game on several devices. Goal is comparison of MR/ AR platforms in point of possibilities, behavior, stability and implementation.
+PlanB. Famous Cube is a implementation of the all known puzzle Rubiks Cube/ Magic Cube as Mixed Reality/ Augmented Reality game on several devices. Goal is comparison of MR/ AR platforms in point of possibilities, behavior, stability and implementation.
 
 The following platforms are implemented:
 - Nreal Light/ Nebula
