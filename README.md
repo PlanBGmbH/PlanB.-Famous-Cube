@@ -8,6 +8,7 @@ The following platforms are implemented:
 ## Nreal Light/ Nebula
 https://user-images.githubusercontent.com/46566137/119388477-a013cd00-bcca-11eb-82de-a8f364d557f6.mp4
 
+Play Store Link: https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
 More informations about Nreal you find here:
 https://www.nreal.ai/
 
