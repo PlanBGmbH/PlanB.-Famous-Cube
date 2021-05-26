@@ -6,17 +6,20 @@ The following platforms are implemented:
 - Microsoft HoloLens 2
 
 ## Nreal Light/ Nebula
-https://user-images.githubusercontent.com/46566137/118971734-108bb880-b970-11eb-9f73-0902017c71e6.mp4
+https://user-images.githubusercontent.com/46566137/119388477-a013cd00-bcca-11eb-82de-a8f364d557f6.mp4
 
-
+Play Store Link: https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
 
 More informations about Nreal you find here:
 https://www.nreal.ai/
 
+
 ## Microsoft HoloLens 2
-https://user-images.githubusercontent.com/46566137/119046628-3ab79780-b9bd-11eb-9237-e93e0bd547c4.mp4
-
-
+https://user-images.githubusercontent.com/46566137/119388559-ba4dab00-bcca-11eb-9ddb-e1b295029ff6.mp4
 
 More informations about HoloLens 2 you find here:
 https://www.microsoft.com/en-us/hololens/
+
+
+## Share it on
+[<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/twitter.jpg" width="30px;"/>](https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube&text=PlanB.%20Famous%20Cube%20for%20Mixed%20Reality%20Devices&hashtags=mixed-reality%2CHoloLens%2CNreal%2CPlanB)&nbsp; &nbsp; [<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/reddit.jpg" width="30px;"/>](https://reddit.com/submit?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube&title=PlanB.%20Famous%20Cube%20for%20Mixed%20Reality%20Devices)&nbsp; &nbsp; [<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/linkedin.jpg" width="30px;"/>](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube)
