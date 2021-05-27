@@ -8,7 +8,8 @@ The following platforms are implemented:
 ## Nreal Light/ Nebula
 https://user-images.githubusercontent.com/46566137/119388477-a013cd00-bcca-11eb-82de-a8f364d557f6.mp4
 
-Play Store Link: https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
+Play Store Link:
+https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
 
 More informations about Nreal you find here:
 https://www.nreal.ai/
@@ -16,6 +17,9 @@ https://www.nreal.ai/
 
 ## Microsoft HoloLens 2
 https://user-images.githubusercontent.com/46566137/119388559-ba4dab00-bcca-11eb-9ddb-e1b295029ff6.mp4
+
+Microsoft Store Link:
+https://www.microsoft.com/de-de/p/planb-famous-cube-for-hololens-2/9n71wg5q0drc
 
 More informations about HoloLens 2 you find here:
 https://www.microsoft.com/en-us/hololens/
