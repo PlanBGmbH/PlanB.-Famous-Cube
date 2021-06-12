@@ -57,8 +57,7 @@ public class CubeShuffle : MonoBehaviour
     /// Start shuffle methode incl. genarting movement list -> working is in the update methode
     /// </summary>
     public void Shuffle()
-    {
-        NRInput.TriggerHapticVibration();
+    {        
         int shuffleLen = 11;
         if (shuffleLen < 10)
         {

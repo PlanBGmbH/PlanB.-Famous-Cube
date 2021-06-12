@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using NRKernal;
 
 [RequireComponent(typeof(Button))]
 public class NRExtButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
@@ -40,6 +41,7 @@ public class NRExtButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     {
         if (btn.interactable)
         {
+            NRInput.TriggerHapticVibration();
             txt.color = baseColor * btn.colors.highlightedColor * btn.colors.colorMultiplier;
         }
         else

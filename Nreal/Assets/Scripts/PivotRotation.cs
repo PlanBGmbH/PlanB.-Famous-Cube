@@ -180,6 +180,7 @@ public class PivotRotation : MonoBehaviour
 
     public void Rotate(List<GameObject> side)
     {
+        NRInput.TriggerHapticVibration();
         activeSide = side;
         ActivateGlowing();
         Vector3 laserEndPoint;

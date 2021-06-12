@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using NRKernal;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -24,7 +25,7 @@ public class FaceInteraction : MonoBehaviour, IPointerEnterHandler, IPointerExit
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (!PivotRotation.DraggingInProgress)
-        {
+        {            
             m_MeshRender.material.EnableKeyword("_EMISSION");
         }
     }
