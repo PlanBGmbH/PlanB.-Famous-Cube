@@ -19,7 +19,7 @@ namespace NRKernal.Record
         /// <summary> The default texture. </summary>
         private Texture2D m_DefaultTexture;
         /// <summary> The default frame. </summary>
-        private CameraTextureFrame m_DefaultFrame;
+        private UniversalTextureFrame m_DefaultFrame;
         /// <summary> True if is play, false if not. </summary>
         private bool m_IsPlay = false;
 
@@ -27,8 +27,10 @@ namespace NRKernal.Record
         public EditorFrameProvider()
         {
             m_DefaultTexture = Resources.Load<Texture2D>("Record/Textures/captureDefault");
-            m_DefaultFrame = new CameraTextureFrame();
-            m_DefaultFrame.texture = m_DefaultTexture;
+            m_DefaultFrame = new UniversalTextureFrame();
+            m_DefaultFrame.textures = new Texture[1];
+            m_DefaultFrame.textureType = TextureType.RGB;
+            m_DefaultFrame.textures[0] = m_DefaultTexture;
 
             NRKernalUpdater.Instance.StartCoroutine(UpdateFrame());
         }
@@ -75,7 +77,7 @@ namespace NRKernal.Record
         public override void Release()
         {
             m_IsPlay = false;
-            NRKernalUpdater.Instance.StopCoroutine(UpdateFrame());
+            NRKernalUpdater.Instance?.StopCoroutine(UpdateFrame());
         }
     }
 }

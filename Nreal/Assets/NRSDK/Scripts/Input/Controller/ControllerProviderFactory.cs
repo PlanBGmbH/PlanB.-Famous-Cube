@@ -10,11 +10,14 @@
 namespace NRKernal
 {
     using System;
+    using System.Collections.Generic;
 
-    
+
     /// <summary> A controller provider factory. </summary>
     internal static class ControllerProviderFactory
     {
+        private static Dictionary<Type, ControllerProviderBase> m_ControllerProviderDict = new Dictionary<Type, ControllerProviderBase>();
+
         /// <summary> Type of the android controller provider. </summary>
         public static Type androidControllerProviderType = typeof(NRControllerProvider);
 
@@ -23,7 +26,7 @@ namespace NRKernal
         /// <returns> The new controller provider. </returns>
         public static ControllerProviderBase CreateControllerProvider(ControllerState[] states)
         {
-            ControllerProviderBase provider = CreateControllerProvider(androidControllerProviderType, states);
+            ControllerProviderBase provider = GetOrCreateControllerProvider(androidControllerProviderType, states);
             return provider;
         }
 
@@ -31,13 +34,21 @@ namespace NRKernal
         /// <param name="providerType"> Type of the provider.</param>
         /// <param name="states">       The states.</param>
         /// <returns> The new controller provider. </returns>
-        private static ControllerProviderBase CreateControllerProvider(Type providerType, ControllerState[] states)
+        internal static ControllerProviderBase GetOrCreateControllerProvider(Type providerType, ControllerState[] states)
         {
             if (providerType != null)
             {
+                if (m_ControllerProviderDict.ContainsKey(providerType))
+                {
+                    return m_ControllerProviderDict[providerType];
+                }
                 object parserObj = Activator.CreateInstance(providerType, new object[] { states });
                 if (parserObj is ControllerProviderBase)
-                    return parserObj as ControllerProviderBase;
+                {
+                    var controllerProvider = parserObj as ControllerProviderBase;
+                    m_ControllerProviderDict.Add(providerType, controllerProvider);
+                    return controllerProvider;
+                }
             }
             return null;
         }

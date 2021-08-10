@@ -10,6 +10,7 @@
 namespace NRKernal.Record
 {
     using System;
+    using System.Collections.Generic;
     using UnityEngine;
 
     /// <summary> A frame capture context. </summary>
@@ -27,6 +28,8 @@ namespace NRKernal.Record
         private CaptureBehaviourBase m_CaptureBehaviour;
         /// <summary> True if is initialize, false if not. </summary>
         private bool m_IsInit = false;
+
+        private List<IFrameConsumer> m_FrameConsumerList;
 
         /// <summary> Gets the preview texture. </summary>
         /// <value> The preview texture. </value>
@@ -84,19 +87,41 @@ namespace NRKernal.Record
         /// <param name="param"> The parameter.</param>
         public void StartCaptureMode(CameraParameters param)
         {
-            if (m_IsInit)
+            if (m_IsInit) return;
+
+            NRDebugger.Info("[CaptureContext] Create...");
+            if (m_CaptureBehaviour == null)
             {
-                return;
+                this.m_CaptureBehaviour = this.GetCaptureBehaviourByMode(param.camMode);
             }
-            this.m_CaptureBehaviour = this.GetCaptureBehaviourByMode(param.camMode);
+
             this.m_CameraParameters = param;
             this.m_Encoder = GetEncoderByMode(param.camMode);
             this.m_Encoder.Config(param);
             this.m_Blender = new FrameBlender();
             this.m_Blender.Init(m_CaptureBehaviour.CaptureCamera, m_Encoder, param);
-            this.m_CaptureBehaviour.Init(this, m_Blender);
-            this.m_FrameProvider.OnUpdate += this.m_CaptureBehaviour.OnFrame;
+            this.m_CaptureBehaviour.Init(this);
+            this.m_FrameProvider.OnUpdate += UpdateFrame;
+
+            this.m_FrameConsumerList = new List<IFrameConsumer>();
+            this.Sequence(m_CaptureBehaviour)
+                .Sequence(m_Blender);
+
             this.m_IsInit = true;
+        }
+
+        private FrameCaptureContext Sequence(IFrameConsumer consummer)
+        {
+            this.m_FrameConsumerList.Add(consummer);
+            return this;
+        }
+
+        private void UpdateFrame(UniversalTextureFrame frame)
+        {
+            for (int i = 0; i < m_FrameConsumerList.Count; i++)
+            {
+                m_FrameConsumerList[i].OnFrame(frame);
+            }
         }
 
         /// <summary> Gets capture behaviour by mode. </summary>
@@ -166,6 +191,8 @@ namespace NRKernal.Record
             {
                 return;
             }
+            NRDebugger.Info("[CaptureContext] Start...");
+
             m_Encoder?.Start();
             m_FrameProvider?.Play();
         }
@@ -177,8 +204,11 @@ namespace NRKernal.Record
             {
                 return;
             }
-            m_FrameProvider?.Stop();
+            NRDebugger.Info("[CaptureContext] Stop...");
+
+            // Need stop encoder firstly.
             m_Encoder?.Stop();
+            m_FrameProvider?.Stop();
         }
 
         /// <summary> Releases this object. </summary>
@@ -188,11 +218,22 @@ namespace NRKernal.Record
             {
                 return;
             }
-            m_FrameProvider.OnUpdate -= this.m_CaptureBehaviour.OnFrame;
-            m_FrameProvider?.Release();
+            NRDebugger.Info("[CaptureContext] Release...");
+            if (m_FrameProvider != null)
+            {
+                m_FrameProvider.OnUpdate -= this.m_CaptureBehaviour.OnFrame;
+                m_FrameProvider?.Release();
+            }
+
             m_Blender?.Dispose();
             m_Encoder?.Release();
-            GameObject.Destroy(m_CaptureBehaviour);
+
+            if (m_CaptureBehaviour != null)
+            {
+                GameObject.Destroy(m_CaptureBehaviour.gameObject);
+                m_CaptureBehaviour = null;
+            }
+
             m_IsInit = false;
         }
     }

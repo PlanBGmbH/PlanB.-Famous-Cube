@@ -44,15 +44,33 @@ namespace NRKernal.Record
                 if (m_SupportedResolutions == null)
                 {
                     var resolutions = new List<Resolution>();
-                    var resolution = new Resolution();
+
 #if !UNITY_EDITOR
                     NativeResolution rgbResolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.RGB);
 #else
                     NativeResolution rgbResolution = new NativeResolution(1280, 720);
 #endif
-                    resolution.width = rgbResolution.width;
-                    resolution.height = rgbResolution.height;
-                    resolutions.Add(resolution);
+                    Resolution stand_resolution = new Resolution()
+                    {
+                        width = rgbResolution.width,
+                        height = rgbResolution.height,
+                        refreshRate = 30,
+                    };
+                    Resolution low_resolution = new Resolution()
+                    {
+                        width = stand_resolution.width / 2,
+                        height = stand_resolution.height / 2,
+                        refreshRate = 30,
+                    };
+                    Resolution high_resolution = new Resolution()
+                    {
+                        width = stand_resolution.width * 3 / 2,
+                        height = stand_resolution.height * 3 / 2,
+                        refreshRate = 30,
+                    };
+                    resolutions.Add(stand_resolution);
+                    resolutions.Add(high_resolution);
+                    resolutions.Add(low_resolution);
                     m_SupportedResolutions = resolutions;
                 }
 
@@ -102,7 +120,7 @@ namespace NRKernal.Record
         public static IEnumerable<int> GetSupportedFrameRatesForResolution(Resolution resolution)
         {
             List<int> frameRates = new List<int>();
-            frameRates.Add(20);
+            frameRates.Add(30);
             return frameRates;
         }
 
@@ -152,12 +170,47 @@ namespace NRKernal.Record
         /// <param name="onVideoModeStartedCallback"> The on video mode started callback.</param>
         public void StartVideoModeAsync(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback)
         {
+            if (setupParams.audioState == AudioState.MicAudio)
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                NRAndroidPermissionsManager.GetInstance().RequestAndroidPermission("android.permission.RECORD_AUDIO").ThenAction((requestResult) =>
+                {
+                    if (requestResult.IsAllGranted)
+                    {
+                        StartVideoMode(setupParams, onVideoModeStartedCallback);
+                    }
+                    else {
+                        NRDebugger.Error("Record audio need the permission of 'android.permission.RECORD_AUDIO'.");
+                        var result = new VideoCaptureResult();
+                        result.resultType = CaptureResultType.UnknownError;
+                        onVideoModeStartedCallback?.Invoke(result);
+                        NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
+                    }
+                });
+#else
+                StartVideoMode(setupParams, onVideoModeStartedCallback);
+#endif
+            }
+            else
+            {
+                StartVideoMode(setupParams, onVideoModeStartedCallback);
+            }
+        }
+
+        private void StartVideoMode(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback)
+        {
             setupParams.camMode = CamMode.VideoMode;
             setupParams.hologramOpacity = 1;
             m_CaptureContext.StartCaptureMode(setupParams);
             var result = new VideoCaptureResult();
             result.resultType = CaptureResultType.Success;
             onVideoModeStartedCallback?.Invoke(result);
+        }
+
+        public void StartVideoModeAsync(CameraParameters setupParams, AudioState audioState, OnVideoModeStartedCallback onVideoModeStartedCallback)
+        {
+            setupParams.audioState = audioState;
+            StartVideoModeAsync(setupParams, onVideoModeStartedCallback);
         }
 
         /// <summary> Stops recording asynchronous. </summary>
@@ -212,31 +265,31 @@ namespace NRKernal.Record
             UnknownError = 1
         }
 
-        ///// <summary>
-        ///// Specifies what audio sources should be recorded while recording the video.
-        ///// </summary>
-        //public enum AudioState
-        //{
-        //    /// <summary>
-        //    /// Only include the mic audio in the video recording.
-        //    /// </summary>
-        //    MicAudio = 0,
+        /// <summary>
+        /// Specifies what audio sources should be recorded while recording the video.
+        /// </summary>
+        public enum AudioState
+        {
+            /// <summary>
+            /// Only include the mic audio in the video recording.
+            /// </summary>
+            MicAudio = 0,
 
-        //    /// <summary>
-        //    /// Only include the application audio in the video recording.
-        //    /// </summary>
-        //    ApplicationAudio = 1,
+            ///// <summary>
+            ///// Only include the application audio in the video recording.
+            ///// </summary>
+            //ApplicationAudio = 1,
 
-        //    /// <summary>
-        //    /// Include both the application audio as well as the mic audio in the video recording.
-        //    /// </summary>
-        //    ApplicationAndMicAudio = 2,
+            ///// <summary>
+            ///// Include both the application audio as well as the mic audio in the video recording.
+            ///// </summary>
+            //ApplicationAndMicAudio = 2,
 
-        //    /// <summary>
-        //    /// Do not include any audio in the video recording.
-        //    /// </summary>
-        //    None = 3
-        //}
+            /// <summary>
+            /// Do not include any audio in the video recording.
+            /// </summary>
+            None = 3
+        }
 
         /// <summary>
         /// A data container that contains the result information of a video recording operation. </summary>

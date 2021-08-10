@@ -19,6 +19,7 @@ namespace NRKernal.Record
     {
 #if !UNITY_EDITOR
         private const int STARTENCODEEVENT = 0x1001;
+        private const int STOPENCODEEVENT = 0x1002;
         public static NativeEncoder NativeEncoder { get; set; }
         private delegate void RenderEventDelegate(int eventID);
         private static RenderEventDelegate RenderThreadHandle = new RenderEventDelegate(RunOnRenderThread);
@@ -50,6 +51,10 @@ namespace NRKernal.Record
             {
                 NativeEncoder.Start();
             }
+            if (eventID == STOPENCODEEVENT)
+            {
+                NativeEncoder.Stop();
+            }
         }
 #endif
 
@@ -65,7 +70,7 @@ namespace NRKernal.Record
         public void Config(NativeEncodeConfig config)
         {
             EncodeConfig = config;
-            NRDebugger.Info("Encode record Config：" + config.ToString());
+            NRDebugger.Info("[VideoEncoder] Encode record Config：" + config.ToString());
         }
 
         /// <summary> Starts this object. </summary>
@@ -79,7 +84,7 @@ namespace NRKernal.Record
             NativeEncoder.SetConfigration(EncodeConfig);
             GL.IssuePluginEvent(RenderThreadHandlePtr, STARTENCODEEVENT);
 #endif
-            NRDebugger.Info("Encode record Start");
+            NRDebugger.Info("[VideoEncoder] Encode record Start");
             m_IsStarted = true;
         }
 
@@ -109,16 +114,16 @@ namespace NRKernal.Record
                 return;
             }
 #if !UNITY_EDITOR
-            NativeEncoder.Stop();
+            GL.IssuePluginEvent(RenderThreadHandlePtr, STOPENCODEEVENT);
 #endif
-            NRDebugger.Info("Encode record Stop");
+            NRDebugger.Info("[VideoEncoder] Encode record Stop");
             m_IsStarted = false;
         }
 
         /// <summary> Releases this object. </summary>
         public void Release()
         {
-            NRDebugger.Info("Encode record Release...");
+            NRDebugger.Info("[VideoEncoder] Encode record Release...");
 #if !UNITY_EDITOR
             NativeEncoder.Destroy();
 #endif

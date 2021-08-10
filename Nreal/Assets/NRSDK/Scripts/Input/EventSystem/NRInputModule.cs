@@ -51,7 +51,9 @@ namespace NRKernal
         {
             Initialize();
             if (isActiveAndEnabled && EventSystem.current.currentInputModule != this)
+            {
                 ProcessRaycast();
+            }
         }
 
         /// <summary> Process the raycast. </summary>
@@ -80,7 +82,8 @@ namespace NRKernal
                 var raycasterRot = raycaster.transform.rotation;
 
                 var hoverEventData = raycaster.HoverEventData;
-                if (hoverEventData == null) { continue; }
+                if (hoverEventData == null)
+                    continue;
 
                 hoverEventData.Reset();
                 hoverEventData.delta = Vector2.zero;
@@ -96,7 +99,8 @@ namespace NRKernal
                 for (int j = 0, jmax = raycaster.ButtonEventDataList.Count; j < jmax; ++j)
                 {
                     var buttonEventData = raycaster.ButtonEventDataList[j];
-                    if (buttonEventData == null || buttonEventData == hoverEventData) { continue; }
+                    if (buttonEventData == null || buttonEventData == hoverEventData)
+                        continue;
 
                     buttonEventData.Reset();
                     buttonEventData.delta = Vector2.zero;
@@ -117,10 +121,10 @@ namespace NRKernal
                 for (int j = 1, jmax = raycaster.ButtonEventDataList.Count; j < jmax; ++j)
                 {
                     var buttonEventData = raycaster.ButtonEventDataList[j];
-                    if (buttonEventData == null || buttonEventData == hoverEventData) { continue; }
+                    if (buttonEventData == null || buttonEventData == hoverEventData)
+                        continue;
 
                     buttonEventData.pointerEnter = hoverEventData.pointerEnter;
-
                     ProcessPress(buttonEventData);
                     ProcessDrag(buttonEventData);
                 }
@@ -130,14 +134,17 @@ namespace NRKernal
         /// <summary> Initializes this object. </summary>
         public static void Initialize()
         {
-            if (Active || isApplicationQuitting) { return; }
+            if (Active || isApplicationQuitting)
+                return;
 
             var instances = FindObjectsOfType<NRInputModule>();
             if (instances.Length > 0)
             {
                 m_Instance = instances[0];
                 if (instances.Length > 1)
+                {
                     NRDebugger.Warning("Multiple NRInputModule not supported!");
+                }
             }
 
             if (!Active)
@@ -183,9 +190,7 @@ namespace NRKernal
         public static void AddRaycaster(NRPointerRaycaster raycaster)
         {
             if (raycaster == null)
-            {
                 return;
-            }
             Initialize();
             raycasters.Add(raycaster);
         }
@@ -194,6 +199,10 @@ namespace NRKernal
         /// <param name="raycaster"> The raycaster.</param>
         public static void RemoveRaycaster(NRPointerRaycaster raycaster)
         {
+            if (m_Instance)
+            {
+                m_Instance.ProcessRaycast();
+            }
             raycasters.Remove(raycaster);
         }
 
@@ -329,9 +338,7 @@ namespace NRKernal
 
             eventData.pointerPress = newPressed;
             eventData.rawPointerPress = currentOverGo;
-
             eventData.clickTime = time;
-
             eventData.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
 
             if (eventData.pointerDrag != null)
@@ -384,7 +391,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         protected bool ShouldStartDrag(NRPointerEventData eventData)
         {
-            if (!eventData.useDragThreshold || eventData.raycaster == null) { return true; }
+            if (!eventData.useDragThreshold || eventData.raycaster == null)
+            {
+                return true;
+            }
             var currentPos = eventData.position3D + (eventData.rotation * Vector3.forward) * eventData.pressDistance;
             var pressPos = eventData.pressPosition3D + (eventData.pressRotation * Vector3.forward) * eventData.pressDistance;
             var threshold = NRInput.DragThreshold;
@@ -422,7 +432,8 @@ namespace NRKernal
         /// <param name="newEnterTarget"> The new enter target.</param>
         protected static void HandlePressExitAndEnter(NRPointerEventData eventData, GameObject newEnterTarget)
         {
-            if (eventData.pressEnter == newEnterTarget) { return; }
+            if (eventData.pressEnter == newEnterTarget)
+                return;
 
             var oldTarget = eventData.pressEnter == null ? null : eventData.pressEnter.transform;
             var newTarget = newEnterTarget == null ? null : newEnterTarget.transform;

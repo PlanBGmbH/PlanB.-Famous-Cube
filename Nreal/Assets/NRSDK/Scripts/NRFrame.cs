@@ -54,25 +54,47 @@ namespace NRKernal
 
         public static bool isHeadPoseReady { get; private set; }
 
-        /// <summary> Gets head pose by time. </summary>
+        /// <summary> Gets head pose by recommond timestamp. </summary>
         /// <param name="pose">      [in,out] The pose.</param>
-        /// <param name="timestamp"> (Optional) The timestamp.</param>
-        /// <param name="predict">   (Optional) The predict.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public static bool GetHeadPoseByTime(ref Pose pose, UInt64 timestamp = 0, UInt64 predict = 0)
+        public static bool GetHeadPoseByTime(ref Pose pose)
         {
             if (SessionStatus == SessionState.Running)
             {
-                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPose(ref pose, timestamp, predict);
+                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPoseRecommend(ref pose);
                 return isHeadPoseReady;
             }
             return false;
         }
 
-        /// <summary> Clears the pose. </summary>
-        public static void ClearPose()
+        /// <summary> Gets head pose by timestamp. </summary>
+        /// <param name="pose">      [in,out] The pose.</param>
+        /// <param name="timestamp"> The timestamp.</param>
+        /// <returns> True if it succeeds, false if it fails. </returns>
+        public static bool GetHeadPoseByTime(ref Pose pose, UInt64 timestamp)
         {
-            m_HeadPose = Pose.identity;
+            if (SessionStatus == SessionState.Running)
+            {
+                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPose(ref pose, timestamp);
+                return isHeadPoseReady;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Get the pose information when the current frame display on the screen.
+        /// </summary>
+        /// <param name="pose"></param>
+        /// <param name="timestamp">current timestamp to the pose.</param>
+        /// <returns></returns>
+        public static bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp)
+        {
+            if (SessionStatus == SessionState.Running)
+            {
+                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetFramePresentHeadPose(ref pose, ref timestamp);
+                return isHeadPoseReady;
+            }
+            return false;
         }
 
         /// <summary> Get the pose of center camera between left eye and right eye. </summary>
@@ -104,7 +126,7 @@ namespace NRKernal
                 {
                     m_EyePosFromHead.LEyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.LEFT);
                     m_EyePosFromHead.REyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.RIGHT);
-                    m_EyePosFromHead.RGBEyePos = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.RGB);
+                    m_EyePosFromHead.RGBEyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.RGB);
                 }
                 return m_EyePosFromHead;
             }
@@ -141,12 +163,20 @@ namespace NRKernal
             return result;
         }
 
+        private static UInt64 m_CurrentPoseTimeStamp = 0;
+        public static UInt64 CurrentPoseTimeStamp
+        {
+            get
+            {
+                return m_CurrentPoseTimeStamp;
+            }
+        }
         /// <summary> Executes the 'update' action. </summary>
         internal static void OnUpdate()
         {
             // Update head pos
             Pose pose = Pose.identity;
-            if (GetHeadPoseByTime(ref pose))
+            if (GetFramePresentHeadPose(ref pose, ref m_CurrentPoseTimeStamp) && LostTrackingReason != LostTrackingReason.INITIALIZING)
             {
                 m_HeadPose = pose;
             }

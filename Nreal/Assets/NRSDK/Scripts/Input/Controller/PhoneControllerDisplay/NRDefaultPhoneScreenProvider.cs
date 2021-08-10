@@ -14,6 +14,7 @@ namespace NRKernal
 
     public class NRDefaultPhoneScreenProvider : NRPhoneScreenProviderBase
     {
+        private static AndroidJavaObject m_VirtualDisplayFragment;
         public class AndroidSystemButtonDataProxy : AndroidJavaProxy, ISystemButtonDataProxy
         {
             private NRPhoneScreenProviderBase m_Provider;
@@ -26,18 +27,31 @@ namespace NRKernal
             public void OnUpdate(AndroidJavaObject data)
             {
                 SystemButtonState state = new SystemButtonState();
-                byte[] sbuffer = data.Call<byte[]>("getRawData");
-                //byte[] Bytes = new byte[sbuffer.Length];
-                //Buffer.BlockCopy(sbuffer, 0, Bytes, 0, Bytes.Length);
-                state.DeSerialize(sbuffer);
+#if UNITY_2019_1_OR_NEWER
+                sbyte[] sbuffer = data.Call<sbyte[]>("getRawData");
+                byte[] bytes = new byte[sbuffer.Length];
+                Buffer.BlockCopy(sbuffer, 0, bytes, 0, bytes.Length);
+#else
+                byte[] bytes = data.Call<byte[]>("getRawData");
+#endif
+                state.DeSerialize(bytes);
                 m_Provider.OnSystemButtonDataChanged(state);
             }
         }
 
         public override void RegistFragment(AndroidJavaObject unityActivity, ISystemButtonDataProxy proxy)
         {
-            AndroidJavaClass VirtualDisplayFragment = new AndroidJavaClass("ai.nreal.virtualcontroller.VirtualControllerFragment");
-            VirtualDisplayFragment.CallStatic<AndroidJavaObject>("RegistFragment", unityActivity, proxy);
+            NRDebugger.Info("[VirtualController] RegistFragment...");
+            var VirtualDisplayFragment = new AndroidJavaClass("ai.nreal.virtualcontroller.VirtualControllerFragment");
+            m_VirtualDisplayFragment = VirtualDisplayFragment.CallStatic<AndroidJavaObject>("RegistFragment", unityActivity, proxy);
+        }
+
+        public static void RegistDebugInfoProxy(AndroidJavaProxy proxy)
+        {
+            if (m_VirtualDisplayFragment != null)
+            {
+                m_VirtualDisplayFragment.Call("setDebugInfoProvider", proxy);
+            }
         }
 
         public override ISystemButtonDataProxy CreateAndroidDataProxy()

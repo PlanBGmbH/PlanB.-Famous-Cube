@@ -61,6 +61,7 @@ namespace NRKernal
             m_DefaultLocalOffset = transform.localPosition;
             m_LaserDefaultLocalOffset = raycaster.transform.localPosition;
             m_ModelDefaultLocalOffset = modelAnchor.localPosition;
+            raycaster.RelatedHand = defaultHandEnum;
         }
 
         /// <summary> Executes the 'enable' action. </summary>
@@ -88,8 +89,8 @@ namespace NRKernal
         {
             if (CameraCenter == null)
                 return;
-            m_IsEnabled = NRInput.CheckControllerAvailable(defaultHandEnum);
-            raycaster.gameObject.SetActive(m_IsEnabled && NRInput.RaycastMode == RaycastModeEnum.Laser);
+            m_IsEnabled = NRInput.CheckControllerAvailable(defaultHandEnum) && !NRInput.Hands.IsRunning;
+            raycaster.gameObject.SetActive(m_IsEnabled && NRInput.RaycastersActive && NRInput.RaycastMode == RaycastModeEnum.Laser);
             modelAnchor.gameObject.SetActive(m_IsEnabled);
             if (m_IsEnabled)
                 TrackPose();

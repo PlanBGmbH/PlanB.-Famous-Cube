@@ -61,6 +61,11 @@
             }
             return queue;
         }
+
+        public void Clear()
+        {
+            m_CachePoolDict.Clear();
+        }
     }
 
     /// <summary> The bytes pool. </summary>
@@ -116,6 +121,11 @@
                 BytesDict.Add(data.Length, que);
             }
             que.Enqueue(data);
+        }
+
+        public void Clear()
+        {
+            BytesDict.Clear();
         }
     }
 }

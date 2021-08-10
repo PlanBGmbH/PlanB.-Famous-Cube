@@ -10,6 +10,7 @@
 namespace NRKernal.NRExamples
 {
     using NRKernal;
+    using System.Collections;
     using System.Collections.Generic;
     using UnityEngine;
 
@@ -49,23 +50,33 @@ namespace NRKernal.NRExamples
         }
 #endif
 
-        /// <summary> Updates this object. </summary>
-        private void Update()
+        void Start()
         {
-#if UNITY_EDITOR
-            var center = new Pose(transform.position, transform.rotation);
-            GetBoundaryPolygon(transform, m_PosList);
-#else
-            var center = Trackable.GetCenterPose();
-            ((NRTrackablePlane)Trackable).GetBoundaryPolygon(m_PosList);
-#endif
-            this.DrawFromCenter(center, m_PosList);
-#if !UNITY_EDITOR
-            if (Trackable.GetTrackingState() == TrackingState.Stopped)
+            StartCoroutine(UpdateMesh());
+        }
+
+        /// <summary> Updates this object. </summary>
+        private IEnumerator UpdateMesh()
+        {
+            WaitForSeconds wait = new WaitForSeconds(1f / 5);
+            while (true)
             {
-                Destroy(gameObject);
-            }
+                yield return wait;
+#if UNITY_EDITOR
+                var center = new Pose(transform.position, transform.rotation);
+                GetBoundaryPolygon(transform, m_PosList);
+#else
+                var center = Trackable.GetCenterPose();
+                ((NRTrackablePlane)Trackable).GetBoundaryPolygon(m_PosList);
 #endif
+                this.DrawFromCenter(center, m_PosList);
+#if !UNITY_EDITOR
+                if (Trackable.GetTrackingState() == TrackingState.Stopped)
+                {
+                    Destroy(gameObject);
+                }
+#endif
+            }
         }
 
         /// <summary> Draw from center. </summary>

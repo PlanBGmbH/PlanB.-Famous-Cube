@@ -48,7 +48,7 @@ namespace NRKernal.NRExamples
             {
                 TrackingImageVisualizer visualizer = null;
                 m_Visualizers.TryGetValue(image.GetDataBaseIndex(), out visualizer);
-                if (image.GetTrackingState() == TrackingState.Tracking && visualizer == null)
+                if (image.GetTrackingState() != TrackingState.Stopped && visualizer == null)
                 {
                     NRDebugger.Info("Create new TrackingImageVisualizer!");
                     // Create an anchor to ensure that NRSDK keeps tracking this augmented image.
@@ -65,7 +65,6 @@ namespace NRKernal.NRExamples
 
                 FitToScanOverlay.SetActive(false);
             }
-
         }
 
         /// <summary> Enables the image tracking. </summary>

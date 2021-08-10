@@ -48,7 +48,7 @@
 				{
 					fixed2 uv = fixed2(i.uv.x, 1 - i.uv.y);
 					return tex2D(_MainTex, uv);
-			}
+				}
 			ENDCG
 		}
 	}

@@ -100,22 +100,7 @@ namespace NRKernal
                 return;
             }
 
-            polygonList.Clear();
-            int size = NativeInterface.NativePlane.GetPolygonSize(TrackableNativeHandle);
-            float[] temp_data = NativeInterface.NativePlane.GetPolygonData(TrackableNativeHandle);
-            float[] point_data = new float[size * 2];
-            Array.Copy(temp_data, point_data, size * 2);
-            Pose centerPos = GetCenterPose();
-            var unityWorldTPlane = Matrix4x4.TRS(centerPos.position, centerPos.rotation, Vector3.one);
-            for (int i = 2 * size - 2; i >= 0; i -= 2)
-            {
-                Vector3 localpos = new Vector3(point_data[i], 0, -point_data[i + 1]);
-                polygonList.Add(unityWorldTPlane.MultiplyPoint3x4(localpos));
-            }
-            if (planetype == TrackablePlaneType.VERTICAL)
-            {
-                polygonList.Reverse();
-            }
+            NativeInterface.NativePlane.GetBoundaryPolygon(TrackableNativeHandle, polygonList);
         }
     }
 }

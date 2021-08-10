@@ -73,6 +73,10 @@ namespace NRKernal.NRExamples
         /// <summary> Late update. </summary>
         private void LateUpdate()
         {
+            if (CenterCamera == null)
+            {
+                return;
+            }
             float t = Time.deltaTime * FollowSpeed;
             transform.position = Vector3.Lerp(transform.position, CalculatePosition(CenterCamera), t);
             transform.rotation = Quaternion.Slerp(transform.rotation, CalculateRotation(CenterCamera), t);

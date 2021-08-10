@@ -11,41 +11,41 @@ namespace NRKernal
 {
     using AOT;
     using System;
+#if UNITY_ANDROID && !UNITY_EDITOR
     using System.Runtime.InteropServices;
     using System.Threading;
     using UnityEngine;
+#endif
+
+
+    /// <summary> Glasses event. </summary>
+    /// <param name="eventtype"> The eventtype.</param>
+    public delegate void GlassesEvent(NRDevice.GlassesEventType eventtype);
+    /// <summary> Glasses disconnect event. </summary>
+    /// <param name="reason"> The reason.</param>
+    public delegate void GlassesDisconnectEvent(GlassesDisconnectReason reason);
+    /// <summary> Glassed temporary level changed. </summary>
+    /// <param name="level"> The level.</param>
+    public delegate void GlassedTempLevelChanged(GlassesTemperatureLevel level);
 
     /// <summary> Manage the HMD device and quit. </summary>
     public class NRDevice : SingleTon<NRDevice>
     {
+        /// <summary> Event queue for all listeners interested in OnGlassesStateChanged events. </summary>
+        public static event GlassesEvent OnGlassesStateChanged;
+        /// <summary> Event queue for all listeners interested in OnGlassesDisconnect events. </summary>
+        public static event GlassesDisconnectEvent OnGlassesDisconnect;
+
         /// <summary> Values that represent glasses event types. </summary>
         public enum GlassesEventType
         {
             /// <summary> An enum constant representing the put on option. </summary>
             PutOn,
             /// <summary> An enum constant representing the put off option. </summary>
-            PutOff,
-            /// <summary> An enum constant representing the plug out option. </summary>
-            PlugOut
+            PutOff
         }
-        /// <summary> Glasses event. </summary>
-        /// <param name="eventtype"> The eventtype.</param>
-        public delegate void GlassesEvent(GlassesEventType eventtype);
-        /// <summary> Glasses disconnect event. </summary>
-        /// <param name="reason"> The reason.</param>
-        public delegate void GlassesDisconnectEvent(GlassesDisconnectReason reason);
-        /// <summary> Glassed temporary level changed. </summary>
-        /// <param name="level"> The level.</param>
-        public delegate void GlassedTempLevelChanged(GlassesTemperatureLevel level);
-        /// <summary> Event queue for all listeners interested in OnGlassesStateChanged events. </summary>
-        public static event GlassesEvent OnGlassesStateChanged;
-        /// <summary> Event queue for all listeners interested in OnGlassesDisconnect events. </summary>
-        public static event GlassesDisconnectEvent OnGlassesDisconnect;
-        /// <summary>
-        /// Event queue for all listeners interested in OnGlassesTempLevelChanged events. </summary>
-        public static event GlassedTempLevelChanged OnGlassesTempLevelChanged;
-        private const float SDK_RELEASE_TIMEOUT = 2f;
 
+        private const float SDK_RELEASE_TIMEOUT = 2f;
         /// <summary> The native hmd. </summary>
         private NativeHMD m_NativeHMD;
         /// <summary> Gets the native hmd. </summary>
@@ -90,7 +90,7 @@ namespace NRKernal
         {
             get
             {
-                return IsGlassesPlugOut;
+                return m_IsGlassesPlugOut;
             }
         }
 
@@ -311,6 +311,7 @@ namespace NRKernal
             MainThreadDispather.QueueOnMainThread(() =>
             {
                 OnGlassesStateChanged?.Invoke(wearing_status == 1 ? GlassesEventType.PutOn : GlassesEventType.PutOff);
+                NRSessionManager.OnGlassesStateChanged?.Invoke(wearing_status == 1 ? GlassesEventType.PutOn : GlassesEventType.PutOff);
             });
         }
 
@@ -329,27 +330,28 @@ namespace NRKernal
             m_IsGlassesPlugOut = true;
 
             NRDebugger.Info("[NRDevice] OnGlassesDisconnectEvent:" + reason.ToString());
-            try
+            // If NRSDK release time out in 2 seconds, FoceKill the process.
+            AsyncTaskExecuter.Instance.RunAction(() =>
             {
-                OnGlassesDisconnect?.Invoke(reason);
-            }
-            catch (Exception e)
-            {
-                NRDebugger.Info("[NRDevice] Operate OnGlassesDisconnect event error:" + e.ToString());
-                throw e;
-            }
-            finally
-            {
-                // If NRSDK release time out in 2 seconds, FoceKill the process.
-                AsyncTaskExecuter.Instance.RunAction(() =>
+                try
+                {
+                    OnGlassesDisconnect?.Invoke(reason);
+                    NRSessionManager.OnGlassesDisconnect?.Invoke(reason);
+                }
+                catch (Exception e)
+                {
+                    NRDebugger.Info("[NRDevice] Operate OnGlassesDisconnect event error:" + e.ToString());
+                    throw e;
+                }
+                finally
                 {
                     ForceKill(true);
-                }, () =>
-                {
-                    NRDebugger.Error("[NRDevice] Release sdk timeout, force kill the process!!!");
-                    ForceKill(false);
-                }, SDK_RELEASE_TIMEOUT);
-            }
+                }
+            }, () =>
+            {
+                NRDebugger.Error("[NRDevice] Release sdk timeout, force kill the process!!!");
+                ForceKill(false);
+            }, SDK_RELEASE_TIMEOUT);
         }
         #endregion
 
@@ -369,14 +371,9 @@ namespace NRKernal
         /// <exception cref="Exception"> Thrown when an exception error condition occurs.</exception>
         public static void ForceKill(bool needrelease = true)
         {
-            NRDebugger.Info("[NRDevice] Start To ForceKill Application needrelease sdk:" + needrelease);
             try
             {
-                System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                stopwatch.Start();
-                NRInput.Destroy();
-                NRSessionManager.Instance.DestroySession();
-                NRDebugger.Info("[NRDevice] release sdk cost:{0} ms", stopwatch.ElapsedMilliseconds);
+                ReleaseSDK();
             }
             catch (Exception e)
             {
@@ -393,6 +390,15 @@ namespace NRKernal
                 processClass.CallStatic("killProcess", myPid);
 #endif
             }
+        }
+
+        public static void ReleaseSDK()
+        {
+            NRDebugger.Info("[NRDevice] Start to release sdk");
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+            NRSessionManager.Instance.DestroySession();
+            NRDebugger.Info("[NRDevice] Release sdk end, cost:{0} ms", stopwatch.ElapsedMilliseconds);
         }
 
         /// <summary> Destory HMD resource. </summary>

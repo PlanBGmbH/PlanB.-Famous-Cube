@@ -115,9 +115,12 @@ namespace NRKernal.Record
         {
             while (!this.m_CaptureContext.GetFrameProvider().IsFrameReady())
             {
-                NRDebugger.Info("Wait for the frame ready!");
+                NRDebugger.Debug("[PhotoCapture] Wait for the first frame ready...");
                 yield return new WaitForEndOfFrame();
             }
+            yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
+            yield return new WaitForEndOfFrame();
             callback?.Invoke();
         }
 
@@ -199,7 +202,13 @@ namespace NRKernal.Record
 
             /// <summary> Indicates whether or not the operation was successful. </summary>
             /// <value> True if success, false if not. </value>
-            public bool success { get; }
+            public bool success
+            {
+                get
+                {
+                    return resultType == CaptureResultType.Success;
+                }
+            }
         }
 
         /// <summary> Called when a PhotoCapture resource has been created. </summary>

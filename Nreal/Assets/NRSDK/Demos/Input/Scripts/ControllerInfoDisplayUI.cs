@@ -124,7 +124,7 @@ namespace NRKernal.NRExamples
                 + "battery: " + NRInput.GetControllerBattery(m_CurrentDebugHand);
             extraInfoText.text = m_ExtraInfoStr;
             //Debug.Log("istouching:" + NRInput.IsTouching() + " value:" + NRInput.GetTouch(m_CurrentDebugHand).ToString("F3"));
-            //PrintInputState();
+            PrintInputState();
         }
 
         private void PrintInputState()

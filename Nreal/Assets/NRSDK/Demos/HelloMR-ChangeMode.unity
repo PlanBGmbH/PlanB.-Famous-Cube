@@ -199,6 +199,7 @@ GameObject:
   - component: {fileID: 301305223}
   - component: {fileID: 301305222}
   - component: {fileID: 301305221}
+  - component: {fileID: 301305225}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -278,6 +279,17 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -0.194}
   m_SizeDelta: {x: 390, y: 51}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &301305225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 301305220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6deb9c5fb35cd8744a326094bd8a0a40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &564377735
 GameObject:
   m_ObjectHideFlags: 0
@@ -450,15 +462,9 @@ Prefab:
   m_IsPrefabAsset: 0
 --- !u!4 &736572257 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 4529309942957008, guid: 665d8158924bd2648a94fb3f87691bbb,
+  m_CorrespondingSourceObject: {fileID: 4154700624755278, guid: 665d8158924bd2648a94fb3f87691bbb,
     type: 2}
   m_PrefabInternal: {fileID: 736572256}
---- !u!114 &736572258 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114176646661500702, guid: 665d8158924bd2648a94fb3f87691bbb,
-    type: 2}
-  m_PrefabInternal: {fileID: 736572256}
-  m_Script: {fileID: 11500000, guid: 4d6418b7609a9354d90406d37b3db22c, type: 3}
 --- !u!1 &749357233
 GameObject:
   m_ObjectHideFlags: 0
@@ -631,7 +637,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 736572258}
+      - m_Target: {fileID: 301305225}
         m_MethodName: ChangeTo6Dof
         m_Mode: 1
         m_Arguments:
@@ -754,7 +760,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 736572258}
+      - m_Target: {fileID: 301305225}
         m_MethodName: ChangeTo3Dof
         m_Mode: 1
         m_Arguments:
@@ -923,7 +929,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 736572258}
+      - m_Target: {fileID: 301305225}
         m_MethodName: ChangeTo0Dof
         m_Mode: 1
         m_Arguments:

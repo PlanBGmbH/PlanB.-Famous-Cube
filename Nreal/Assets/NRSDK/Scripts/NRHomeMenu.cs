@@ -8,28 +8,27 @@ namespace NRKernal.NRExamples
     {
         /// <summary> The confirm control. </summary>
         public Button confirmBtn;
+
         /// <summary> The cancel control. </summary>
         public Button cancelBtn;
 
         /// <summary> The instance. </summary>
         private static NRHomeMenu m_Instance;
-        /// <summary> True if is showing, false if not. </summary>
-        private static bool m_IsShowing = false;
+
         /// <summary> Full pathname of the menu prefab file. </summary>
         private static string m_MenuPrefabPath = "NRUI/NRHomeMenu";
 
-        private Transform m_CenterCamera;
-        private Transform CenterCamera
-        {
-            get
-            {
-                if (m_CenterCamera == null)
-                {
-                    m_CenterCamera = NRSessionManager.Instance.CenterCameraAnchor;
-                }
-                return m_CenterCamera;
-            }
-        }
+        /// <summary> Transform of center camera. </summary>
+        private Transform CameraCenter { get { return NRInput.CameraCenter; } }
+
+        /// <summary> True if is showing, false if not. </summary>
+        public static bool IsShowing { get; private set; }
+
+        /// <summary> Action to excute on home menu show. </summary>
+        public static System.Action OnHomeMenuShow;
+
+        /// <summary> Action to excute on home menu hide. </summary>
+        public static System.Action OnHomeMenuHide;
 
         /// <summary> Starts this object. </summary>
         void Start()
@@ -41,8 +40,10 @@ namespace NRKernal.NRExamples
         /// <summary> Updates this object. </summary>
         void Update()
         {
-            if (m_IsShowing && NRInput.RaycastMode == RaycastModeEnum.Laser)
+            if (IsShowing && NRInput.RaycastMode == RaycastModeEnum.Laser)
+            {
                 FollowCamera();
+            }
         }
 
         /// <summary> Executes the 'comfirm button click' action. </summary>
@@ -61,10 +62,10 @@ namespace NRKernal.NRExamples
         /// <summary> Follow camera. </summary>
         private void FollowCamera()
         {
-            if (m_Instance && CenterCamera)
+            if (m_Instance && CameraCenter)
             {
-                m_Instance.transform.position = CenterCamera.transform.position;
-                m_Instance.transform.rotation = CenterCamera.transform.rotation;
+                m_Instance.transform.position = CameraCenter.position;
+                m_Instance.transform.rotation = CameraCenter.rotation;
             }
         }
 
@@ -80,31 +81,48 @@ namespace NRKernal.NRExamples
             GameObject menuGo = Instantiate(menuPrefab);
             m_Instance = menuGo.GetComponent<NRHomeMenu>();
             if (m_Instance)
+            {
                 DontDestroyOnLoad(menuGo);
+            }
             else
+            {
                 Destroy(menuGo);
+            }
         }
 
         /// <summary> Toggles this object. </summary>
         public static void Toggle()
         {
-            if (m_IsShowing)
+            if (IsShowing)
+            {
                 Hide();
+            }
             else
+            {
                 Show();
+            }
         }
 
         /// <summary> Shows this object. </summary>
         public static void Show()
         {
             if (m_Instance == null)
+            {
                 CreateMenu();
+            }
+
             if (m_Instance)
             {
                 m_Instance.gameObject.SetActive(true);
-                m_IsShowing = true;
+                IsShowing = true;
                 if (NRInput.RaycastMode == RaycastModeEnum.Gaze)
+                {
                     m_Instance.FollowCamera();
+                }
+                if (OnHomeMenuShow != null)
+                {
+                    OnHomeMenuShow();
+                }
             }
         }
 
@@ -114,7 +132,11 @@ namespace NRKernal.NRExamples
             if (m_Instance)
             {
                 m_Instance.gameObject.SetActive(false);
-                m_IsShowing = false;
+                IsShowing = false;
+                if (OnHomeMenuHide != null)
+                {
+                    OnHomeMenuHide();
+                }
             }
         }
     }

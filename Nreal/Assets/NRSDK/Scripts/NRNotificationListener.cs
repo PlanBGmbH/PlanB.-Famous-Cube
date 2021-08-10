@@ -7,6 +7,7 @@
 * 
 *****************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -44,7 +45,7 @@ namespace NRKernal
 
             /// <summary> Executes the 'state changed' action. </summary>
             /// <param name="level"> The level.</param>
-            public virtual void OnStateChanged(Level level)
+            public virtual void Trigger(Level level)
             {
                 NotificationListener.Dispath(this, level);
             }
@@ -101,11 +102,11 @@ namespace NRKernal
                 {
                     if (state == PowerState.Low)
                     {
-                        this.OnStateChanged(Level.High);
+                        this.Trigger(Level.High);
                     }
                     else if (state == PowerState.Middle)
                     {
-                        this.OnStateChanged(Level.Middle);
+                        this.Trigger(Level.Middle);
                     }
                     this.currentState = state;
                 }
@@ -149,7 +150,7 @@ namespace NRKernal
                 NRDebugger.Info("[SlamStateNotification] OnHMDLostTracking.");
                 if (m_CurrentState != SlamState.LostTracking)
                 {
-                    this.OnStateChanged(Level.Middle);
+                    this.Trigger(Level.Middle);
                     m_CurrentState = SlamState.LostTracking;
                 }
             }
@@ -177,11 +178,78 @@ namespace NRKernal
                 {
                     if (level != GlassesTemperatureLevel.TEMPERATURE_LEVEL_NORMAL)
                     {
-                        this.OnStateChanged(level == GlassesTemperatureLevel.TEMPERATURE_LEVEL_HOT
+                        this.Trigger(level == GlassesTemperatureLevel.TEMPERATURE_LEVEL_HOT
                             ? Level.High : Level.Middle);
                     }
 
                     this.currentState = level;
+                }
+            }
+        }
+
+        /// <summary> Native interface error. </summary>
+        public class NativeErrorNotification : Notification
+        {
+            public NRKernalError KernalError { get; private set; }
+            /// <summary> Constructor. </summary>
+            /// <param name="listener"> The listener.</param>
+            public NativeErrorNotification(NRNotificationListener listener) : base(listener)
+            {
+                NRSessionManager.OnKernalError += OnSessionError;
+            }
+
+            private void OnSessionError(NRKernalError exception)
+            {
+                KernalError = exception;
+
+                // Trigger the notification window when the error is NRRGBCameraDeviceNotFindError
+                if (KernalError is NRRGBCameraDeviceNotFindError
+                    || KernalError is NRPermissionDenyError
+                    || KernalError is NRUnSupportedHandtrackingCalculationError)
+                {
+                    this.Trigger(Level.High);
+                }
+            }
+
+            public string ErrorTitle
+            {
+                get
+                {
+                    if (KernalError is NRRGBCameraDeviceNotFindError)
+                    {
+                        return "RGBCamera is disabled";
+                    }
+                    else if (KernalError is NRPermissionDenyError)
+                    {
+                        return "Permission Deny";
+                    }
+                    else if (KernalError is NRUnSupportedHandtrackingCalculationError)
+                    {
+                        return "Not support hand tracking calculation";
+                    }
+                    else
+                    {
+                        return KernalError.GetType().ToString();
+                    }
+                }
+            }
+
+            public string ErrorContent
+            {
+                get
+                {
+                    if (KernalError is NRRGBCameraDeviceNotFindError)
+                    {
+                        return NativeConstants.RGBCameraDeviceNotFindErrorTip;
+                    }
+                    else if (KernalError is NRUnSupportedHandtrackingCalculationError)
+                    {
+                        return NativeConstants.UnSupportedHandtrackingCalculationErrorTip;
+                    }
+                    else
+                    {
+                        return KernalError.GetError();
+                    }
                 }
             }
         }
@@ -201,9 +269,12 @@ namespace NRKernal
         public bool EnableHighTempTips;
         /// <summary> The high temporary notification prefab. </summary>
         public NRNotificationWindow HighTempNotificationPrefab;
+        [Header("Whether to open the native interface error prompt")]
+        public bool EnableNativeNotifyTips;
+        public NRNotificationWindow NativeErrorNotificationPrefab;
 
         /// <summary> List of notifications. </summary>
-        protected List<Notification> NotificationList = new List<Notification>();
+        protected Dictionary<Notification, NRNotificationWindow> NotificationDict = new Dictionary<Notification, NRNotificationWindow>();
         /// <summary> The tips last time. </summary>
         private Dictionary<Level, float> TipsLastTime = new Dictionary<Level, float>() {
             { Level.High,3.5f},
@@ -232,6 +303,7 @@ namespace NRKernal
             LowPowerNotificationPrefab.gameObject.SetActive(false);
             SlamStateNotificationPrefab.gameObject.SetActive(false);
             HighTempNotificationPrefab.gameObject.SetActive(false);
+            NativeErrorNotificationPrefab.gameObject.SetActive(false);
         }
 
         /// <summary> Starts this object. </summary>
@@ -239,16 +311,32 @@ namespace NRKernal
         {
             DontDestroyOnLoad(gameObject);
             RegistNotification();
+
+            NRKernalUpdater.OnUpdate -= OnUpdate;
+            NRKernalUpdater.OnUpdate += OnUpdate;
         }
 
         /// <summary> Regist notification. </summary>
         protected virtual void RegistNotification()
         {
-            if (EnableLowPowerTips) NotificationList.Add(new LowPowerNotification(this));
-            if (EnableSlamStateTips) NotificationList.Add(new SlamStateNotification(this));
-            if (EnableHighTempTips) NotificationList.Add(new TemperatureLevelNotification(this));
+            if (NRSessionManager.Instance.NRSessionBehaviour.SessionConfig.EnableNotification)
+            {
+                if (EnableLowPowerTips) BindNotificationWindow(new LowPowerNotification(this), LowPowerNotificationPrefab);
+                if (EnableSlamStateTips) BindNotificationWindow(new SlamStateNotification(this), SlamStateNotificationPrefab);
+                if (EnableHighTempTips) BindNotificationWindow(new TemperatureLevelNotification(this), HighTempNotificationPrefab);
+            }
 
-            NRKernalUpdater.OnUpdate += OnUpdate;
+            if (EnableNativeNotifyTips) BindNotificationWindow(new NativeErrorNotification(this), NativeErrorNotificationPrefab);
+        }
+
+        public void BindNotificationWindow(Notification notification, NRNotificationWindow window)
+        {
+            if (NotificationDict.ContainsKey(notification))
+            {
+                NRDebugger.Error("[NRNotificationListener] Already has the notification.");
+                return;
+            }
+            NotificationDict.Add(notification, window);
         }
 
         /// <summary> Executes the 'update' action. </summary>
@@ -261,9 +349,9 @@ namespace NRKernal
             }
             m_TimeLast = 0;
 
-            for (int i = 0; i < NotificationList.Count; i++)
+            foreach (var item in NotificationDict)
             {
-                NotificationList[i].UpdateState();
+                item.Key.UpdateState();
             }
 
             if (m_LockTime < float.Epsilon)
@@ -297,28 +385,23 @@ namespace NRKernal
         /// <param name="msg"> The message.</param>
         protected virtual void OprateNotificationMsg(NotificationMsg msg)
         {
-            NRNotificationWindow prefab = null;
+            NRNotificationWindow prefab = NotificationDict[msg.notification];
             Notification notification_obj = msg.notification;
             Level notification_level = msg.level;
             float duration = TipsLastTime[notification_level];
-
+            Action onConfirm = null;
             // Notification window will not be destroyed automatic when lowpower and high level warning
             // Set it's duration to -1
             if (notification_obj is LowPowerNotification)
             {
-                prefab = LowPowerNotificationPrefab;
                 if (notification_level == Level.High)
                 {
                     duration = -1f;
+                    onConfirm = () =>
+                    {
+                        NRDevice.QuitApp();
+                    };
                 }
-            }
-            else if (notification_obj is SlamStateNotification)
-            {
-                prefab = SlamStateNotificationPrefab;
-            }
-            else if (notification_obj is TemperatureLevelNotification)
-            {
-                prefab = HighTempNotificationPrefab;
             }
 
             if (prefab != null)
@@ -327,7 +410,14 @@ namespace NRKernal
                 NRNotificationWindow notification = Instantiate(prefab);
                 notification.gameObject.SetActive(true);
                 notification.transform.SetParent(transform);
-                notification.FillData(notification_level, duration);
+                notification.FillData(notification_level, duration, onConfirm);
+
+                if (notification_obj is NativeErrorNotification)
+                {
+                    string title = ((NativeErrorNotification)notification_obj).ErrorTitle;
+                    string content = ((NativeErrorNotification)notification_obj).ErrorContent;
+                    notification.SetTitle(title).SetContent(content);
+                }
             }
         }
     }

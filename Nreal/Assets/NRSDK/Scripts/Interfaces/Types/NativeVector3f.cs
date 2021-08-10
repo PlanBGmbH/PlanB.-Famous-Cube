@@ -35,6 +35,14 @@ namespace NRKernal
             Z = v.z;
         }
 
+        public static NativeVector3f identity
+        {
+            get
+            {
+                return new NativeVector3f(Vector3.zero);
+            }
+        }
+
         /// <summary>
         /// Indexer to get or set items within this collection using array index syntax. </summary>
         /// <param name="i"> Zero-based index of the entry to access.</param>

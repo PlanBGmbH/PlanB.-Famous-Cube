@@ -74,14 +74,24 @@ namespace NRKernal
                             throw new NRDPDeviceNotFindError(module_tag + "Can not find the glasses display!");
                         case NativeResult.GetDisplayModeMismatch:
                             throw new NRDPDeviceNotFindError(module_tag + "Glasses display mode mismatch!");
+                        case NativeResult.UnSupportedHandtrackingCalculation:
+                            throw new NRUnSupportedHandtrackingCalculationError(module_tag + "Not support hand tracking calculation!");
                         default:
                             break;
                     }
                 }
                 catch (System.Exception e)
                 {
-                    NRSessionManager.Instance.OprateInitException(e);
-                    throw;
+                    MainThreadDispather.QueueOnMainThread(() =>
+                    {
+                        NRSessionManager.Instance.OprateInitException(e);
+                    });
+
+                    // Normal level Error don't need to throw.
+                    if ((e is NRKernalError) && ((e as NRKernalError).level == Level.High))
+                    {
+                        throw e;
+                    }
                 }
             }
             else

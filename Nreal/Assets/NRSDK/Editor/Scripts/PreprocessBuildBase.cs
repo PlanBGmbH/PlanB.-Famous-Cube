@@ -126,6 +126,31 @@ namespace NRKernal
 
             AutoGenerateAndroidManifest(xmlPath);
             AssetDatabase.Refresh();
+
+            ApplySettingsToConfig();
+        }
+
+        private static void ApplySettingsToConfig()
+        {
+            var sessionConfigGuids = AssetDatabase.FindAssets("t:NRSessionConfig");
+            foreach (var item in sessionConfigGuids)
+            {
+                var config = AssetDatabase.LoadAssetAtPath<NRSessionConfig>(
+                    AssetDatabase.GUIDToAssetPath(item));
+                config.UseMultiThread = PlayerSettings.GetMobileMTRendering(BuildTargetGroup.Android);
+                EditorUtility.SetDirty(config);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        [MenuItem("NRSDK/AddAudioPermission")]
+        public static void AddAudioPermission()
+        {
+            string xmlPath = Application.dataPath + "/Plugins/Android/AndroidManifest.xml";
+            var androidManifest = new AndroidManifest(xmlPath);
+            androidManifest.SetAudioRecordPermission();
+            androidManifest.Save();
         }
 
         /// <summary> Automatic generate android manifest. </summary>

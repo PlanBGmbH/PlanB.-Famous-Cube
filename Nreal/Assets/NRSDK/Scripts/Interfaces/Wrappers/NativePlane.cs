@@ -10,6 +10,7 @@
 namespace NRKernal
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
     using UnityEngine;
 
@@ -83,23 +84,27 @@ namespace NRKernal
             return extent_z;
         }
 
-        /// <summary> Gets polygon size. </summary>
-        /// <param name="trackable_handle"> Handle of the trackable.</param>
-        /// <returns> The polygon size. </returns>
-        public int GetPolygonSize(UInt64 trackable_handle)
+        public void GetBoundaryPolygon(UInt64 trackable_handle, List<Vector3> polygonList)
         {
+            polygonList.Clear();
             int polygon_size = 0;
             NativeApi.NRTrackablePlaneGetPolygonSize(m_NativeInterface.TrackingHandle, trackable_handle, ref polygon_size);
-            return polygon_size / 2;
-        }
-
-        /// <summary> Gets polygon data. </summary>
-        /// <param name="trackable_handle"> Handle of the trackable.</param>
-        /// <returns> An array of float. </returns>
-        public float[] GetPolygonData(UInt64 trackable_handle)
-        {
+            int size = polygon_size / 2;
             NativeApi.NRTrackablePlaneGetPolygon(m_NativeInterface.TrackingHandle, trackable_handle, (m_TmpPointsHandle.AddrOfPinnedObject()));
-            return m_Points;
+            float[] point_data = new float[size * 2];
+            Array.Copy(m_Points, point_data, size * 2);
+            Pose centerPos = GetCenterPose(trackable_handle);
+            var unityWorldTPlane = Matrix4x4.TRS(centerPos.position, centerPos.rotation, Vector3.one);
+            var plane_type = GetPlaneType(trackable_handle);
+            for (int i = 2 * size - 2; i >= 0; i -= 2)
+            {
+                Vector3 localpos = new Vector3(point_data[i], 0, -point_data[i + 1]);
+                polygonList.Add(unityWorldTPlane.MultiplyPoint3x4(localpos));
+            }
+            if (plane_type == TrackablePlaneType.VERTICAL)
+            {
+                polygonList.Reverse();
+            }
         }
 
         private partial struct NativeApi

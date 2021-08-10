@@ -26,13 +26,13 @@ namespace NRKernal.NRExamples
         private int m_CumulativeClickNum = 0;
         /// <summary> True if is profiler opened, false if not. </summary>
         private bool m_IsProfilerOpened = false;
-        /// <summary> The button press timer. </summary>
-        private float m_ButtonPressTimer;
+        /// <summary> System gesture duration timer. </summary>
+        private float m_SystemGestureTimer;
 
         /// <summary> Number of trigger profiler clicks. </summary>
         private const int TRIGGER_PROFILER_CLICK_COUNT = 3;
-        /// <summary> Duration of the button long press. </summary>
-        private const float BUTTON_LONG_PRESS_DURATION = 1.2f;
+        /// <summary> Duration of system gesture to trigger function. </summary>
+        private const float SYSTEM_GESTURE_KEEP_DURATION = 1.2f;
 
         /// <summary> Executes the 'enable' action. </summary>
         private void OnEnable()
@@ -61,7 +61,7 @@ namespace NRKernal.NRExamples
                 QuitApplication();
             }
 #endif
-            CheckButtonLongPress();
+            CheckSystemGesture();
         }
 
         /// <summary> Executes the 'home button click' action. </summary>
@@ -76,26 +76,6 @@ namespace NRKernal.NRExamples
             if (enableTriggerProfiler)
             {
                 CollectClickEvent();
-            }
-        }
-
-        /// <summary> Check button long press. </summary>
-        private void CheckButtonLongPress()
-        {
-            if (NRInput.GetButton(ControllerButton.HOME))
-            {
-                m_ButtonPressTimer += Time.deltaTime;
-                if (m_ButtonPressTimer > BUTTON_LONG_PRESS_DURATION)
-                {
-                    m_ButtonPressTimer = float.MinValue;
-
-                    // Reset layser when long press Home btn.
-                    NRInput.RecenterController();
-                }
-            }
-            else
-            {
-                m_ButtonPressTimer = 0f;
             }
         }
 
@@ -120,6 +100,22 @@ namespace NRKernal.NRExamples
             m_LastClickTime = Time.unscaledTime;
         }
 
+        private void CheckSystemGesture()
+        {
+            if (NRInput.Hands.IsPerformingSystemGesture())
+            {
+                m_SystemGestureTimer += Time.deltaTime;
+                if(m_SystemGestureTimer > SYSTEM_GESTURE_KEEP_DURATION)
+                {
+                    m_SystemGestureTimer = float.MinValue;
+                    NRHomeMenu.Show();
+                }
+            }
+            else
+            {
+                m_SystemGestureTimer = 0f;
+            }
+        }
 
         /// <summary> Quit application. </summary>
         public static void QuitApplication()

@@ -25,12 +25,14 @@ namespace NRKernal.Record
 
 #if UNITY_EDITOR
         /// <summary> The matrix. </summary>
-        private Matrix4x4 matrix = new Matrix4x4(
+        private Matrix4x4 RGBCameraMatrix = new Matrix4x4(
                    new Vector4(1.92188f, 0f, 0f, 0f),
                    new Vector4(0f, 3.41598f, 0f, 0f),
                    new Vector4(0.0169f, 0.02256f, -1.00060f, -1f),
                    new Vector4(0, 0f, -0.60018f, 0f)
            );
+
+        private Pose RGBCameraPoseFromHead = new Pose(Vector3.zero, new Quaternion(0.1f, 0.0f, 0.0f, 1.0f));
 #endif
 
         /// <summary> Starts this object. </summary>
@@ -39,7 +41,9 @@ namespace NRKernal.Record
             m_TargetCamera = gameObject.GetComponent<Camera>();
 
 #if UNITY_EDITOR
-            m_TargetCamera.projectionMatrix = matrix;
+            m_TargetCamera.projectionMatrix = RGBCameraMatrix;
+            transform.localPosition = RGBCameraPoseFromHead.position;
+            transform.localRotation = RGBCameraPoseFromHead.rotation;
 #else
             StartCoroutine(Initialize());
 #endif
@@ -54,7 +58,7 @@ namespace NRKernal.Record
             EyeProjectMatrixData matrix_data = NRFrame.GetEyeProjectMatrix(out result, m_TargetCamera.nearClipPlane, m_TargetCamera.farClipPlane);
             while (!result)
             {
-                NRDebugger.Info("Waitting to initialize camera param.");
+                NRDebugger.Info("[NRCameraInitializer] Waitting to initialize camera param.");
                 yield return new WaitForEndOfFrame();
                 matrix_data = NRFrame.GetEyeProjectMatrix(out result, m_TargetCamera.nearClipPlane, m_TargetCamera.farClipPlane);
             }
@@ -64,24 +68,24 @@ namespace NRKernal.Record
             {
                 case NativeEye.LEFT:
                     m_TargetCamera.projectionMatrix = matrix_data.LEyeMatrix;
-                    NRDebugger.Info("[Matrix] RGB Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
+                    NRDebugger.Info("[NRCameraInitializer] Left Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
                     transform.localPosition = eyeposFromHead.LEyePose.position;
                     transform.localRotation = eyeposFromHead.LEyePose.rotation;
-                    NRDebugger.Info("RGB Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
+                    NRDebugger.Info("[NRCameraInitializer] Left Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
                 case NativeEye.RIGHT:
                     m_TargetCamera.projectionMatrix = matrix_data.REyeMatrix;
-                    NRDebugger.Info("[Matrix] RGB Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
+                    NRDebugger.Info("[NRCameraInitializer] Right Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
                     transform.localPosition = eyeposFromHead.REyePose.position;
                     transform.localRotation = eyeposFromHead.REyePose.rotation;
-                    NRDebugger.Info("RGB Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
+                    NRDebugger.Info("[NRCameraInitializer] Right Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
                 case NativeEye.RGB:
                     m_TargetCamera.projectionMatrix = matrix_data.RGBEyeMatrix;
-                    NRDebugger.Info("[Matrix] RGB Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
-                    transform.localPosition = eyeposFromHead.RGBEyePos.position;
-                    transform.localRotation = eyeposFromHead.RGBEyePos.rotation;
-                    NRDebugger.Info("RGB Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
+                    NRDebugger.Info("[NRCameraInitializer] RGB Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
+                    transform.localPosition = eyeposFromHead.RGBEyePose.position;
+                    transform.localRotation = eyeposFromHead.RGBEyePose.rotation;
+                    NRDebugger.Info("[NRCameraInitializer] RGB Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
                 default:
                     break;

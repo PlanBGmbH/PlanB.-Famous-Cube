@@ -15,20 +15,50 @@ namespace NRKernal.Record
     public class RGBCameraFrameProvider : AbstractFrameProvider
     {
         /// <summary> The RGB tex. </summary>
-        private NRRGBCamTexture m_RGBTex;
+        private CameraModelView m_CameraTexture;
+        private UniversalTextureFrame frameInfo;
 
         /// <summary> Default constructor. </summary>
         public RGBCameraFrameProvider()
         {
-            m_RGBTex = new NRRGBCamTexture();
-            m_RGBTex.OnUpdate += UpdateFrame;
+            var active_format = NativeCameraProxy.GetActiveCameraImageFormat();
+            NRDebugger.Info("[CameraFrameProvider] Use format:{0}", active_format);
+            switch (active_format)
+            {
+                case CameraImageFormat.YUV_420_888:
+                    m_CameraTexture = new NRRGBCamTextureYUV();
+                    ((NRRGBCamTextureYUV)m_CameraTexture).OnUpdate += UpdateYUVFrame;
+                    frameInfo.textures = new Texture[3];
+                    frameInfo.textureType = TextureType.YUV;
+                    break;
+                case CameraImageFormat.RGB_888:
+                    m_CameraTexture = new NRRGBCamTexture();
+                    ((NRRGBCamTexture)m_CameraTexture).OnUpdate += UpdateRGBFrame;
+                    frameInfo.textures = new Texture[1];
+                    frameInfo.textureType = TextureType.RGB;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void UpdateYUVFrame(NRRGBCamTextureYUV.YUVTextureFrame frame)
+        {
+            frameInfo.timeStamp = frame.timeStamp;
+            frameInfo.textures[0] = frame.textureY;
+            frameInfo.textures[1] = frame.textureU;
+            frameInfo.textures[2] = frame.textureV;
+            OnUpdate?.Invoke(frameInfo);
+            m_IsFrameReady = true;
         }
 
         /// <summary> Updates the frame described by frame. </summary>
         /// <param name="frame"> The frame.</param>
-        private void UpdateFrame(CameraTextureFrame frame)
+        private void UpdateRGBFrame(CameraTextureFrame frame)
         {
-            OnUpdate?.Invoke(frame);
+            frameInfo.timeStamp = frame.timeStamp;
+            frameInfo.textures[0] = frame.texture;
+            OnUpdate?.Invoke(frameInfo);
             m_IsFrameReady = true;
         }
 
@@ -37,27 +67,27 @@ namespace NRKernal.Record
         public override Resolution GetFrameInfo()
         {
             Resolution resolution = new Resolution();
-            resolution.width = m_RGBTex.Width;
-            resolution.height = m_RGBTex.Height;
+            resolution.width = m_CameraTexture.Width;
+            resolution.height = m_CameraTexture.Height;
             return resolution;
         }
 
         /// <summary> Plays this object. </summary>
         public override void Play()
         {
-            m_RGBTex.Play();
+            m_CameraTexture.Play();
         }
 
         /// <summary> Stops this object. </summary>
         public override void Stop()
         {
-            m_RGBTex.Pause();
+            m_CameraTexture.Pause();
         }
 
         /// <summary> Releases this object. </summary>
         public override void Release()
         {
-            m_RGBTex.Stop();
+            m_CameraTexture.Stop();
         }
     }
 }

@@ -13,6 +13,12 @@ namespace NRKernal
     using UnityEngine;
     using System.IO;
     using UnityEngine.Rendering;
+    using System.Collections.Generic;
+    using NRKernal.Release;
+    using LitJson;
+    using System.Linq;
+    using System;
+    using System.Text;
 
     /// <summary> Form for viewing the project tips. </summary>
     [InitializeOnLoad]
@@ -22,25 +28,38 @@ namespace NRKernal
         private abstract class Check
         {
             /// <summary> The key. </summary>
-            protected string key;
+            protected string _key;
+            protected MessageType _level;
+            public MessageType level
+            {
+                get
+                {
+                    return _level;
+                }
+            }
+
+            public Check(MessageType level)
+            {
+                _level = level;
+            }
 
             /// <summary> Ignores this object. </summary>
             public void Ignore()
             {
-                EditorPrefs.SetBool(ignorePrefix + key, true);
+                EditorPrefs.SetBool(ignorePrefix + _key, true);
             }
 
             /// <summary> Query if this object is ignored. </summary>
             /// <returns> True if ignored, false if not. </returns>
             public bool IsIgnored()
             {
-                return EditorPrefs.HasKey(ignorePrefix + key);
+                return EditorPrefs.HasKey(ignorePrefix + _key);
             }
 
             /// <summary> Deletes the ignore. </summary>
             public void DeleteIgnore()
             {
-                EditorPrefs.DeleteKey(ignorePrefix + key);
+                EditorPrefs.DeleteKey(ignorePrefix + _key);
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -56,15 +75,21 @@ namespace NRKernal
 
             /// <summary> Fixes this object. </summary>
             public abstract void Fix();
+
+            protected void DrawContent(string title, string message)
+            {
+                EditorGUILayout.HelpBox(title, level);
+                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+            }
         }
 
         /// <summary> A ckeck android vsyn. </summary>
         private class CkeckAndroidVsyn : Check
         {
             /// <summary> Default constructor. </summary>
-            public CkeckAndroidVsyn()
+            public CkeckAndroidVsyn(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -77,11 +102,9 @@ namespace NRKernal
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("vSyn is opened on Mobile Devices", MessageType.Error);
-
                 string message = @"In order to render correct on mobile devices, the vSyn in quality settings must be disabled. 
 in dropdown list of Quality Settings > V Sync Count, choose 'Dont't Sync' for all levels.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("vSyn is opened on Mobile Devices", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -107,9 +130,9 @@ in dropdown list of Quality Settings > V Sync Count, choose 'Dont't Sync' for al
         private class CkeckAndroidSDCardPermission : Check
         {
             /// <summary> Default constructor. </summary>
-            public CkeckAndroidSDCardPermission()
+            public CkeckAndroidSDCardPermission(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -129,11 +152,9 @@ in dropdown list of Quality Settings > V Sync Count, choose 'Dont't Sync' for al
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("Sdcard permission not available", MessageType.Error);
-
                 string message = @"In order to run correct on mobile devices, the sdcard write permission should be set. 
 in dropdown list of Player Settings > Other Settings > Write Permission, choose 'External(SDCard)'.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("Sdcard permission not available", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -156,9 +177,9 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
         /// <summary> Android minSdkVersion should be higher than 26. </summary>
         private class CkeckAndroidMinAPILevel : Check
         {
-            public CkeckAndroidMinAPILevel()
+            public CkeckAndroidMinAPILevel(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             public override bool IsValid()
@@ -177,10 +198,8 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("Android minSdkVersion should be higher than 26.", MessageType.Error);
-
                 string message = @"In order to run correct on mobile devices, Android minSdkVersion should be higher than 26.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("Android minSdkVersion should be higher than 26", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -204,9 +223,9 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
         private class CkeckAndroidOrientation : Check
         {
             /// <summary> Default constructor. </summary>
-            public CkeckAndroidOrientation()
+            public CkeckAndroidOrientation(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -219,11 +238,9 @@ in dropdown list of Player Settings > Other Settings > Write Permission, choose 
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("Orientation is not portrait", MessageType.Error);
-
                 string message = @"In order to display correct on mobile devices, the orientation should be set to portrait. 
 in dropdown list of Player Settings > Resolution and Presentation > Default Orientation, choose 'Portrait'.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("Orientation is not portrait", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -247,9 +264,9 @@ in dropdown list of Player Settings > Resolution and Presentation > Default Orie
         private class CkeckAndroidGraphicsAPI : Check
         {
             /// <summary> Default constructor. </summary>
-            public CkeckAndroidGraphicsAPI()
+            public CkeckAndroidGraphicsAPI(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -275,11 +292,9 @@ in dropdown list of Player Settings > Resolution and Presentation > Default Orie
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("GraphicsAPIs is not OpenGLES3", MessageType.Error);
-
                 string message = @"In order to render correct on mobile devices, the graphicsAPIs should be set to OpenGLES3. 
 in dropdown list of Player Settings > Other Settings > Graphics APIs , choose 'OpenGLES3'.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("GraphicsAPIs is not OpenGLES3", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -303,9 +318,9 @@ in dropdown list of Player Settings > Other Settings > Graphics APIs , choose 'O
         private class CkeckColorSpace : Check
         {
             /// <summary> Default constructor. </summary>
-            public CkeckColorSpace()
+            public CkeckColorSpace(MessageType level) : base(level)
             {
-                key = this.GetType().Name;
+                _key = this.GetType().Name;
             }
 
             /// <summary> Query if this object is valid. </summary>
@@ -318,11 +333,9 @@ in dropdown list of Player Settings > Other Settings > Graphics APIs , choose 'O
             /// <summary> Draw graphical user interface. </summary>
             public override void DrawGUI()
             {
-                EditorGUILayout.HelpBox("ColorSpace is not Linear", MessageType.Warning);
-
                 string message = @"In order to display correct on mobile devices, the colorSpace should be set to linear. 
 in dropdown list of Player Settings > Other Settings > Color Space, choose 'Linear'.";
-                EditorGUILayout.LabelField(message, EditorStyles.textArea);
+                DrawContent("ColorSpace is not Linear", message);
             }
 
             /// <summary> Query if this object is fixable. </summary>
@@ -342,15 +355,226 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
             }
         }
 
+        /// <summary> A ckeck color space. </summary>
+        private class CkeckXRDefine : Check
+        {
+
+            /// <summary> Default constructor. </summary>
+            public CkeckXRDefine(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                var dict = PackageUtility.GetAllPackagesByManifest();
+                if (dict.Count == 0 || !dict.ContainsKey(NativeConstants.XRPLUGIN))
+                {
+                    return !DefineSymbolsUtility.HasSymbol(NativeConstants.XRDEFINE);
+                }
+                else
+                {
+                    return DefineSymbolsUtility.HasSymbol(NativeConstants.XRDEFINE);
+                }
+            }
+
+            /// <summary> Draw graphical user interface. </summary>
+            public override void DrawGUI()
+            {
+                string message = @"Not configured correctly.";
+                DrawContent("Define is not correctly.", message);
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                var dict = PackageUtility.GetAllPackagesByManifest();
+                if (dict.Count == 0 || !dict.ContainsKey(NativeConstants.XRPLUGIN))
+                {
+                    DefineSymbolsUtility.RemoveSymbol(NativeConstants.XRDEFINE);
+                }
+                else
+                {
+                    DefineSymbolsUtility.AddSymbol(NativeConstants.XRDEFINE);
+                }
+            }
+        }
+
+        /// <summary> A ckeck color space. </summary>
+        private class CkeckDependency : Check
+        {
+            public class PackageInfo
+            {
+                public string name;
+                public string version;
+            }
+            private PackageInfo XRPluginPackageInfo;
+
+            /// <summary> Default constructor. </summary>
+            public CkeckDependency(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            private void FreshXRPluginVersion(Action<PackageInfo> callback = null)
+            {
+                PackageUtility.GetAllPackages((info) =>
+                {
+                    if (!info.isSuccess)
+                    {
+                        NRDebugger.Warning("Can not get all packages info...");
+                        return;
+                    }
+
+                    var package_result = info.packages.Select((package) =>
+                    {
+                        UnityEditor.PackageManager.PackageInfo p = null;
+                        if (package.name.Equals(NativeConstants.XRPLUGIN))
+                        {
+                            p = package;
+                        }
+                        return p;
+                    }).First();
+
+                    if (XRPluginPackageInfo == null)
+                    {
+                        XRPluginPackageInfo = new PackageInfo();
+                    }
+                    if (package_result != null)
+                    {
+                        XRPluginPackageInfo.name = package_result.name;
+                        XRPluginPackageInfo.version = package_result.version;
+                    }
+
+                    callback?.Invoke(XRPluginPackageInfo);
+                });
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                if (XRPluginPackageInfo == null)
+                {
+                    FreshXRPluginVersion();
+                    return true;
+                }
+
+                bool result = true;
+                if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
+                {
+                    result = false;
+                }
+
+                if (!result)
+                {
+                    FreshXRPluginVersion();
+                }
+
+                return result;
+            }
+
+            public override void DrawGUI()
+            {
+                const string title = "Check dependencies";
+                const string messageFormat = "package \"{0}\" version is \"{1}\", need to upgrade to \"{2}\"";
+
+                StringBuilder st = new StringBuilder();
+                if (XRPluginPackageInfo != null)
+                {
+                    if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
+                    {
+                        st.AppendLine(string.Format(messageFormat, XRPluginPackageInfo.name, XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION));
+                    }
+                }
+                else
+                {
+                    FreshXRPluginVersion();
+                    st.AppendLine("Waitting to get dependencies version...");
+                }
+                DrawContent(title, st.ToString());
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                if (string.Compare(XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION) < 0)
+                {
+                    Debug.LogFormat("[CkeckDependency] Fix dependency , current:{0} dependency:{1}",
+                        XRPluginPackageInfo.version, NativeConstants.XRPLUGIN_MIN_VERSION);
+                    FixedXRProviderPlugin(NativeConstants.XRPLUGIN, NativeConstants.XRPLUGIN_MIN_VERSION);
+                }
+            }
+
+            public static void FixedXRProviderPlugin(string key, string version)
+            {
+                string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Packages/manifest.json");
+                var contents = File.ReadAllLines(path);
+                var json = JsonMapper.ToObject(File.ReadAllText(path));
+
+                for (int i = 0; i < contents.Length; i++)
+                {
+                    if (contents[i].Contains(key) && !contents[i].Contains('{'))
+                    {
+                        var valueofkey = json["dependencies"][key].ToString();
+                        if (key.Equals(NativeConstants.XRPLUGIN))
+                        {
+                            if (valueofkey.Contains('#'))
+                            {
+                                var value_params = valueofkey.Split('#');
+                                if (value_params.Length != 2)
+                                {
+                                    NRDebugger.Warning("Dependencie format error:[{0}]", valueofkey);
+                                    break;
+                                }
+                                valueofkey = string.Format("{0}#{1}", value_params[0], version);
+                            }
+                            else
+                            {
+                                valueofkey = string.Format("{0}#{1}", valueofkey, version);
+                            }
+                        }
+                        else
+                        {
+                            valueofkey = version;
+                        }
+                        contents[i] = string.Format("   \"{0}\": \"{1}\",", key, valueofkey.Replace("\"", ""));
+                    }
+                }
+
+                File.WriteAllLines(path, contents);
+            }
+        }
+
         /// <summary> The checks. </summary>
         private static Check[] checks = new Check[]
         {
-            new CkeckAndroidVsyn(),
-            new CkeckAndroidMinAPILevel(),
+            new CkeckAndroidVsyn(MessageType.Error),
+            new CkeckAndroidMinAPILevel(MessageType.Error),
             //new CkeckAndroidSDCardPermission(),
-            new CkeckAndroidOrientation(),
-            new CkeckAndroidGraphicsAPI(),
-            new CkeckColorSpace(),
+            new CkeckAndroidOrientation(MessageType.Warning),
+            new CkeckAndroidGraphicsAPI(MessageType.Error),
+            new CkeckXRDefine(MessageType.Error),
+#if USING_XR_SDK
+            new CkeckDependency(MessageType.Error)
+#endif
+            //new CkeckColorSpace(Level.Error),
         };
 
         /// <summary> The window. </summary>
@@ -360,11 +584,11 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
         /// <summary> The ignore prefix. </summary>
         private const string ignorePrefix = "NRKernal.ignore";
 
-        //static ProjectTipsWindow()
-        //{
-        //    EditorApplication.update -= Update;
-        //    EditorApplication.update += Update;
-        //}
+        static ProjectTipsWindow()
+        {
+            EditorApplication.update -= Update;
+            EditorApplication.update += Update;
+        }
 
         /// <summary> Shows the window. </summary>
         [MenuItem("NRSDK/Project Tips", false, 50)]
@@ -383,7 +607,7 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
 
             foreach (Check check in checks)
             {
-                if (!check.IsIgnored() && !check.IsValid())
+                if (!check.IsIgnored() && !check.IsValid() && check.level > MessageType.Warning)
                 {
                     show = true;
                 }
@@ -394,7 +618,7 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
                 ShowWindow();
             }
 
-            //EditorApplication.update -= Update;
+            EditorApplication.update -= Update;
         }
 
         /// <summary> Executes the 'graphical user interface' action. </summary>

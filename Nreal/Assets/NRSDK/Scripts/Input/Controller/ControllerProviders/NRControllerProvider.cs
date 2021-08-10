@@ -62,6 +62,15 @@ namespace NRKernal
             return string.Empty;
         }
 
+        public ControllerHandEnum GetHandednessType()
+        {
+            if (m_NativeController != null)
+            {
+                return m_NativeController.GetHandednessType() == HandednessType.LEFT_HANDEDNESS ? ControllerHandEnum.Left : ControllerHandEnum.Right;
+            }
+            return ControllerHandEnum.Right;
+        }
+
         /// <summary> Executes the 'pause' action. </summary>
         public override void OnPause()
         {
@@ -216,7 +225,7 @@ namespace NRKernal
         /// <param name="index"> Zero-based index of the.</param>
         private void CheckRecenter(int index)
         {
-            if (states[index].GetButton(ControllerButton.APP))
+            if (states[index].GetButton(ControllerButton.HOME))
             {
                 homePressingTimerArr[index] += Time.deltaTime;
                 if (homePressingTimerArr[index] > HOME_LONG_PRESS_TIME)

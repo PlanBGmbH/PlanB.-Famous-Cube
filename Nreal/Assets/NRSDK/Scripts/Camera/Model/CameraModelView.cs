@@ -87,6 +87,8 @@ namespace NRKernal
             }
         }
 
+        public CameraImageFormat ImageFormat { get; protected set; }
+
         /// <summary> Default constructor. </summary>
         public CameraModelView() { }
 
@@ -94,6 +96,7 @@ namespace NRKernal
         /// <param name="format"> Camera image format.</param>
         public CameraModelView(CameraImageFormat format)
         {
+            ImageFormat = format;
             this.CreateRGBCameraProxy(format);
         }
 
@@ -120,6 +123,7 @@ namespace NRKernal
             }
             NRKernalUpdater.OnUpdate += UpdateTexture;
             m_NativeCameraProxy.Play();
+            m_NativeCameraProxy.Regist(this);
             m_State = State.Playing;
         }
 

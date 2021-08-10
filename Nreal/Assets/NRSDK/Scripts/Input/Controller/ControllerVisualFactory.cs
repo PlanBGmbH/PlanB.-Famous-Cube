@@ -27,14 +27,13 @@ namespace NRKernal
             string folderPath = "ControllerVisuals/";
             switch (visualType)
             {
+                case ControllerVisualType.None:
+                    return null;
                 case ControllerVisualType.NrealLight:
                     prefabPath = folderPath + "nreal_light_controller_visual";
                     break;
                 case ControllerVisualType.Phone:
                     prefabPath = folderPath + "phone_controller_visual";
-                    break;
-                case ControllerVisualType.FinchShift:
-                    prefabPath = folderPath + "finch_shift_controller_visual";
                     break;
                 default:
                     NRDebugger.Error("Can not find controller visual for: " + visualType + ", set to default visual");
@@ -59,10 +58,10 @@ namespace NRKernal
         {
             switch (controllerType)
             {
+                case ControllerType.CONTROLLER_TYPE_HAND:
+                    return ControllerVisualType.None;
                 case ControllerType.CONTROLLER_TYPE_PHONE:
                     return ControllerVisualType.Phone;
-                case ControllerType.CONTROLLER_TYPE_FINCHSHIFT:
-                    return ControllerVisualType.FinchShift;
                 default:
                     return ControllerVisualType.NrealLight;
             }

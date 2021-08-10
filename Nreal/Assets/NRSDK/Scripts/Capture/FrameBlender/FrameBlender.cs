@@ -12,7 +12,7 @@ namespace NRKernal.Record
     using UnityEngine;
 
     /// <summary> A frame blender. </summary>
-    public class FrameBlender
+    public class FrameBlender : IFrameConsumer
     {
         /// <summary> Target camera. </summary>
         protected Camera m_TargetCamera;
@@ -22,8 +22,6 @@ namespace NRKernal.Record
         private Material m_BlendMaterial;
         /// <summary> The blend mode. </summary>
         protected BlendMode m_BlendMode;
-        /// <summary> The RGB origin. </summary>
-        protected Texture2D m_RGBOrigin;
         /// <summary> The RGB source. </summary>
         protected RenderTexture m_RGBSource;
         /// <summary> The temporary combine tex. </summary>
@@ -49,6 +47,18 @@ namespace NRKernal.Record
         {
             get
             {
+                //if (m_BlendMode == BlendMode.Blend || m_BlendMode == BlendMode.VirtualOnly)
+                //{
+                //    if (m_TargetCamera != null)
+                //    {
+                //        return m_TargetCamera?.targetTexture;
+                //    }
+                //    else return null;
+                //}
+                //else
+                //{
+                //    return m_BlendTexture;
+                //}
                 return m_BlendTexture;
             }
             protected set
@@ -118,52 +128,65 @@ namespace NRKernal.Record
             m_BlendMode = param.blendMode;
             m_TargetCamera = camera;
             m_Encoder = encoder;
-            Shader blendshader;
+
+            // An extra rendering is required when BlendMode is RGBOnly or WidescreenBlend.
             switch (m_BlendMode)
             {
                 case BlendMode.RGBOnly:
-                    blendshader = Resources.Load<Shader>("Record/Shaders/NormalBlend");
-                    m_BlendMaterial = new Material(blendshader);
-                    BlendTexture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+                    BlendTexture = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32, false);
                     break;
                 case BlendMode.VirtualOnly:
-                    blendshader = Resources.Load<Shader>("Record/Shaders/NormalBlend");
-                    m_BlendMaterial = new Material(blendshader);
-                    BlendTexture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+                    BlendTexture = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32, false);
                     break;
                 case BlendMode.Blend:
-                    blendshader = Resources.Load<Shader>("Record/Shaders/AlphaBlend");
-                    m_BlendMaterial = new Material(blendshader);
-                    BlendTexture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+                    BlendTexture = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32, false);
                     break;
                 case BlendMode.WidescreenBlend:
-                    blendshader = Resources.Load<Shader>("Record/Shaders/NormalBlend");
-                    m_BlendMaterial = new Material(blendshader);
-                    BlendTexture = new RenderTexture(2 * Width, Height, 24, RenderTextureFormat.ARGB32);
-                    m_RGBSource = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+                    BlendTexture = UnityExtendedUtility.CreateRenderTexture(2 * Width, Height, 24, RenderTextureFormat.ARGB32, false);
+                    m_RGBSource = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32, false);
                     m_TempCombineTex = new Texture2D(2 * Width, Height, TextureFormat.ARGB32, false);
                     break;
                 default:
                     break;
             }
+
             m_TargetCamera.enabled = false;
-            m_TargetCamera.targetTexture = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
+            m_TargetCamera.targetTexture = UnityExtendedUtility.CreateRenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
         }
 
         /// <summary> Executes the 'frame' action. </summary>
         /// <param name="frame"> The frame.</param>
-        public void OnFrame(CameraTextureFrame frame)
+        public virtual void OnFrame(UniversalTextureFrame frame)
         {
-            Texture2D frametex = frame.texture as Texture2D;
-            m_RGBOrigin = frametex;
+            Texture2D frametex = frame.textures[0] as Texture2D;
+            if (m_BlendMode != BlendMode.RGBOnly)
+            {
+                m_TargetCamera.Render();
+            }
 
-            m_TargetCamera.Render();
+            if (m_BlendMaterial == null)
+            {
+                CreatBlendMaterial(m_BlendMode, frame.textureType);
+            }
 
+            bool isyuv = frame.textureType == TextureType.YUV;
             switch (m_BlendMode)
             {
                 case BlendMode.RGBOnly:
-                    m_BlendMaterial.SetTexture("_MainTex", frame.texture);
-                    Graphics.Blit(frame.texture, BlendTexture, m_BlendMaterial);
+                    const string MainTextureStr = "_MainTex";
+                    if (isyuv)
+                    {
+                        const string UTextureStr = "_UTex";
+                        const string VTextureStr = "_VTex";
+                        m_BlendMaterial.SetTexture(MainTextureStr, frame.textures[0]);
+                        m_BlendMaterial.SetTexture(UTextureStr, frame.textures[1]);
+                        m_BlendMaterial.SetTexture(VTextureStr, frame.textures[2]);
+                    }
+                    else
+                    {
+                        m_BlendMaterial.SetTexture(MainTextureStr, frame.textures[0]);
+                    }
+                    Graphics.Blit(frame.textures[0], BlendTexture, m_BlendMaterial);
                     break;
                 case BlendMode.VirtualOnly:
                     m_BlendMaterial.SetTexture("_MainTex", m_TargetCamera.targetTexture);
@@ -171,10 +194,23 @@ namespace NRKernal.Record
                     break;
                 case BlendMode.Blend:
                     m_BlendMaterial.SetTexture("_MainTex", m_TargetCamera.targetTexture);
-                    m_BlendMaterial.SetTexture("_BcakGroundTex", frame.texture);
+                    if (isyuv)
+                    {
+                        m_BlendMaterial.SetTexture("_YTex", frame.textures[0]);
+                        m_BlendMaterial.SetTexture("_UTex", frame.textures[1]);
+                        m_BlendMaterial.SetTexture("_VTex", frame.textures[2]);
+                    }
+                    else
+                    {
+                        m_BlendMaterial.SetTexture("_BcakGroundTex", frame.textures[0]);
+                    }
                     Graphics.Blit(m_TargetCamera.targetTexture, BlendTexture, m_BlendMaterial);
                     break;
                 case BlendMode.WidescreenBlend:
+                    if (isyuv)
+                    {
+                        throw new System.Exception("Not support yuv texture for this mode...");
+                    }
                     CombineTexture(frametex, m_TargetCamera.targetTexture, m_TempCombineTex, BlendTexture);
                     break;
                 default:
@@ -186,6 +222,26 @@ namespace NRKernal.Record
             FrameCount++;
         }
 
+        private void CreatBlendMaterial(BlendMode mode, TextureType texturetype)
+        {
+            string shader_name;
+            if (mode == BlendMode.Blend)
+            {
+                shader_name = "Record/Shaders/AlphaBlend{0}";
+                shader_name = string.Format(shader_name, texturetype == TextureType.RGB ? "" : "YUV");
+            }
+            else if (mode == BlendMode.VirtualOnly)
+            {
+                shader_name = "Record/Shaders/NormalTexture";
+            }
+            else
+            {
+                shader_name = "Record/Shaders/NormalBlend{0}";
+                shader_name = string.Format(shader_name, texturetype == TextureType.RGB ? "" : "YUV");
+            }
+            m_BlendMaterial = new Material(Resources.Load<Shader>(shader_name));
+        }
+
         /// <summary> Combine texture. </summary>
         /// <param name="bgsource">   The bgsource.</param>
         /// <param name="foresource"> The foresource.</param>
@@ -193,7 +249,8 @@ namespace NRKernal.Record
         /// <param name="dest">       Destination for the.</param>
         private void CombineTexture(Texture2D bgsource, RenderTexture foresource, Texture2D tempdest, RenderTexture dest)
         {
-            m_BlendMaterial.SetTexture("_MainTex", m_RGBSource);
+            const string MainTextureStr = "_MainTex";
+            m_BlendMaterial.SetTexture(MainTextureStr, m_RGBSource);
             Graphics.Blit(bgsource, m_RGBSource, m_BlendMaterial);
 
             RenderTexture prev = RenderTexture.active;

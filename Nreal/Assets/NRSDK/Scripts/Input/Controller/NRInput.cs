@@ -30,6 +30,15 @@ namespace NRKernal
         Laser
     }
 
+    /// <summary> Enumeration of input source type. </summary>
+    public enum InputSourceEnum
+    {
+        /// <summary> An enum constant representing the hands option. </summary>
+        Hands,
+        /// <summary> An enum constant representing the controller option. </summary>
+        Controller
+    }
+
     /// <summary> Enumeration of controller visual types. </summary>
     public enum ControllerVisualType
     {
@@ -38,9 +47,7 @@ namespace NRKernal
         /// <summary> An enum constant representing the nreal light option. </summary>
         NrealLight = 1,
         /// <summary> An enum constant representing the phone option. </summary>
-        Phone = 2,
-        /// <summary> An enum constant representing the finch shift option. </summary>
-        FinchShift
+        Phone = 2
     }
 
     /// <summary>
@@ -50,7 +57,7 @@ namespace NRKernal
     /// controller states, so that every frame NRInput could get the right states.There are max two
     /// states for one controllerProvider. </summary>
     [HelpURL("https://developer.nreal.ai/develop/unity/controller")]
-    [ScriptOrder(-100)]
+    [ScriptOrder(NativeConstants.NRINPUT_ORDER)]
     public partial class NRInput : SingletonBehaviour<NRInput>
     {
         /// <summary> True to emulate virtual display in editor. </summary>
@@ -66,6 +73,9 @@ namespace NRKernal
         /// <summary> The raycast mode. </summary>
         [SerializeField]
         private RaycastModeEnum m_RaycastMode = RaycastModeEnum.Laser;
+        /// <summary> The current input source type. </summary>
+        [SerializeField]
+        private InputSourceEnum m_InputSourceType = InputSourceEnum.Controller;
         /// <summary> The click interval. </summary>
         [SerializeField]
         private float m_ClickInterval = 0.3f;
@@ -84,9 +94,15 @@ namespace NRKernal
         private bool m_ControllerVisualActive = true;
         /// <summary> True to enable, false to disable the haptic vibration. </summary>
         private bool m_HapticVibrationEnabled = true;
+        /// <summary> True to active, false to disactive the gameobjects of raycasters. </summary>
+        private bool m_RaycastersActive = true;
+        /// <summary> Whether has checked the camera center. </summary>
+        private bool m_HasCheckedCameraCenter;
+        /// <summary> True means will do something OnValidate. </summary>
+        private bool m_IsListeningToEditorValidateEvents = false;
+        /// <summary> The cached input source type in Editor. </summary>
+        private InputSourceEnum m_EditorCachedInputSourceType = InputSourceEnum.Controller;
 
-        /// <summary> The instance. </summary>
-        private static NRInput m_Instance = null;
         /// <summary> True to ignore recenter callback. </summary>
         private static bool m_IgnoreRecenterCallback = false;
         /// <summary> The domain hand. </summary>
@@ -142,6 +158,11 @@ namespace NRKernal
         /// <value> True if haptic vibration enabled, false if not. </value>
         public static bool HapticVibrationEnabled { get { return Instance.m_HapticVibrationEnabled; } set { Instance.m_HapticVibrationEnabled = value; } }
 
+        /// <summary>
+        /// Determine whether to active raycaster gameobjects, could be get and set at runtime. </summary>
+        /// <value> True if active raycaster gameobjects, false if not. </value>
+        public static bool RaycastersActive { get { return Instance.m_RaycastersActive; } set { Instance.m_RaycastersActive = value; } }
+
         /// <summary> Determine whether emulate phone virtual display in Unity Editor. </summary>
         /// <value> True if emulate virtual display in editor, false if not. </value>
         public static bool EmulateVirtualDisplayInEditor { get { return Instance ? Instance.m_EmulateVirtualDisplayInEditor : false; } }
@@ -158,6 +179,10 @@ namespace NRKernal
         /// <value> The raycast mode. </value>
         public static RaycastModeEnum RaycastMode { get { return Instance.m_RaycastMode; } set { Instance.m_RaycastMode = value; } }
 
+        /// <summary> Get the current input source type. </summary>
+        /// <value> The input source type. </value>
+        public static InputSourceEnum CurrentInputSourceType { get { return Instance.m_InputSourceType; } }
+
         /// <summary> Get and set button click interval. </summary>
         /// <value> The click interval. </value>
         public static float ClickInterval { get { return Instance.m_ClickInterval; } set { Instance.m_ClickInterval = value; } }
@@ -170,6 +195,9 @@ namespace NRKernal
         /// <value> The camera center. </value>
         public static Transform CameraCenter { get { return Instance.GetCameraCenter(); } }
 
+        /// <summary> The HandsManager which controls the hand-tracking. </summary>
+        public static HandsManager Hands = new HandsManager();
+
         /// <summary> Starts this object. </summary>
         private void Start()
         {
@@ -178,10 +206,6 @@ namespace NRKernal
                 return;
             }
             Init();
-#if UNITY_EDITOR
-            // For Emulator Init
-            InitEmulator();
-#endif
         }
 
         /// <summary> Executes the 'update' action. </summary>
@@ -199,7 +223,9 @@ namespace NRKernal
             {
                 m_ControllerProvider.Update();
                 if (OnControllerStatesUpdated != null)
+                {
                     OnControllerStatesUpdated();
+                }
                 CheckControllerConnection();
                 CheckControllerRecentered();
                 CheckControllerButtonEvents();
@@ -207,6 +233,13 @@ namespace NRKernal
             else
             {
                 m_ControllerProvider.Update();
+#if !UNITY_EDITOR
+                if (m_ControllerProvider is NRControllerProvider)
+                {
+                    m_DomainHand = ((NRControllerProvider)m_ControllerProvider).GetHandednessType();
+                    NRDebugger.Info("[NRInput] Set default domain hand:" + m_DomainHand);
+                }
+#endif
             }
         }
 
@@ -231,6 +264,19 @@ namespace NRKernal
             NRKernalUpdater.OnPostUpdate -= OnUpdate;
             m_ControllerProvider?.OnPause();
         }
+
+#if UNITY_EDITOR
+        /// <summary> Executes the 'validate' action. </summary>
+        private void OnValidate()
+        {
+            if (!m_IsListeningToEditorValidateEvents)
+                return;
+            if (m_EditorCachedInputSourceType != m_InputSourceType)
+            {
+                SetInputSource(m_InputSourceType);
+            }
+        }
+#endif
 
         /// <summary> Gets a version. </summary>
         /// <param name="index"> Zero-based index of the.</param>
@@ -278,12 +324,16 @@ namespace NRKernal
             if (m_LastControllerCount < currentControllerCount)
             {
                 if (OnControllerConnected != null)
+                {
                     OnControllerConnected();
+                }
             }
             else if (m_LastControllerCount > currentControllerCount)
             {
                 if (OnControllerDisconnected != null)
+                {
                     OnControllerDisconnected();
+                }
             }
             m_LastControllerCount = currentControllerCount;
         }
@@ -294,11 +344,17 @@ namespace NRKernal
             if (GetControllerState(DomainHand).recentered)
             {
                 if (m_IgnoreRecenterCallback == false && OnBeforeControllerRecenter != null)
+                {
                     OnBeforeControllerRecenter();
+                }
                 if (OnControllerRecentering != null)
+                {
                     OnControllerRecentering();
+                }
                 if (m_IgnoreRecenterCallback == false && OnControllerRecentered != null)
+                {
                     OnControllerRecentered();
+                }
                 m_IgnoreRecenterCallback = false;
             }
         }
@@ -334,10 +390,17 @@ namespace NRKernal
         /// <summary> Initializes this object. </summary>
         private void Init()
         {
+            NRDebugger.Info("[NRInput] Init");
             NRDevice.Instance.Init();
             m_VisualManager = gameObject.AddComponent<ControllerVisualManager>();
             m_VisualManager.Init(m_States);
-            m_ControllerProvider = ControllerProviderFactory.CreateControllerProvider(m_States);
+            SwitchControllerProvider(ControllerProviderFactory.androidControllerProviderType);
+
+#if UNITY_EDITOR
+            InitEmulator();
+            m_IsListeningToEditorValidateEvents = true;
+#endif
+            SetInputSourceSafely(m_InputSourceType);
         }
 
         /// <summary> Initializes the emulator. </summary>
@@ -358,18 +421,35 @@ namespace NRKernal
         /// <returns> The camera center. </returns>
         private Transform GetCameraCenter()
         {
-            if (m_OverrideCameraCenter)
+            if (m_OverrideCameraCenter == null)
             {
-                return m_OverrideCameraCenter;
-            }
-            if (NRSessionManager.Instance.CenterCameraAnchor != null)
-            {
+                m_HasCheckedCameraCenter = true;
                 return NRSessionManager.Instance.CenterCameraAnchor;
             }
             else
             {
-                return Camera.main?.transform;
+                if (!m_HasCheckedCameraCenter)
+                {
+                    CheckCameraCenter();
+                }
+                return m_OverrideCameraCenter;
             }
+        }
+
+        /// <summary> To guarantee the camera center was right. </summary>
+        private void CheckCameraCenter()
+        {
+            if (m_OverrideCameraCenter != null 
+                && NRSessionManager.Instance != null 
+                && NRSessionManager.Instance.NRSessionBehaviour != null)
+            {
+                var cameraRigTransform = NRSessionManager.Instance.NRSessionBehaviour.transform;
+                if (m_OverrideCameraCenter.parent == cameraRigTransform)
+                {
+                    m_OverrideCameraCenter = NRSessionManager.Instance.CenterCameraAnchor;
+                }
+            }
+            m_HasCheckedCameraCenter = true;
         }
 
         /// <summary> Convert hand to index. </summary>
@@ -378,8 +458,13 @@ namespace NRKernal
         private static int ConvertHandToIndex(ControllerHandEnum handEnum)
         {
             if (GetAvailableControllersCount() < 2)
+            {
                 return DomainHand == handEnum ? 0 : 1;
-            return (int)handEnum;
+            }
+            else
+            {
+                return (int)handEnum;
+            }
         }
 
         /// <summary> Gets controller state. </summary>
@@ -390,6 +475,43 @@ namespace NRKernal
             return m_States[ConvertHandToIndex(hand)];
         }
 
+        /// <summary>
+        /// Set the current input source with fallback
+        /// </summary>
+        /// <param name="inputSourceType"></param>
+        private static void SetInputSourceSafely(InputSourceEnum inputSourceType)
+        {
+            if (SetInputSource(inputSourceType))
+            {
+                return;
+            }
+            var fallbackInputSourceType = InputSourceEnum.Controller;
+            NRDebugger.Info("[NRInput] Set Input Source To {0} Failed. Now Set Input Source To Fallback: {1}", inputSourceType, fallbackInputSourceType);
+            SetInputSource(fallbackInputSourceType);
+        }
+
+        /// <summary>
+        /// To swith the controller provider
+        /// </summary>
+        /// <param name="providerType"></param>
+        internal static void SwitchControllerProvider(Type providerType)
+        {
+            if (m_ControllerProvider != null && m_ControllerProvider.GetType() == providerType)
+                return;
+            var nextControllerProvider = ControllerProviderFactory.GetOrCreateControllerProvider(providerType, m_States);
+            if (nextControllerProvider == null)
+                return;
+            if (m_ControllerProvider != null)
+            {
+                m_ControllerProvider.OnPause();
+            }
+            m_ControllerProvider = nextControllerProvider;
+            if (m_ControllerProvider != null)
+            {
+                m_ControllerProvider.OnResume();
+            }
+        }
+
         /// <summary> Set the current enumeration of handedness. </summary>
         /// <param name="handEnum"> .</param>
         public static void SetDomainHandMode(ControllerHandEnum handEnum)
@@ -398,7 +520,45 @@ namespace NRKernal
                 return;
             m_DomainHand = handEnum;
             if (OnDomainHandChanged != null)
+            {
                 OnDomainHandChanged(m_DomainHand);
+            }
+        }
+
+        /// <summary> Set the current input source. </summary>
+        /// <param name="inputSourceType"></param>
+        /// <returns> The result of setting input source. </returns>
+        public static bool SetInputSource(InputSourceEnum inputSourceType)
+        {
+            NRDebugger.Info("[NRInput] Set Input Source: " + inputSourceType);
+            if (Instance == null)
+            {
+                return false;
+            }
+
+            bool success = true;
+            switch (inputSourceType)
+            {
+                case InputSourceEnum.Hands:
+                    success = Hands.StartHandTracking();
+                    break;
+                case InputSourceEnum.Controller:
+                    success = Hands.StopHandTracking();
+                    break;
+                default:
+                    break;
+            }
+
+            if (success)
+            {
+                Instance.m_InputSourceType = inputSourceType;
+
+#if UNITY_EDITOR
+                Instance.m_EditorCachedInputSourceType = inputSourceType;
+#endif
+            }
+            NRDebugger.Info("[NRInput] Input Source Set. Current Input Source = " + CurrentInputSourceType);
+            return success;
         }
 
         /// <summary> Get the current count of controllers which are connected and available. </summary>
@@ -406,7 +566,9 @@ namespace NRKernal
         public static int GetAvailableControllersCount()
         {
             if (m_ControllerProvider == null)
+            {
                 return 0;
+            }
             return m_ControllerProvider.ControllerCount;
         }
 
@@ -429,11 +591,20 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public static bool CheckControllerAvailable(ControllerHandEnum handEnum)
         {
+            if (m_ControllerProvider is NRHandControllerProvider)
+            {
+                return Hands.GetHandState(handEnum == ControllerHandEnum.Right ? HandEnum.RightHand : HandEnum.LeftHand).pointerPoseValid;
+            }
+
             int availableCount = GetAvailableControllersCount();
             if (availableCount == 2)
+            {
                 return true;
+            }
             if (availableCount == 1)
+            {
                 return handEnum == DomainHand;
+            }
             return false;
         }
 
@@ -495,8 +666,7 @@ namespace NRKernal
         }
 
         /// <summary>
-        /// Returns the current position of the domain controller if 6dof, otherwise returns
-        /// Vector3.zero. </summary>
+        /// Returns the current position of the domain controller if 6dof, otherwise returns Vector3.zero. </summary>
         /// <returns> The position. </returns>
         public static Vector3 GetPosition()
         {
@@ -555,10 +725,6 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public static bool GetButton(ControllerHandEnum hand, ControllerButton button)
         {
-            if (NRInput.GetControllerType() == ControllerType.CONTROLLER_TYPE_NREALLIGHT && button == ControllerButton.TRIGGER)
-            {
-                return GetControllerState(hand).GetButton(button) || GetControllerState(hand).GetButton(ControllerButton.APP);
-            }
             return GetControllerState(hand).GetButton(button);
         }
 
@@ -569,10 +735,6 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public static bool GetButtonDown(ControllerHandEnum hand, ControllerButton button)
         {
-            if (NRInput.GetControllerType() == ControllerType.CONTROLLER_TYPE_NREALLIGHT && button == ControllerButton.TRIGGER)
-            {
-                return GetControllerState(hand).GetButtonDown(button) || GetControllerState(hand).GetButtonDown(ControllerButton.APP);
-            }
             return GetControllerState(hand).GetButtonDown(button);
         }
 
@@ -583,10 +745,6 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public static bool GetButtonUp(ControllerHandEnum hand, ControllerButton button)
         {
-            if (NRInput.GetControllerType() == ControllerType.CONTROLLER_TYPE_NREALLIGHT && button == ControllerButton.TRIGGER)
-            {
-                return GetControllerState(hand).GetButtonUp(button) || GetControllerState(hand).GetButtonUp(ControllerButton.APP);
-            }
             return GetControllerState(hand).GetButtonUp(button);
         }
 

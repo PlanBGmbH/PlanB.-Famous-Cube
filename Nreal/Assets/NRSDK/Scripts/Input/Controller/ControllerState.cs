@@ -13,7 +13,6 @@ namespace NRKernal
     using System.Collections.Generic;
     using UnityEngine;
 
-
     /// <summary> Values that represent controller types. </summary>
     public enum ControllerType
     {
@@ -25,8 +24,8 @@ namespace NRKernal
         CONTROLLER_TYPE_NREALLIGHT = 0,
         /// <summary> An enum constant representing the controller type phone option. </summary>
         CONTROLLER_TYPE_PHONE = 1,
-        /// <summary> An enum constant representing the controller type finchshift option. </summary>
-        CONTROLLER_TYPE_FINCHSHIFT = 2
+        /// <summary> An enum constant representing the controller type hand option. </summary>
+        CONTROLLER_TYPE_HAND = 2
     }
 
     /// <summary> Values that represent controller available features. </summary>
@@ -92,6 +91,12 @@ namespace NRKernal
         /// <summary>
         /// An enum constant representing the controller connection state connected option. </summary>
         CONTROLLER_CONNECTION_STATE_CONNECTED = 3
+    }
+
+    internal enum HandednessType
+    {
+        LEFT_HANDEDNESS = 1,
+        RIGHT_HANDEDNESS,
     }
 
     /// <summary> Values that represent button event types. </summary>

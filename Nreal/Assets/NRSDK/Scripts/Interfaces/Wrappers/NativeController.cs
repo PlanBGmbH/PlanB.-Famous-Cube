@@ -379,6 +379,14 @@ namespace NRKernal
             return System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
         }
 
+        public HandednessType GetHandednessType()
+        {
+            HandednessType handedness_type = HandednessType.RIGHT_HANDEDNESS;
+            var result = NativeApi.NRControllerGetHandednessType(m_ControllerHandle, ref handedness_type);
+            NativeErrorListener.Check(result, this, "GetHandednessType");
+            return handedness_type;
+        }
+
         private partial struct NativeApi
         {
             /// <summary> Nr controller create. </summary>
@@ -592,6 +600,13 @@ namespace NRKernal
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRControllerGetVersion(UInt64 controller_handle, int controller_index, byte[] out_version, int len);
+
+            /// <summary> Get the handedness left or right. </summary>
+            /// <param name="controller_handle">    The handle of controller state object. </param>
+            /// <param name="handedness_type">      The handedness type returned. </param>
+            /// <returns>The result of operation.</returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRControllerGetHandednessType(UInt64 controller_handle, ref HandednessType handedness_type);
         };
     }
 }

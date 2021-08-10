@@ -595,7 +595,7 @@ Camera:
   m_PrefabInternal: {fileID: 1153780555}
 --- !u!4 &1153780557 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 4529309942957008, guid: 665d8158924bd2648a94fb3f87691bbb,
+  m_CorrespondingSourceObject: {fileID: 4154700624755278, guid: 665d8158924bd2648a94fb3f87691bbb,
     type: 2}
   m_PrefabInternal: {fileID: 1153780555}
 --- !u!1 &1180201240

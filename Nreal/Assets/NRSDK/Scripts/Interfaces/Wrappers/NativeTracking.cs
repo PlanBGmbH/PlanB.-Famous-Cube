@@ -126,18 +126,6 @@ namespace NRKernal
             return result == NativeResult.Success;
         }
 
-        /// <summary> Updates the trackables. </summary>
-        /// <param name="trackable_list_handle"> Handle of the trackable list.</param>
-        /// <param name="trackable_type">        Type of the trackable.</param>
-        public void UpdateTrackables(UInt64 trackable_list_handle, TrackableType trackable_type)
-        {
-            if (m_TrackingHandle == 0)
-            {
-                return;
-            }
-            NativeApi.NRTrackingUpdateTrackables(m_NativeInterface.TrackingHandle, trackable_type, trackable_list_handle);
-        }
-
         private partial struct NativeApi
         {
             /// <summary> Nr tracking create. </summary>
@@ -189,15 +177,6 @@ namespace NRKernal
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRTrackingRecenter(UInt64 tracking_handle);
-
-            /// <summary> Nr tracking update trackables. </summary>
-            /// <param name="tracking_handle">           Handle of the tracking.</param>
-            /// <param name="trackable_type">            Type of the trackable.</param>
-            /// <param name="out_trackable_list_handle"> Handle of the out trackable list.</param>
-            /// <returns> A NativeResult. </returns>
-            [DllImport(NativeConstants.NRNativeLibrary)]
-            public static extern NativeResult NRTrackingUpdateTrackables(UInt64 tracking_handle,
-               TrackableType trackable_type, UInt64 out_trackable_list_handle);
         };
     }
 }

@@ -16,7 +16,7 @@ namespace NRKernal.Record
     {
         /// <summary> Updates the image frame described by frame. </summary>
         /// <param name="frame"> The frame.</param>
-        public delegate void UpdateImageFrame(CameraTextureFrame frame);
+        public delegate void UpdateImageFrame(UniversalTextureFrame frame);
         /// <summary> The on update. </summary>
         public UpdateImageFrame OnUpdate;
         /// <summary> True if is frame ready, false if not. </summary>

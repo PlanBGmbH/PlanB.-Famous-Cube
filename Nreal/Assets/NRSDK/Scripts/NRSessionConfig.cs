@@ -37,7 +37,16 @@ namespace NRKernal
 
         /// <summary> A prefab specifying the NRSDK TrackingImageDatabase configuration. </summary>
         [Tooltip("An error prompt will pop up when the device fails to connect.")]
-        public NRGlassesInitErrorTip ErrorTipsPrefab;
+        public NRGlassesInitErrorTip GlassesErrorTipPrefab;
+
+        /// <summary> A prefab specifying the NRSDK TrackingImageDatabase configuration. </summary>
+        [Tooltip("An warnning prompt will pop up when the lost tracking.")]
+        public NRTrackingModeChangedTip TrackingModeChangeTipPrefab;
+
+        /// <summary> Read it from PlayerdSetting automatically . </summary>
+        [Tooltip("It will be read automatically from PlayerdSetting. ")]
+        [HideInInspector]
+        public bool UseMultiThread = false;
 
 
         /// <summary> ValueType check if two NRSessionConfig objects are equal. </summary>
@@ -76,8 +85,10 @@ namespace NRKernal
             PlaneFindingMode = other.PlaneFindingMode;
             ImageTrackingMode = other.ImageTrackingMode;
             TrackingImageDatabase = other.TrackingImageDatabase;
+            GlassesErrorTipPrefab = other.GlassesErrorTipPrefab;
+            TrackingModeChangeTipPrefab = other.TrackingModeChangeTipPrefab;
+            UseMultiThread = other.UseMultiThread;
             EnableNotification = other.EnableNotification;
-            ErrorTipsPrefab = other.ErrorTipsPrefab;
         }
     }
 }

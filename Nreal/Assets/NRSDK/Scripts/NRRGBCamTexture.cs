@@ -15,7 +15,7 @@ namespace NRKernal
     /// <summary> Create a rgb camera texture. </summary>
     public class NRRGBCamTexture : CameraModelView
     {
-        /// <summary> The on update. </summary>
+        /// <summary> When the data of RGBCamera is updated, it will be called. </summary>
         public Action<CameraTextureFrame> OnUpdate;
         /// <summary> The current frame. </summary>
         public CameraTextureFrame CurrentFrame;

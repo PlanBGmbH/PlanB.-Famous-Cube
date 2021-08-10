@@ -30,6 +30,8 @@ namespace NRKernal
         public virtual NativeResolution Resolution { get; }
         /// <summary> True if is initialized, false if not. </summary>
         private bool m_IsInitialized = false;
+        /// <summary> True if the format has been set, false if not. </summary>
+        private bool m_IsImageFormatSet = false;
         /// <summary> The last frame. </summary>
         protected int m_LastFrame = -1;
         /// <summary> True if is playing, false if not. </summary>
@@ -105,13 +107,19 @@ namespace NRKernal
                     return frame;
                 }
             }
+
+            public void Clear()
+            {
+                m_ObjectPool.Clear();
+                m_Queue.Clear();
+            }
         }
         /// <summary> The camera frames. </summary>
         protected FixedSizedQueue m_CameraFrames;
         /// <summary> The frame pool. </summary>
         protected ObjectPool FramePool;
         /// <summary> The active textures. </summary>
-        protected List<CameraModelView> m_ActiveTextures;
+        protected static List<CameraModelView> m_ActiveTextures;
 
         /// <summary> Specialized constructor for use only by derived class. </summary>
         /// <param name="provider"> The provider.</param>
@@ -156,7 +164,26 @@ namespace NRKernal
         /// <param name="tex"> The tex to remove.</param>
         public void Regist(CameraModelView tex)
         {
-            m_ActiveTextures.Add(tex);
+            if (m_ActiveTextures == null)
+            {
+                m_ActiveTextures = new List<CameraModelView>();
+            }
+            if (!m_ActiveTextures.Contains(tex))
+            {
+                m_ActiveTextures.Add(tex);
+            }
+        }
+
+        public static CameraImageFormat GetActiveCameraImageFormat()
+        {
+            if (m_ActiveTextures != null && m_ActiveTextures.Count > 0)
+            {
+                return m_ActiveTextures[0].ImageFormat;
+            }
+            else
+            {
+                return CameraImageFormat.RGB_888;
+            }
         }
 
         /// <summary> Removes the given tex. </summary>
@@ -181,9 +208,16 @@ namespace NRKernal
         /// <param name="format"> Describes the format to use.</param>
         public void SetImageFormat(CameraImageFormat format)
         {
-#if !UNITY_EDITOR
-            CameraDataProvider.SetImageFormat(format);
-#endif
+            if (!m_IsInitialized)
+            {
+                Initialize();
+            }
+            if (m_IsImageFormatSet)
+            {
+                return;
+            }
+
+            m_IsImageFormatSet = CameraDataProvider.SetImageFormat(format);
             NRDebugger.Info("[CameraController] SetImageFormat : " + format.ToString());
         }
 
@@ -198,18 +232,29 @@ namespace NRKernal
             {
                 return;
             }
-            NRDebugger.Info("[CameraController] Start to play");
-#if !UNITY_EDITOR
-            CameraDataProvider.StartCapture();
-#endif
+
             m_IsPlaying = true;
+
+            AsyncTaskExecuter.Instance.RunAction(() =>
+            {
+                lock (this)
+                {
+                    NRDebugger.Info("[CameraController] Start to play, result:" + m_IsPlaying);
+                    m_IsPlaying = CameraDataProvider.StartCapture();
+                }
+            });
         }
 
         /// <summary> Query if this object has frame. </summary>
         /// <returns> True if frame, false if not. </returns>
         public bool HasFrame()
         {
-            return m_IsPlaying && (m_CameraFrames.Count > 0 || m_CurrentFrame.data != null);
+            // To prevent the problem that the object behind can not be acquired when the same frame is fetched more than once.
+            if (Time.frameCount == m_LastFrame)
+            {
+                return true;
+            }
+            return m_IsPlaying && m_CameraFrames.Count > 0;
         }
 
         /// <summary> Gets the frame. </summary>
@@ -218,7 +263,9 @@ namespace NRKernal
         {
             if (Time.frameCount != m_LastFrame && m_CameraFrames.Count > 0)
             {
+                // Get the newest frame of the queue.
                 m_CurrentFrame = m_CameraFrames.Dequeue();
+
                 m_LastFrame = Time.frameCount;
             }
 
@@ -261,21 +308,21 @@ namespace NRKernal
             {
                 return;
             }
-            NRDebugger.Info("[CameraController] Start to Stop");
 
             // If there is no a active texture, pause and release camera resource.
             if (m_ActiveTextures.Count == 0)
             {
-                m_IsPlaying = false;
-#if !UNITY_EDITOR
-                CameraDataProvider.StopCapture();
-#endif
-                Release();
+                lock (this)
+                {
+                    m_IsPlaying = !CameraDataProvider.StopCapture();
+                    NRDebugger.Info("[CameraController] Start to Stop,result:" + !m_IsPlaying);
+                    Release();
+                }
             }
         }
 
         /// <summary> Release the camera. </summary>
-        public virtual void Release()
+        protected virtual void Release()
         {
             if (CameraDataProvider == null)
             {
@@ -283,13 +330,14 @@ namespace NRKernal
             }
 
             NRDebugger.Info("[CameraController] Start to Release");
-
-            //#if !UNITY_EDITOR
-            //            CameraDataProvider.Release();
-            //            CameraDataProvider = null;
-            //#endif
+            CameraDataProvider.Release();
+            m_CameraFrames.Clear();
+            m_CameraFrames = null;
             m_CurrentFrame.data = null;
+            m_ActiveTextures.Clear();
+            m_ActiveTextures = null;
             m_IsInitialized = false;
+            m_IsImageFormatSet = false;
             m_IsPlaying = false;
         }
     }

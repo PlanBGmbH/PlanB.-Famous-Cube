@@ -35,11 +35,10 @@ namespace NRKernal
         /// <summary> The far away position. </summary>
         private static Vector3 m_FarAwayPos = Vector3.one * 10000f;
 
-        /// <summary> <para>See MonoBehaviour.Start.</para> </summary>
-        protected override void Start()
+        /// <summary> <para>See MonoBehaviour.Awake.</para> </summary>
+        protected override void Awake()
         {
-            base.Start();
-
+            base.Awake();
             m_UICamera = gameObject.GetComponent<Camera>();
             //var resolution = NRPhoneScreen.Resolution * NRVirtualDisplayer.ScaleFactor;
             var resolution = NRPhoneScreen.Resolution;

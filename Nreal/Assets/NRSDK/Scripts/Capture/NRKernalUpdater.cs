@@ -13,7 +13,7 @@ namespace NRKernal
     using System;
 
     /// <summary> A nr kernal updater used to drive the lifecycle. </summary>
-    [ScriptOrder(-1000)]
+    [ScriptOrder(NativeConstants.NRKERNALUPDATER_ORDER)]
     public class NRKernalUpdater : MonoBehaviour
     {
         /// <summary> The instance. </summary>
@@ -24,7 +24,7 @@ namespace NRKernal
         {
             get
             {
-                if (m_Instance == null)
+                if (m_Instance == null && !m_IsDestroyed)
                 {
                     m_Instance = CreateInstance();
                 }
@@ -32,7 +32,6 @@ namespace NRKernal
             }
         }
 
-        /// <summary> Initializes this object. </summary>
         [RuntimeInitializeOnLoadMethod]
         static void Initialize()
         {
@@ -67,6 +66,13 @@ namespace NRKernal
             OnPreUpdate?.Invoke();
             OnUpdate?.Invoke();
             OnPostUpdate?.Invoke();
+        }
+
+        private static bool m_IsDestroyed = false;
+        private void OnDestroy()
+        {
+            m_Instance = null;
+            m_IsDestroyed = true;
         }
     }
 }

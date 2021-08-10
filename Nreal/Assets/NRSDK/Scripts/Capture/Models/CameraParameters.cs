@@ -20,13 +20,14 @@ namespace NRKernal.Record
         {
             this.camMode = webCamMode;
             this.hologramOpacity = 1f;
-            this.frameRate = 20;
+            this.frameRate = 30;
 
             this.cameraResolutionWidth = 1280;
             this.cameraResolutionHeight = 720;
 
             this.pixelFormat = CapturePixelFormat.BGRA32;
             this.blendMode = mode;
+            this.audioState = NRVideoCapture.AudioState.MicAudio;
         }
 
         /// <summary> The opacity of captured holograms. </summary>
@@ -39,7 +40,6 @@ namespace NRKernal.Record
         public int frameRate { get; set; }
 
         /// <summary> A valid width resolution for use with the web camera. </summary>
-        /// <value> The width of the camera resolution. </value>
         public int cameraResolutionWidth { get; set; }
 
         /// <summary> A valid height resolution for use with the web camera. </summary>
@@ -47,15 +47,16 @@ namespace NRKernal.Record
         public int cameraResolutionHeight { get; set; }
 
         /// <summary> The pixel format used to capture and record your image data. </summary>
-        /// <value> The pixel format. </value>
         public CapturePixelFormat pixelFormat { get; set; }
 
         /// <summary> The camera mode of capture. </summary>
         /// <value> The camera mode. </value>
         public CamMode camMode { get; set; }
 
+        /// <summary> The audio state of capture. </summary>
+        public NRVideoCapture.AudioState audioState { get; set; }
+
         /// <summary> The blend mode of camera output. </summary>
-        /// <value> The blend mode. </value>
         public BlendMode blendMode { get; set; }
     }
 }

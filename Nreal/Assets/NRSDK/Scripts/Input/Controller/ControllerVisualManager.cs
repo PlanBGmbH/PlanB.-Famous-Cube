@@ -49,7 +49,9 @@ namespace NRKernal
         public void ChangeControllerVisual(int index, ControllerVisualType visualType)
         {
             if (m_ControllerVisuals[index] != null)
+            {
                 DestroyVisual(index);
+            }
             CreateControllerVisual(index, visualType);
         }
 
@@ -82,11 +84,16 @@ namespace NRKernal
         /// <param name="state"> The state.</param>
         private void UpdateVisual(int index, ControllerState state)
         {
-            if (m_ControllerVisuals[index] == null && state.controllerType != ControllerType.CONTROLLER_TYPE_UNKNOWN)
+            ControllerVisualType visualType = ControllerVisualFactory.GetDefaultVisualType(state.controllerType);
+            if (m_ControllerVisuals[index] != null && visualType == ControllerVisualType.None)
             {
-                ControllerVisualType visualType = ControllerVisualFactory.GetDefaultVisualType(state.controllerType);
+                DestroyVisual(index);
+            }
+            else if (m_ControllerVisuals[index] == null && visualType != ControllerVisualType.None)
+            {
                 CreateControllerVisual(index, visualType);
             }
+
             if (m_ControllerVisuals[index] != null)
             {
                 m_ControllerVisuals[index].SetActive(NRInput.ControllerVisualActive);

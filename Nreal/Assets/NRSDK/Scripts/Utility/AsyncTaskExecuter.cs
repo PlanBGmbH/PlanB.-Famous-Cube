@@ -33,7 +33,7 @@ namespace NRKernal
         {
             while (true)
             {
-                Thread.Sleep(10);
+                Thread.Sleep(5);
                 if (m_TaskQueue.Count != 0)
                 {
                     lock (m_TaskQueue)
@@ -56,7 +56,7 @@ namespace NRKernal
 
         /// <summary> Executes the action. </summary>
         /// <param name="task"> The task.</param>
-        internal void RunAction(Action task)
+        public void RunAction(Action task)
         {
             lock (m_TaskQueue)
             {
@@ -87,12 +87,12 @@ namespace NRKernal
                     }
                     try
                     {
-                        NRDebugger.Info("[AsyncTaskExecuter] RunTimeout opration...");
+                        NRDebugger.Info("[AsyncTaskExecuter] Run action timeout...");
                         timeoutOpration?.Invoke();
                     }
                     catch (Exception e)
                     {
-                        NRDebugger.Error("Run timeout opration exeption:" + e.ToString());
+                        NRDebugger.Error("[AsyncTaskExecuter] Run action timeout exeption:" + e.ToString());
                         throw;
                     }
                 }, cancleToken.Token);

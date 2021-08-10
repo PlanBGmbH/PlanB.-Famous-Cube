@@ -42,7 +42,7 @@ namespace NRKernal.Record
         /// <param name="config"> The configuration.</param>
         public void SetConfigration(NativeEncodeConfig config)
         {
-            var result = NativeApi.HWEncoderSetConfigration(EncodeHandle, LitJson.JsonMapper.ToJson(config));
+            var result = NativeApi.HWEncoderSetConfigration(EncodeHandle, config.ToString());
             NativeErrorListener.Check(result, this, "SetConfigration");
         }
 

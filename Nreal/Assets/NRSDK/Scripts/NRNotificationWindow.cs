@@ -46,13 +46,15 @@ namespace NRKernal
         [SerializeField]
         private Button m_ConfirmBtn;
 
+        public Action OnConfirm;
+
         /// <summary> The duration. </summary>
         private float m_Duration = 2f;
 
         /// <summary> Fill data. </summary>
         /// <param name="level">    The level.</param>
         /// <param name="duration"> (Optional) The duration.</param>
-        public virtual void FillData(NRNotificationListener.Level level, float duration = 2f)
+        public virtual NRNotificationWindow FillData(NRNotificationListener.Level level, float duration = 2f, Action onConfirm = null)
         {
             NotificationInfo info;
 
@@ -68,23 +70,39 @@ namespace NRKernal
                 case NRNotificationListener.Level.Low:
                 default:
                     GameObject.Destroy(gameObject);
-                    return;
+                    return this;
             }
 
             m_Title.text = info.title;
             m_Message.text = info.message;
             m_Duration = duration;
             m_Icon.sprite = info.sprite;
+            OnConfirm += onConfirm;
 
             m_ConfirmBtn?.onClick.AddListener(() =>
             {
-                NRDevice.QuitApp();
+                OnConfirm?.Invoke();
+                AutoDestroy();
             });
 
             if (m_Duration > 0)
             {
                 Invoke("AutoDestroy", m_Duration);
             }
+
+            return this;
+        }
+
+        public NRNotificationWindow SetTitle(string title)
+        {
+            m_Title.text = title;
+            return this;
+        }
+
+        public NRNotificationWindow SetContent(string content)
+        {
+            m_Message.text = content;
+            return this;
         }
 
         /// <summary> Automatic destroy. </summary>

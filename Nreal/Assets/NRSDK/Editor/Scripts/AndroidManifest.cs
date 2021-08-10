@@ -145,10 +145,10 @@ namespace NRKernal
                 XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.CAMERA");
                 child.Attributes.Append(newAttribute);
             }
-            else
-            {
-                NRDebugger.Info("Already has the camera permission.");
-            }
+            //else
+            //{
+            //    NRDebugger.Info("Already has the camera permission.");
+            //}
         }
 
         internal void SetPackageReadPermission()
@@ -161,10 +161,10 @@ namespace NRKernal
                 XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.QUERY_ALL_PACKAGES");
                 child.Attributes.Append(newAttribute);
             }
-            else
-            {
-                NRDebugger.Info("Already has the permission of 'android.permission.QUERY_ALL_PACKAGES'.");
-            }
+            //else
+            //{
+            //    NRDebugger.Info("Already has the permission of 'android.permission.QUERY_ALL_PACKAGES'.");
+            //}
         }
 
         /// <summary> Sets blue tooth permission. </summary>
@@ -180,9 +180,21 @@ namespace NRKernal
                 newAttribute = CreateAndroidAttribute("name", "android.permission.BLUETOOTH_ADMIN");
                 child.Attributes.Append(newAttribute);
             }
-            else
+            //else
+            //{
+            //    NRDebugger.Info("Already has the bluetooth permission.");
+            //}
+        }
+
+        internal void SetAudioRecordPermission()
+        {
+            var manifest = SelectSingleNode("/manifest");
+            if (!manifest.InnerXml.Contains("android.permission.RECORD_AUDIO"))
             {
-                NRDebugger.Info("Already has the bluetooth permission.");
+                XmlElement child = CreateElement("uses-permission");
+                manifest.AppendChild(child);
+                XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.RECORD_AUDIO");
+                child.Attributes.Append(newAttribute);
             }
         }
 
@@ -208,10 +220,10 @@ namespace NRKernal
                 newAttribute = CreateAndroidAttribute("value", "true");
                 child.Attributes.Append(newAttribute);
             }
-            else
-            {
-                NRDebugger.Info("Already has the sdk meta data.");
-            }
+            //else
+            //{
+            //    NRDebugger.Info("Already has the sdk meta data.");
+            //}
         }
 
         /// <summary> Sets a pk displayed on launcher. </summary>

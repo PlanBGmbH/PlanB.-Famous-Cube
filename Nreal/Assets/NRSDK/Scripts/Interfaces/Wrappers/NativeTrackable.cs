@@ -10,6 +10,7 @@
 namespace NRKernal
 {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.InteropServices;
 
     /// <summary> 6-dof Trackable's Native API . </summary>
@@ -25,57 +26,28 @@ namespace NRKernal
             m_NativeInterface = nativeInterface;
         }
 
-        /// <summary> Creates trackable list. </summary>
-        /// <returns> The new trackable list. </returns>
-        public UInt64 CreateTrackableList()
+        public bool UpdateTrackables(TrackableType trackable_type, List<UInt64> trackables)
         {
-            if (m_NativeInterface.TrackingHandle == 0)
+            if (m_NativeInterface == null || m_NativeInterface.TrackingHandle == 0)
             {
-                return 0;
+                return false;
             }
+
+            trackables.Clear();
             UInt64 trackable_list_handle = 0;
-            NativeApi.NRTrackableListCreate(m_NativeInterface.TrackingHandle, ref trackable_list_handle);
-            return trackable_list_handle;
-        }
-
-        /// <summary> Destroys the trackable list described by trackable_list_handle. </summary>
-        /// <param name="trackable_list_handle"> Handle of the trackable list.</param>
-        public void DestroyTrackableList(UInt64 trackable_list_handle)
-        {
-            if (m_NativeInterface.TrackingHandle == 0)
-            {
-                return;
-            }
-            NativeApi.NRTrackableListDestroy(m_NativeInterface.TrackingHandle, trackable_list_handle);
-        }
-
-        /// <summary> Gets a size. </summary>
-        /// <param name="trackable_list_handle"> Handle of the trackable list.</param>
-        /// <returns> The size. </returns>
-        public int GetSize(UInt64 trackable_list_handle)
-        {
-            if (m_NativeInterface.TrackingHandle == 0)
-            {
-                return 0;
-            }
+            var create_result = NativeApi.NRTrackableListCreate(m_NativeInterface.TrackingHandle, ref trackable_list_handle);
+            var update_result = NativeApi.NRTrackingUpdateTrackables(m_NativeInterface.TrackingHandle, trackable_type, trackable_list_handle);
             int list_size = 0;
-            NativeApi.NRTrackableListGetSize(m_NativeInterface.TrackingHandle, trackable_list_handle, ref list_size);
-            return list_size;
-        }
-
-        /// <summary> Acquires the item. </summary>
-        /// <param name="trackable_list_handle"> Handle of the trackable list.</param>
-        /// <param name="index">                 Zero-based index of the.</param>
-        /// <returns> An UInt64. </returns>
-        public UInt64 AcquireItem(UInt64 trackable_list_handle, int index)
-        {
-            if (m_NativeInterface.TrackingHandle == 0)
+            var getsize_result = NativeApi.NRTrackableListGetSize(m_NativeInterface.TrackingHandle, trackable_list_handle, ref list_size);
+            for (int i = 0; i < list_size; i++)
             {
-                return 0;
+                UInt64 trackable_handle = 0;
+                var acquireitem_result = NativeApi.NRTrackableListAcquireItem(m_NativeInterface.TrackingHandle, trackable_list_handle, i, ref trackable_handle);
+                if (acquireitem_result == NativeResult.Success) trackables.Add(trackable_handle);
             }
-            UInt64 trackable_handle = 0;
-            NativeApi.NRTrackableListAcquireItem(m_NativeInterface.TrackingHandle, trackable_list_handle, index, ref trackable_handle);
-            return trackable_handle;
+            var destroy_result = NativeApi.NRTrackableListDestroy(m_NativeInterface.TrackingHandle, trackable_list_handle);
+            return (create_result == NativeResult.Success) && (update_result == NativeResult.Success)
+                && (getsize_result == NativeResult.Success) && (destroy_result == NativeResult.Success);
         }
 
         /// <summary> Gets an identify. </summary>
@@ -132,11 +104,20 @@ namespace NRKernal
 
             /// <summary> Nr trackable list destroy. </summary>
             /// <param name="session_handle">            Handle of the session.</param>
-            /// <param name="out_trackable_list_handle"> Handle of the out trackable list.</param>
+            /// <param name="trackable_list_handle"> Handle of the out trackable list.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRTrackableListDestroy(UInt64 session_handle,
-                UInt64 out_trackable_list_handle);
+                UInt64 trackable_list_handle);
+
+            /// <summary> Nr tracking update trackables. </summary>
+            /// <param name="tracking_handle">           Handle of the tracking.</param>
+            /// <param name="trackable_type">            Type of the trackable.</param>
+            /// <param name="trackable_list_handle"> Handle of the out trackable list.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRTrackingUpdateTrackables(UInt64 tracking_handle,
+               TrackableType trackable_type, UInt64 trackable_list_handle);
 
             /// <summary> Nr trackable list get size. </summary>
             /// <param name="session_handle">        Handle of the session.</param>
@@ -151,11 +132,11 @@ namespace NRKernal
             /// <param name="session_handle">        Handle of the session.</param>
             /// <param name="trackable_list_handle"> Handle of the trackable list.</param>
             /// <param name="index">                 Zero-based index of the.</param>
-            /// <param name="out_trackable">         [in,out] The out trackable.</param>
+            /// <param name="out_trackable_item_handle">         [in,out] The out trackable.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRTrackableListAcquireItem(UInt64 session_handle,
-                UInt64 trackable_list_handle, int index, ref UInt64 out_trackable);
+                UInt64 trackable_list_handle, int index, ref UInt64 out_trackable_item_handle);
 
             /// <summary> Nr trackable get identifier. </summary>
             /// <param name="session_handle">   Handle of the session.</param>

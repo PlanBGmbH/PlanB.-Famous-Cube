@@ -391,6 +391,11 @@ Prefab:
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 665d8158924bd2648a94fb3f87691bbb, type: 2}
   m_IsPrefabAsset: 0
+--- !u!4 &736572257 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4154700624755278, guid: 665d8158924bd2648a94fb3f87691bbb,
+    type: 2}
+  m_PrefabInternal: {fileID: 736572256}
 --- !u!1001 &823195076
 Prefab:
   m_ObjectHideFlags: 0
@@ -534,12 +539,7 @@ Prefab:
         type: 2}
       propertyPath: m_OverrideCameraCenter
       value: 
-      objectReference: {fileID: 1827403671}
+      objectReference: {fileID: 736572257}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ad152f08ed7eb6e4abd93376a0203e38, type: 2}
   m_IsPrefabAsset: 0
---- !u!4 &1827403671 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4529309942957008, guid: 665d8158924bd2648a94fb3f87691bbb,
-    type: 2}
-  m_PrefabInternal: {fileID: 736572256}

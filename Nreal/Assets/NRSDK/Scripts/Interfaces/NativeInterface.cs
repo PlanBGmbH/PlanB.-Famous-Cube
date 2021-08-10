@@ -32,6 +32,7 @@ namespace NRKernal
             NativeTrackable = new NativeTrackable(this);
             TrackableFactory = new NRTrackableManager(this);
             Configration = new NativeConfigration(this);
+            NativeRenderring = new NativeRenderring();
         }
 
         /// <summary> Gets or sets the handle of the tracking. </summary>
@@ -65,6 +66,10 @@ namespace NRKernal
         /// <summary> Gets or sets the configration. </summary>
         /// <value> The configration. </value>
         public NativeConfigration Configration { get; set; }
+
+        /// <summary> Gets or sets the configration. </summary>
+        /// <value> The configration. </value>
+        public NativeRenderring NativeRenderring { get; set; }
 
         private partial struct NativeApi
         {

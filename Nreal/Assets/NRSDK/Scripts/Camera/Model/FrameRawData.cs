@@ -13,6 +13,12 @@ namespace NRKernal
     using System.Runtime.InteropServices;
     using UnityEngine;
 
+    public enum TextureType
+    {
+        RGB,
+        YUV
+    }
+
     /// <summary> A camera texture frame. </summary>
     public struct CameraTextureFrame
     {
@@ -22,6 +28,15 @@ namespace NRKernal
         public Texture texture;
     }
 
+    public struct UniversalTextureFrame
+    {
+        public TextureType textureType;
+        /// <summary> The time stamp. </summary>
+        public UInt64 timeStamp;
+        /// <summary> The textures. </summary>
+        public Texture[] textures;
+    }
+
     /// <summary> A frame raw data. </summary>
     public partial struct FrameRawData
     {
@@ -29,6 +44,7 @@ namespace NRKernal
         public UInt64 timeStamp;
         /// <summary> The data. </summary>
         public byte[] data;
+        public IntPtr nativeTexturePtr;
 
         /// <summary> Makes a safe. </summary>
         /// <param name="textureptr"> The textureptr.</param>
@@ -47,6 +63,7 @@ namespace NRKernal
                 frame.data = new byte[size];
             }
             frame.timeStamp = timestamp;
+            frame.nativeTexturePtr = textureptr;
             Marshal.Copy(textureptr, frame.data, 0, size);
             return true;
         }

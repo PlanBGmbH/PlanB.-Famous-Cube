@@ -65,7 +65,7 @@ namespace NRKernal
         /// <param name="timestamp"> (Optional) The timestamp.</param>
         /// <param name="predict">   (Optional) The predict.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool GetHeadPose(ref Pose pose, UInt64 timestamp = 0, UInt64 predict = 0)
+        public bool GetHeadPose(ref Pose pose, UInt64 timestamp)
         {
             if (m_HeadTrackingHandle == 0)
             {
@@ -73,28 +73,58 @@ namespace NRKernal
                 return false;
             }
             UInt64 headPoseHandle = 0;
-            UInt64 hmd_nanos = 0;
-            var result = NativeApi.NRTrackingGetHMDTimeNanos(m_NativeInterface.TrackingHandle, ref hmd_nanos);
+            var acquireTrackingPoseResult = NativeApi.NRHeadTrackingAcquireTrackingPose(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, timestamp, ref headPoseHandle);
+            if (acquireTrackingPoseResult != NativeResult.Success)
+            {
+                return false;
+            }
+            NativeMat4f headpos_native = new NativeMat4f(Matrix4x4.identity);
+            var getPoseResult = NativeApi.NRTrackingPoseGetPose(m_NativeInterface.TrackingHandle, headPoseHandle, ref headpos_native);
+            if (getPoseResult != NativeResult.Success)
+            {
+                return false;
+            }
+            ConversionUtility.ApiPoseToUnityPose(headpos_native, out pose);
+            NativeApi.NRTrackingPoseDestroy(m_NativeInterface.TrackingHandle, headPoseHandle);
+            return (acquireTrackingPoseResult == NativeResult.Success) && (getPoseResult == NativeResult.Success);
+        }
+
+        public bool GetHeadPoseRecommend(ref Pose pose)
+        {
+            if (m_HeadTrackingHandle == 0)
+            {
+                pose = Pose.identity;
+                return false;
+            }
+            ulong recommend_time = 0;
+            ulong predict_time = 0;
+            var result = NativeApi.NRTrackingGetHMDTimeNanos(m_NativeInterface.TrackingHandle, ref recommend_time);
             if (result != NativeResult.Success)
             {
                 return false;
             }
-            if (timestamp != 0)
-            {
-                hmd_nanos = timestamp;
-            }
-            else if (predict != 0)
-            {
-                hmd_nanos -= predict;
-            }
-            else
-            {
-                UInt64 predict_time = 0;
-                NativeApi.NRHeadTrackingGetRecommendPredictTime(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, ref predict_time);
-                hmd_nanos += predict_time;
-            }
 
-            var acquireTrackingPoseResult = NativeApi.NRHeadTrackingAcquireTrackingPose(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, hmd_nanos, ref headPoseHandle);
+            result = NativeApi.NRHeadTrackingGetRecommendPredictTime(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, ref predict_time);
+            if (result != NativeResult.Success)
+            {
+                return false;
+            }
+            recommend_time += predict_time;
+
+            return GetHeadPose(ref pose, recommend_time);
+        }
+
+        public bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp)
+        {
+            if (m_HeadTrackingHandle == 0 || m_NativeInterface.TrackingHandle == 0)
+            {
+                pose = Pose.identity;
+                timestamp = 0;
+                return false;
+            }
+            UInt64 headPoseHandle = 0;
+            m_NativeInterface.NativeRenderring.GetFramePresentTime(ref timestamp);
+            var acquireTrackingPoseResult = NativeApi.NRHeadTrackingAcquireTrackingPose(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, timestamp, ref headPoseHandle);
             if (acquireTrackingPoseResult != NativeResult.Success)
             {
                 return false;

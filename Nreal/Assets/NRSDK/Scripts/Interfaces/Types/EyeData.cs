@@ -21,19 +21,19 @@ namespace NRKernal
         public Pose REyePose;
 
         /// <summary> RGB eye pose. </summary>
-        public Pose RGBEyePos;
+        public Pose RGBEyePose;
     }
 
     /// <summary> Eye project matrix. </summary>
     public struct EyeProjectMatrixData
     {
-        /// <summary> Left eye projectmatrix. </summary>
+        /// <summary> Left display project matrix. </summary>
         public Matrix4x4 LEyeMatrix;
 
-        /// <summary> Right eye projectmatrix. </summary>
+        /// <summary> Right display project matrix. </summary>
         public Matrix4x4 REyeMatrix;
 
-        /// <summary> RGB eye projectmatrix. </summary>
+        /// <summary> RGB camera project matrix. </summary>
         public Matrix4x4 RGBEyeMatrix;
     }
 }

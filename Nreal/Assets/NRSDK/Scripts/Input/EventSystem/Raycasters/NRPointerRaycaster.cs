@@ -16,7 +16,6 @@ namespace NRKernal
     using UnityEngine;
     using UnityEngine.EventSystems;
     using UnityEngine.UI;
-
     
     /// <summary> A nr pointer raycaster. </summary>
     [DisallowMultipleComponent]
@@ -55,9 +54,23 @@ namespace NRKernal
         /// <summary> The break points. </summary>
         protected readonly List<Vector3> breakPoints = new List<Vector3>();
 
+        /// <summary> The related hand. </summary>
+        private ControllerHandEnum m_RelatedHand;
         /// <summary> Gets or sets the related hand. </summary>
         /// <value> The related hand. </value>
-        public ControllerHandEnum RelatedHand { get; private set; }
+        public ControllerHandEnum RelatedHand
+        {
+            get
+            {
+                return NRInput.RaycastMode == RaycastModeEnum.Gaze ? NRInput.DomainHand : m_RelatedHand;
+            }
+
+            internal set
+            {
+                m_RelatedHand = value;
+            }
+        }
+
         /// <summary> Gets the break points. </summary>
         /// <value> The break points. </value>
         public List<Vector3> BreakPoints { get { return breakPoints; } }
@@ -72,8 +85,6 @@ namespace NRKernal
         protected override void Start()
         {
             base.Start();
-            ControllerTracker controllerTracker = GetComponentInParent<ControllerTracker>();
-            RelatedHand = controllerTracker ? controllerTracker.defaultHandEnum : NRInput.DomainHand;
             buttonEventDataList.Add(new NRPointerEventData(this, EventSystem.current));
         }
 
@@ -93,6 +104,10 @@ namespace NRKernal
 
             var zScale = transform.lossyScale.z;
             var amountDistance = (FarDistance - NearDistance) * zScale;
+            if (!gameObject.activeInHierarchy)
+            {
+                amountDistance = 0.0001f;
+            }
             var origin = transform.TransformPoint(0f, 0f, NearDistance);
             breakPoints.Add(origin);
 

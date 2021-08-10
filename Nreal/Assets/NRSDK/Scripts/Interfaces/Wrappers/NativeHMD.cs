@@ -122,10 +122,14 @@ namespace NRKernal
         /// <returns> The eye resolution. </returns>
         public NativeResolution GetEyeResolution(int eye)
         {
-            NativeResolution resolution = new NativeResolution(3840, 1080);
+            NativeResolution resolution = new NativeResolution(1920, 1080);
+#if UNITY_EDITOR
+            return resolution;
+#else
             var result = NativeApi.NRHMDGetEyeResolution(m_HmdHandle, eye, ref resolution);
             NativeErrorListener.Check(result, this, "GetEyeResolution");
             return resolution;
+#endif
         }
 
         /// <summary> Destroys this object. </summary>

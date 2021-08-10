@@ -31,6 +31,9 @@ namespace NRKernal
         /// <summary> The old trackables. </summary>
         private HashSet<NRTrackable> m_OldTrackables = new HashSet<NRTrackable>();
 
+        /// <summary> Temp trackable handle list. </summary>
+        private List<UInt64> m_TempTrackableHandles = new List<UInt64>();
+
         /// <summary> The native interface. </summary>
         private NativeInterface m_NativeInterface = null;
 
@@ -103,15 +106,14 @@ namespace NRKernal
             {
                 return;
             }
-            UInt64 trackablelist_handle = m_NativeInterface.NativeTrackable.CreateTrackableList();
-            m_NativeInterface.NativeTracking.UpdateTrackables(trackablelist_handle, trackable_type);
-            int count = m_NativeInterface.NativeTrackable.GetSize(trackablelist_handle);
-            for (int i = 0; i < count; i++)
+
+            if (m_NativeInterface.NativeTrackable.UpdateTrackables(trackable_type, m_TempTrackableHandles))
             {
-                UInt64 trackable_handle = m_NativeInterface.NativeTrackable.AcquireItem(trackablelist_handle, i);
-                Create(trackable_handle, m_NativeInterface);
+                for (int i = 0; i < m_TempTrackableHandles.Count; i++)
+                {
+                    Create(m_TempTrackableHandles[i], m_NativeInterface);
+                }
             }
-            m_NativeInterface.NativeTrackable.DestroyTrackableList(trackablelist_handle);
         }
 
         /// <summary> Get the list of trackables with specified filter. </summary>

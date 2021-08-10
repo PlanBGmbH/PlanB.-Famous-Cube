@@ -17,13 +17,14 @@ namespace NRKernal
     {
         /// <summary> Handle of the native camera. </summary>
         private UInt64 m_NativeCameraHandle;
+        private static bool _IsErrorState = false;
 
         /// <summary> Creates a new bool. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Create()
         {
             var result = NativeApi.NRRGBCameraCreate(ref m_NativeCameraHandle);
-            NativeErrorListener.Check(result, this, "Create");
+            NativeErrorListener.Check(result, this, "Create", true);
             return result == NativeResult.Success;
         }
 
@@ -35,6 +36,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool GetRawData(UInt64 imageHandle, int eye, ref IntPtr ptr, ref int size)
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             uint data_size = 0;
             var result = NativeApi.NRRGBCameraImageGetRawData(m_NativeCameraHandle, imageHandle, ref ptr, ref data_size);
             size = (int)data_size;
@@ -71,6 +76,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool SetCaptureCallback(CameraImageCallback callback, UInt64 userdata = 0)
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             var result = NativeApi.NRRGBCameraSetCaptureCallback(m_NativeCameraHandle, callback, userdata);
             NativeErrorListener.Check(result, this, "SetCaptureCallback");
             return result == NativeResult.Success;
@@ -81,6 +90,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool SetImageFormat(CameraImageFormat format)
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             var result = NativeApi.NRRGBCameraSetImageFormat(m_NativeCameraHandle, format);
             NativeErrorListener.Check(result, this, "SetImageFormat");
             return result == NativeResult.Success;
@@ -90,8 +103,14 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool StartCapture()
         {
+            if (_IsErrorState)
+            {
+                NativeErrorListener.Check(NativeResult.RGBCameraDeviceNotFind, this, "StartCapture", true);
+                return false;
+            }
             var result = NativeApi.NRRGBCameraStartCapture(m_NativeCameraHandle);
-            NativeErrorListener.Check(result, this, "StartCapture");
+            _IsErrorState = (result != NativeResult.Success);
+            NativeErrorListener.Check(result, this, "StartCapture", true);
             return result == NativeResult.Success;
         }
 
@@ -99,8 +118,12 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool StopCapture()
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             var result = NativeApi.NRRGBCameraStopCapture(m_NativeCameraHandle);
-            NativeErrorListener.Check(result, this, "StopCapture");
+            NativeErrorListener.Check(result, this, "StopCapture", true);
             return result == NativeResult.Success;
         }
 
@@ -109,6 +132,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool DestroyImage(UInt64 imageHandle)
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             var result = NativeApi.NRRGBCameraImageDestroy(m_NativeCameraHandle, imageHandle);
             NativeErrorListener.Check(result, this, "DestroyImage");
             return result == NativeResult.Success;
@@ -118,6 +145,10 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Release()
         {
+            if (_IsErrorState)
+            {
+                return false;
+            }
             var result = NativeApi.NRRGBCameraDestroy(m_NativeCameraHandle);
             NativeErrorListener.Check(result, this, "Release");
             return result == NativeResult.Success;

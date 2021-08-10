@@ -157,6 +157,12 @@ using Windows.System;
         private GameObject window;
         /// <summary> The CPU frame rate text. </summary>
         private TextMesh cpuFrameRateText;
+
+#if USING_XR_SDK && !UNITY_EDITOR
+        /// <summary> The Dropped frame count in last one second. </summary>
+        private TextMesh droppedFrameCount;
+        private static readonly string droppedFrameCountString = "DroppedFrameCount: {0}";
+#endif
         /// <summary> The GPU frame rate text. </summary>
         private TextMesh gpuFrameRateText;
         /// <summary> The used memory text. </summary>
@@ -223,8 +229,8 @@ using Windows.System;
         /// <summary> The quad mesh. </summary>
         private Mesh quadMesh;
 
-        private Camera m_CenterCamera;
-        private Camera CenterCamera
+        private Transform m_CenterCamera;
+        private Transform CenterCamera
         {
             get
             {
@@ -232,11 +238,11 @@ using Windows.System;
                 {
                     if (NRSessionManager.Instance.CenterCameraAnchor != null)
                     {
-                        m_CenterCamera = NRSessionManager.Instance.CenterCameraAnchor.GetComponent<Camera>();
+                        m_CenterCamera = NRSessionManager.Instance.CenterCameraAnchor;
                     }
                     else
                     {
-                        m_CenterCamera = Camera.main;
+                        m_CenterCamera = Camera.main.transform;
                     }
                 }
                 return m_CenterCamera;
@@ -398,6 +404,11 @@ using Windows.System;
 
                 // Update frame rate text.
                 cpuFrameRateText.text = cpuFrameRateStrings[Mathf.Clamp(cpuFrameRate, 0, maxTargetFrameRate)];
+#if USING_XR_SDK && !UNITY_EDITOR
+                int dropped_framecount = 0;
+                NRSessionManager.Instance.XRDisplaySubsystem?.TryGetDroppedFrameCount(out dropped_framecount);
+                droppedFrameCount.text = string.Format(droppedFrameCountString, dropped_framecount);
+#endif
 
                 if (gpuFrameRate != 0)
                 {
@@ -491,7 +502,7 @@ using Windows.System;
         /// <returns> The calculated window position. </returns>
         private Vector3 CalculateWindowPosition(Transform cameraTransform)
         {
-            float windowDistance = Mathf.Max(16.0f / CenterCamera.fieldOfView, CenterCamera.nearClipPlane + 0.25f);
+            float windowDistance = Mathf.Max(16.0f / Camera.main.fieldOfView, Camera.main.nearClipPlane + 0.25f);
             Vector3 position = cameraTransform.position + (cameraTransform.forward * windowDistance);
             Vector3 horizontalOffset = cameraTransform.right * windowOffset.x;
             Vector3 verticalOffset = cameraTransform.up * windowOffset.y;
@@ -555,6 +566,9 @@ using Windows.System;
             // Add frame rate text and frame indicators.
             {
                 cpuFrameRateText = CreateText("CPUFrameRateText", new Vector3(-0.495f, 0.5f, 0.0f), window.transform, TextAnchor.UpperLeft, textMaterial, Color.white, string.Empty);
+#if USING_XR_SDK && !UNITY_EDITOR
+                droppedFrameCount = CreateText("DroppedFrameCount", new Vector3(0, 0.5f, 0.0f), window.transform, TextAnchor.UpperLeft, textMaterial, Color.white, string.Empty);
+#endif
                 gpuFrameRateText = CreateText("GPUFrameRateText", new Vector3(0.495f, 0.5f, 0.0f), window.transform, TextAnchor.UpperRight, textMaterial, Color.white, string.Empty);
                 gpuFrameRateText.gameObject.SetActive(false);
 

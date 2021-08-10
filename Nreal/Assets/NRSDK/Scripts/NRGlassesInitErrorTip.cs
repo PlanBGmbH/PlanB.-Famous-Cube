@@ -28,7 +28,7 @@ namespace NRKernal
         /// <summary> Initializes this object. </summary>
         /// <param name="msg">     The message.</param>
         /// <param name="confirm"> The confirm.</param>
-        public void Init(string msg, Action confirm)
+        public virtual void Init(string msg, Action confirm)
         {
             m_Tips.text = msg;
             OnConfirm += confirm;

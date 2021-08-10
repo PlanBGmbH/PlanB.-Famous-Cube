@@ -8,6 +8,7 @@
 *****************************************************************************/
 
 using NRKernal.Record;
+using System;
 using System.Linq;
 using UnityEngine;
 
@@ -17,35 +18,22 @@ namespace NRKernal.NRExamples
     [HelpURL("https://developer.nreal.ai/develop/unity/video-capture")]
     public class PhotoCaptureExample : MonoBehaviour
     {
-        /// <summary> The previewer. </summary>
-        public NRPreviewer Previewer;
         /// <summary> The photo capture object. </summary>
         private NRPhotoCapture m_PhotoCaptureObject;
         /// <summary> The camera resolution. </summary>
         private Resolution m_CameraResolution;
+        private bool isOnPhotoProcess = false;
 
-        /// <summary> Starts this object. </summary>
-        void Start()
-        {
-            this.Create();
-        }
-
-        /// <summary> Updates this object. </summary>
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space) || NRInput.GetButtonDown(ControllerButton.TRIGGER))
+            if (NRInput.GetButtonDown(ControllerButton.TRIGGER))
             {
                 TakeAPhoto();
-            }
-
-            if (m_PhotoCaptureObject != null)
-            {
-                Previewer.SetData(m_PhotoCaptureObject.PreviewTexture, true);
             }
         }
 
         /// <summary> Use this for initialization. </summary>
-        void Create()
+        void Create(Action<NRPhotoCapture> onCreated)
         {
             if (m_PhotoCaptureObject != null)
             {
@@ -58,14 +46,13 @@ namespace NRKernal.NRExamples
             {
                 m_CameraResolution = NRPhotoCapture.SupportedResolutions.OrderByDescending((res) => res.width * res.height).First();
 
-                if (captureObject != null)
-                {
-                    m_PhotoCaptureObject = captureObject;
-                }
-                else
+                if (captureObject == null)
                 {
                     NRDebugger.Error("Can not get a captureObject.");
+                    return;
                 }
+
+                m_PhotoCaptureObject = captureObject;
 
                 CameraParameters cameraParameters = new CameraParameters();
                 cameraParameters.cameraResolutionWidth = m_CameraResolution.width;
@@ -77,6 +64,15 @@ namespace NRKernal.NRExamples
                 m_PhotoCaptureObject.StartPhotoModeAsync(cameraParameters, delegate (NRPhotoCapture.PhotoCaptureResult result)
                 {
                     NRDebugger.Info("Start PhotoMode Async");
+                    if (result.success)
+                    {
+                        onCreated?.Invoke(m_PhotoCaptureObject);
+                    }
+                    else
+                    {
+                        isOnPhotoProcess = false;
+                        NRDebugger.Error("Start PhotoMode faild." + result.resultType);
+                    }
                 });
             });
         }
@@ -84,13 +80,24 @@ namespace NRKernal.NRExamples
         /// <summary> Take a photo. </summary>
         void TakeAPhoto()
         {
-            if (m_PhotoCaptureObject == null)
+            if (isOnPhotoProcess)
             {
-                NRDebugger.Info("The NRPhotoCapture has not been created.");
+                NRDebugger.Warning("Currently in the process of taking pictures, Can not take photo .");
                 return;
             }
-            // Take a picture
-            m_PhotoCaptureObject.TakePhotoAsync(OnCapturedPhotoToMemory);
+
+            isOnPhotoProcess = true;
+            if (m_PhotoCaptureObject == null)
+            {
+                this.Create((capture) =>
+                {
+                    capture.TakePhotoAsync(OnCapturedPhotoToMemory);
+                });
+            }
+            else
+            {
+                m_PhotoCaptureObject.TakePhotoAsync(OnCapturedPhotoToMemory);
+            }
         }
 
         /// <summary> Executes the 'captured photo memory' action. </summary>
@@ -107,12 +114,15 @@ namespace NRKernal.NRExamples
             Renderer quadRenderer = quad.GetComponent<Renderer>() as Renderer;
             quadRenderer.material = new Material(Resources.Load<Shader>("Record/Shaders/CaptureScreen"));
 
-            var headTran = NRSessionManager.Instance.NRHMDPoseTracker.centerCamera.transform;
+            var headTran = NRSessionManager.Instance.NRHMDPoseTracker.centerAnchor;
             quad.name = "picture";
             quad.transform.localPosition = headTran.position + headTran.forward * 3f;
             quad.transform.forward = headTran.forward;
             quad.transform.localScale = new Vector3(1.6f, 0.9f, 0);
             quadRenderer.material.SetTexture("_MainTex", targetTexture);
+
+            // Release camera resource after capture the photo.
+            this.Close();
         }
 
         /// <summary> Closes this object. </summary>
@@ -139,11 +149,16 @@ namespace NRKernal.NRExamples
             // Shutdown our photo capture resource
             m_PhotoCaptureObject.Dispose();
             m_PhotoCaptureObject = null;
+            isOnPhotoProcess = false;
         }
 
         /// <summary> Executes the 'destroy' action. </summary>
         void OnDestroy()
         {
+            if (m_PhotoCaptureObject == null)
+            {
+                return;
+            }
             // Shutdown our photo capture resource
             m_PhotoCaptureObject?.Dispose();
         }

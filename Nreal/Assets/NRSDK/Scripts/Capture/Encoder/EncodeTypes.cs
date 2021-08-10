@@ -96,6 +96,8 @@ namespace NRKernal.Record
         /// <value> True if use linner texture, false if not. </value>
         public bool useLinnerTexture { get; private set; }
 
+        public bool addMicphoneAudio { get; private set; }
+
         /// <summary> Constructor. </summary>
         /// <param name="w">         The width.</param>
         /// <param name="h">         The height.</param>
@@ -104,16 +106,17 @@ namespace NRKernal.Record
         /// <param name="codectype"> The codectype.</param>
         /// <param name="path">      Full pathname of the file.</param>
         /// <param name="usealpha">  (Optional) True to usealpha.</param>
-        public NativeEncodeConfig(int w, int h, int bitrate, int f, CodecType codectype, string path, bool usealpha = false)
+        public NativeEncodeConfig(int w, int h, int bitrate, int f, CodecType codectype, string path, bool useaudio = true, bool usealpha = false)
         {
             this.width = w;
             this.height = h;
             this.bitRate = bitrate;
-            this.fps = 20;
+            this.fps = 30;
             this.codecType = (int)codectype;
             this.outPutPath = path;
             this.useStepTime = 0;
             this.useAlpha = usealpha;
+            this.addMicphoneAudio = useaudio;
             this.useLinnerTexture = NRRenderer.isLinearColorSpace;
         }
 
@@ -129,6 +132,7 @@ namespace NRKernal.Record
             this.codecType = GetCodecTypeByPath(path);
             this.outPutPath = path;
             this.useStepTime = 0;
+            this.addMicphoneAudio = cameraparam.audioState == NRVideoCapture.AudioState.MicAudio ? true : false;
             this.useAlpha = cameraparam.hologramOpacity < float.Epsilon;
             this.useLinnerTexture = NRRenderer.isLinearColorSpace;
         }
@@ -163,7 +167,7 @@ namespace NRKernal.Record
         /// <summary> Constructor. </summary>
         /// <param name="config"> The configuration.</param>
         public NativeEncodeConfig(NativeEncodeConfig config)
-            : this(config.width, config.height, config.bitRate, config.fps, (CodecType)config.codecType, config.outPutPath, config.useAlpha)
+            : this(config.width, config.height, config.bitRate, config.fps, (CodecType)config.codecType, config.outPutPath, config.addMicphoneAudio, config.useAlpha)
         {
         }
 

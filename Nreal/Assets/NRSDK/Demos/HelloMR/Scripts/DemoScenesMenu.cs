@@ -8,13 +8,12 @@
 *****************************************************************************/
 
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 namespace NRKernal.NRExamples
 {
     /// <summary> Panel for editing the hidden debug. </summary>
-    public class DemoScenesMenu : MonoBehaviour
+    public class DemoScenesMenu : SingletonBehaviour<DemoScenesMenu>
     {
         /// <summary> The buttons root. </summary>
         public Transform m_ButtonsRoot;

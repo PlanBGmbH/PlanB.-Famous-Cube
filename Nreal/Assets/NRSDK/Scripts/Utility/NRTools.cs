@@ -24,6 +24,7 @@ namespace NRKernal
             persistentDataPath = Application.persistentDataPath;
         }
 
+        #region path utility
         /// <summary> Gets streaming assets path. </summary>
         /// <returns> The streaming assets path. </returns>
         public static string GetStreamingAssetsPath()
@@ -65,7 +66,9 @@ namespace NRKernal
 #endif
             return path;
         }
+        #endregion
 
+        #region time stamp
         /// <summary> Gets time by m seconds. </summary>
         /// <param name="ms"> The milliseconds.</param>
         /// <returns> The time by m seconds. </returns>
@@ -85,5 +88,6 @@ namespace NRKernal
             TimeSpan ts = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0);
             return Convert.ToUInt64(ts.TotalMilliseconds);
         }
+        #endregion
     }
 }

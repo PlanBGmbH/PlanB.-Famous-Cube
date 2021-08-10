@@ -7,6 +7,7 @@
 * 
 *****************************************************************************/
 
+using System.Collections;
 using UnityEngine;
 
 namespace NRKernal.NRExamples
@@ -21,19 +22,32 @@ namespace NRKernal.NRExamples
         /// <summary> Starts this object. </summary>
         void Start()
         {
-            switch (m_TrackingType)
+            StartCoroutine(EnsureTrackingType(m_TrackingType));
+        }
+
+        private IEnumerator EnsureTrackingType(NRHMDPoseTracker.TrackingType type)
+        {
+            WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
+            if (m_TrackingType == NRHMDPoseTracker.TrackingType.Tracking0Dof && NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode != m_TrackingType)
             {
-                case NRHMDPoseTracker.TrackingType.Tracking6Dof:
-                    NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof();
-                    break;
-                case NRHMDPoseTracker.TrackingType.Tracking3Dof:
-                    NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo3Dof();
-                    break;
-                case NRHMDPoseTracker.TrackingType.Tracking0Dof:
-                    NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0Dof();
-                    break;
-                default:
-                    break;
+                while (!NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0Dof(null))
+                {
+                    yield return waitForEndOfFrame;
+                }
+            }
+            else if (m_TrackingType == NRHMDPoseTracker.TrackingType.Tracking3Dof && NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode != m_TrackingType)
+            {
+                while (!NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo3Dof(null))
+                {
+                    yield return waitForEndOfFrame;
+                }
+            }
+            else if (m_TrackingType == NRHMDPoseTracker.TrackingType.Tracking6Dof && NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode != m_TrackingType)
+            {
+                while (!NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof(null))
+                {
+                    yield return waitForEndOfFrame;
+                }
             }
         }
     }

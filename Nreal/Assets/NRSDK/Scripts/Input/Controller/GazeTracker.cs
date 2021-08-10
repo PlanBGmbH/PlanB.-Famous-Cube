@@ -60,7 +60,7 @@ namespace NRKernal
         {
             if (CameraCenter == null)
                 return;
-            m_IsEnabled = NRInput.RaycastMode == RaycastModeEnum.Gaze;
+            m_IsEnabled = (NRInput.RaycastersActive && NRInput.RaycastMode == RaycastModeEnum.Gaze);
             m_Raycaster.gameObject.SetActive(m_IsEnabled);
             if (m_IsEnabled)
             {

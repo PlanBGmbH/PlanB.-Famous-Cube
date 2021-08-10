@@ -20,7 +20,7 @@ namespace NRKernal
     /// <summary>
     /// NRNativeRender operate rendering-related things, provides the feature of optimized rendering
     /// and low latency. </summary>
-    [ScriptOrder(-300)]
+    [ScriptOrder(NativeConstants.NRRENDER_ORDER)]
     public class NRRenderer : MonoBehaviour
     {
         /// <summary> Renders the event delegate described by eventID. </summary>
@@ -54,16 +54,38 @@ namespace NRKernal
         public Camera rightCamera;
         /// <summary> Gets or sets the native renderring. </summary>
         /// <value> The m native renderring. </value>
-        static NativeRenderring m_NativeRenderring { get; set; }
+        private static NativeRenderring m_NativeRenderring;
+        static NativeRenderring NativeRenderring
+        {
+            get
+            {
+                if (NRSessionManager.Instance.NativeAPI != null)
+                {
+                    m_NativeRenderring = NRSessionManager.Instance.NativeAPI.NativeRenderring;
+                }
+                else if (m_NativeRenderring == null)
+                {
+                    m_NativeRenderring = new NativeRenderring();
+                }
+
+                return m_NativeRenderring;
+            }
+            set
+            {
+                m_NativeRenderring = value;
+            }
+        }
 
         /// <summary> The scale factor. </summary>
         public static float ScaleFactor = 1f;
         private const float m_DefaultFocusDistance = 1.4f;
         private float m_FocusDistance = 1.4f;
+
+        private static int _TextureBufferSize = 4;
         /// <summary> Number of eye textures. </summary>
-        private const int EyeTextureCount = 3 * (int)Eyes.Count;
+        private static int EyeTextureCount = _TextureBufferSize * (int)Eyes.Count;
         /// <summary> The eye textures. </summary>
-        private readonly RenderTexture[] eyeTextures = new RenderTexture[EyeTextureCount];
+        private RenderTexture[] eyeTextures;
         /// <summary> Dictionary of rights. </summary>
         private Dictionary<RenderTexture, IntPtr> m_RTDict = new Dictionary<RenderTexture, IntPtr>();
 
@@ -77,6 +99,9 @@ namespace NRKernal
             Destroyed
         }
 
+        private bool m_IsTrackingLost = false;
+        private RenderTexture m_HijackRenderTexture;
+
         /// <summary> The current state. </summary>
         private RendererState m_CurrentState = RendererState.UnInitialized;
         /// <summary> Gets the current state. </summary>
@@ -86,6 +111,14 @@ namespace NRKernal
             get
             {
                 return m_CurrentState;
+            }
+        }
+
+        public NRTrackingModeChangedListener TrackingLostListener
+        {
+            get
+            {
+                return NRSessionManager.Instance.TrackingLostListener;
             }
         }
 
@@ -130,6 +163,25 @@ namespace NRKernal
             m_CurrentState = RendererState.Initialized;
             StartCoroutine(StartUp());
 #endif
+
+            if (TrackingLostListener != null)
+            {
+                TrackingLostListener.OnTrackStateChanged += OnTrackStateChanged;
+            }
+        }
+
+        private void OnTrackStateChanged(bool onSwitchingMode, RenderTexture rt)
+        {
+            if (onSwitchingMode)
+            {
+                m_IsTrackingLost = true;
+                m_HijackRenderTexture = rt;
+            }
+            else
+            {
+                m_IsTrackingLost = false;
+                m_HijackRenderTexture = null;
+            }
         }
 
         /// <summary> Prepares this object for use. </summary>
@@ -154,11 +206,7 @@ namespace NRKernal
             NRDebugger.Info("[NRRender] StartUp");
             CreateRenderTextures();
 #if !UNITY_EDITOR
-            m_NativeRenderring = new NativeRenderring();
-            m_NativeRenderring.Create();
-#if !UNITY_STANDALONE_WIN
-            m_NativeRenderring.InitColorSpace();
-#endif
+            NativeRenderring.Create();
             StartCoroutine(RenderCoroutine());
 #endif
             m_CurrentState = RendererState.Running;
@@ -198,7 +246,7 @@ namespace NRKernal
 #if !UNITY_EDITOR
         void Update()
         {
-            if (m_CurrentState == RendererState.Running)
+            if (m_CurrentState == RendererState.Running && !m_IsTrackingLost)
             {
                 leftCamera.targetTexture = eyeTextures[currentEyeTextureIdx];
                 rightCamera.targetTexture = eyeTextures[currentEyeTextureIdx + 1];
@@ -206,6 +254,11 @@ namespace NRKernal
                 nextEyeTextureIdx = (nextEyeTextureIdx + 2) % EyeTextureCount;
                 leftCamera.enabled = true;
                 rightCamera.enabled = true;
+            }
+            else if(m_IsTrackingLost) 
+            {
+                leftCamera.enabled = false;
+                rightCamera.enabled = false;
             }
         }
 #endif
@@ -216,22 +269,28 @@ namespace NRKernal
         /// <returns> The render texture. </returns>
         private RenderTexture GenRenderTexture(int width, int height)
         {
-            RenderTexture renderTexture = new RenderTexture((int)(width * ScaleFactor), (int)(height * ScaleFactor), 24, RenderTextureFormat.Default);
-            renderTexture.wrapMode = TextureWrapMode.Clamp;
-            if (QualitySettings.antiAliasing > 0)
-            {
-                renderTexture.antiAliasing = QualitySettings.antiAliasing;
-            }
-            renderTexture.Create();
-
-            return renderTexture;
+            return UnityExtendedUtility.CreateRenderTexture((int)(width * ScaleFactor), (int)(height * ScaleFactor), 24, RenderTextureFormat.Default);
         }
 
         /// <summary> Creates render textures. </summary>
         private void CreateRenderTextures()
         {
+            var config = NRSessionManager.Instance.NRSessionBehaviour?.SessionConfig;
+
+            if (config != null && config.UseMultiThread)
+            {
+                _TextureBufferSize = 5;
+            }
+            else
+            {
+                _TextureBufferSize = 4;
+            }
+            NRDebugger.Info("[NRRender] Texture buffer size:{0}", _TextureBufferSize);
+            EyeTextureCount = _TextureBufferSize * (int)Eyes.Count;
+            eyeTextures = new RenderTexture[EyeTextureCount];
+
             var resolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.LEFT);
-            NRDebugger.Info("[CreateRenderTextures]  resolution :" + resolution.ToString());
+            NRDebugger.Info("[CreateRenderTextures] Resolution :" + resolution.ToString());
 
             for (int i = 0; i < EyeTextureCount; i++)
             {
@@ -259,23 +318,35 @@ namespace NRKernal
                 NativeMat4f apiPose;
                 Pose unityPose = NRFrame.HeadPose;
                 ConversionUtility.UnityPoseToApiPose(unityPose, out apiPose);
-                IntPtr left_target, right_target;
-                if (!m_RTDict.TryGetValue(leftCamera.targetTexture, out left_target)) continue;
-                if (!m_RTDict.TryGetValue(rightCamera.targetTexture, out right_target)) continue;
-                FrameInfo info = new FrameInfo(left_target, right_target, apiPose, new Vector3(0, 0, -m_FocusDistance), Vector3.forward);
+                FrameInfo info = new FrameInfo(IntPtr.Zero, IntPtr.Zero, apiPose, new Vector3(0, 0, -m_FocusDistance),
+                       Vector3.forward, NRFrame.CurrentPoseTimeStamp, m_FrameChangedType, NRTextureType.NR_TEXTURE_2D);
+                if (!m_IsTrackingLost)
+                {
+                    IntPtr left_target, right_target;
+                    if (!m_RTDict.TryGetValue(leftCamera.targetTexture, out left_target)) continue;
+                    if (!m_RTDict.TryGetValue(rightCamera.targetTexture, out right_target)) continue;
+                    info.leftTex = left_target;
+                    info.rightTex = right_target;
+                }
+                else
+                {
+                    info.leftTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                    info.rightTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                }
                 SetRenderFrameInfo(info);
-                // reset focuse distance to default value every frame.
+                // reset focuse distance and frame changed type to default value every frame.
                 m_FocusDistance = m_DefaultFocusDistance;
+                m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_NONE;
             }
         }
 
-
+        private NRFrameFlags m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_NONE;
         /// <summary> Sets the focus plane for render thread. </summary>
         /// <param name="distance"> The distance from plane to center camera.</param>
-        [Conditional("NRSDK_BETA")]
         public void SetFocusDistance(float distance)
         {
             m_FocusDistance = distance;
+            m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_FOCUS_PLANE;
         }
 
         /// <summary> Executes the 'on render thread' operation. </summary>
@@ -285,26 +356,25 @@ namespace NRKernal
         {
             if (eventID == STARTNATIVERENDEREVENT)
             {
-                m_NativeRenderring?.Start();
+                NativeRenderring?.Start();
             }
             else if (eventID == RESUMENATIVERENDEREVENT)
             {
-                m_NativeRenderring?.Resume();
+                NativeRenderring?.Resume();
             }
             else if (eventID == PAUSENATIVERENDEREVENT)
             {
-                m_NativeRenderring?.Pause();
+                NativeRenderring?.Pause();
             }
             else if (eventID == STOPNATIVERENDEREVENT)
             {
-                m_NativeRenderring?.Destroy();
-                m_NativeRenderring = null;
+                NativeRenderring?.Destroy();
+                NativeRenderring = null;
                 NRDevice.Instance.Destroy();
             }
             else if (eventID == SETRENDERTEXTUREEVENT)
             {
-                FrameInfo framinfo = (FrameInfo)Marshal.PtrToStructure(m_NativeRenderring.FrameInfoPtr, typeof(FrameInfo));
-                m_NativeRenderring?.DoRender(framinfo.leftTex, framinfo.rightTex, ref framinfo.pose, ref framinfo.focusPosition, ref framinfo.normalPosition);
+                NativeRenderring?.DoExtendedRenderring();
             }
         }
 
@@ -312,7 +382,7 @@ namespace NRKernal
         /// <param name="frame"> The frame.</param>
         private static void SetRenderFrameInfo(FrameInfo frame)
         {
-            Marshal.StructureToPtr(frame, m_NativeRenderring.FrameInfoPtr, true);
+            NativeRenderring.WriteFrameData(frame);
             GL.IssuePluginEvent(RenderThreadHandlePtr, SETRENDERTEXTUREEVENT);
         }
 
@@ -325,8 +395,8 @@ namespace NRKernal
             m_CurrentState = RendererState.Destroyed;
             //GL.IssuePluginEvent(RenderThreadHandlePtr, STOPNATIVERENDEREVENT);
 
-            m_NativeRenderring?.Destroy();
-            m_NativeRenderring = null;
+            NativeRenderring?.Destroy();
+            NativeRenderring = null;
         }
 
         private void OnDestroy()

@@ -14,7 +14,7 @@ namespace NRKernal
     /// <summary>
     /// Oprate AR system state and handles the session lifecycle for application layer. </summary>
     [HelpURL("https://developer.nreal.ai/develop/discover/introduction-nrsdk")]
-    [ScriptOrder(-100)]
+    [ScriptOrder(NativeConstants.NRSESSIONBEHAVIOUR_ORDER)]
     public class NRSessionBehaviour : SingletonBehaviour<NRSessionBehaviour>
     {
         /// <summary> The SessionConfig of nrsession. </summary>

@@ -23,7 +23,7 @@ namespace NRKernal
 
     /// <summary> A nr virtual displayer. </summary>
     [HelpURL("https://developer.nreal.ai/develop/unity/customize-phone-controller")]
-    [ScriptOrder(-200)]
+    [ScriptOrder(NativeConstants.NRVIRTUALDISPLAY_ORDER)]
     public class NRVirtualDisplayer : SingletonBehaviour<NRVirtualDisplayer>, ISystemButtonStateReceiver
     {
         /// <summary>
@@ -87,7 +87,7 @@ namespace NRKernal
         public event Action OnMultiDisplayInitialized;
 
         /// <summary> True to run in background. </summary>
-        public static bool RunInBackground;
+        public static bool RunInBackground = true;
         /// <summary> True if is initialize, false if not. </summary>
         private bool m_IsInitialized = false;
         /// <summary> Gets or sets a value indicating whether this object is playing. </summary>

@@ -50,5 +50,8 @@ namespace NRKernal
 
         /// <summary> Glasses display mode is not 3d. </summary>
         GetDisplayModeMismatch = 12,
+
+        /// <summary> Not support hand tracking calculation. </summary>
+        UnSupportedHandtrackingCalculation = 14
     }
 }
