@@ -76,11 +76,26 @@ public class PivotRotation : MonoBehaviour
         if (dragging)
         {
             SpinSide(activeSide);
-            if (NRInput.GetButtonUp(ControllerButton.TRIGGER))
+
+            if (ChangeInteractionMode.HandInteractionActive)
             {
-                dragging = false;
-                DraggingInProgress = false;
-                RotatToRightAngle();
+                var handState = NRInput.Hands.GetHandState(SelectFace.activeHandEnum);
+
+                if (!handState.isPinching)
+                {
+                    dragging = false;
+                    DraggingInProgress = false;
+                    RotatToRightAngle();
+                }
+            }
+            else
+            {
+                if (NRInput.GetButtonUp(ControllerButton.TRIGGER))
+                {
+                    dragging = false;
+                    DraggingInProgress = false;
+                    RotatToRightAngle();
+                }
             }
         }
 
@@ -94,7 +109,17 @@ public class PivotRotation : MonoBehaviour
     {
         rotation = Vector3.zero;
         Vector3 laserEndPoint;
-        if (NrealInputExt.GetLaserEndWorldPosition(out laserEndPoint))
+        bool hitSuccess = false;
+        if (ChangeInteractionMode.HandInteractionActive)
+        {
+            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, SelectFace.activeHandEnum);
+        }
+        else
+        {
+            hitSuccess = NrealInputExt.GetLaserEndWorldPosition(out laserEndPoint);
+        }
+
+        if (hitSuccess)
         {
             Vector3 mouseOffset = laserEndPoint - mouseRef;
 
@@ -116,7 +141,6 @@ public class PivotRotation : MonoBehaviour
             mouse_pos.x = mouse_pos.x - object_pos.x;
             mouse_pos.y = mouse_pos.y - object_pos.y;
             angleRef = (Mathf.Atan2(mouse_pos.y, mouse_pos.x) * Mathf.Rad2Deg);
-
 
             if (side == cubeState.up)
             {
@@ -184,7 +208,17 @@ public class PivotRotation : MonoBehaviour
         activeSide = side;
         ActivateGlowing();
         Vector3 laserEndPoint;
-        NrealInputExt.GetLaserEndWorldPosition(out laserEndPoint);
+
+        bool hitSuccess = false;
+        if (ChangeInteractionMode.HandInteractionActive)
+        {            
+            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, SelectFace.activeHandEnum);
+        }
+        else
+        {
+            hitSuccess = NrealInputExt.GetLaserEndWorldPosition(out laserEndPoint);
+        }
+
         mouseRef = laserEndPoint;
         dragging = true;
         DraggingInProgress = true;

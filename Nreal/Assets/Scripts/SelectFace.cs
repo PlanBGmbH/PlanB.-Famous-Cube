@@ -21,6 +21,10 @@ public class SelectFace : MonoBehaviour
     /// </summary>
     int layerMask = 1 << 8;
 
+    public HandEnum handRight; 
+    public HandEnum handLeft;
+    public static HandEnum activeHandEnum;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -30,20 +34,62 @@ public class SelectFace : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
-        // If the player doesn't click the trigger button, we are done with this update.
-        if (!NRInput.GetButtonDown(ControllerButton.TRIGGER) || CubeState.autoRotating)
+    {    
+        Ray? laserRay = null;
+        if (ChangeInteractionMode.HandInteractionActive)
         {
-            return;
+            var handState = NRInput.Hands.GetHandState(handRight);
+
+            bool isGrabing = false;
+
+            if (handState.isPinching)
+            {
+                isGrabing = true;
+                activeHandEnum = handRight;
+            }
+            else
+            {
+                handState = NRInput.Hands.GetHandState(handLeft);
+                if (handState.isPinching)
+                {
+                    isGrabing = true;
+                    activeHandEnum = handLeft;
+                }
+            }
+
+            // If the player doesn't hand not grapping button, we are done with this update.
+            if (!isGrabing || CubeState.autoRotating || PivotRotation.DraggingInProgress)
+            {
+                return;
+            }
+
+            if (handState.isPinching)
+            {             
+                laserRay = new Ray(handState.pointerPose.position, handState.pointerPose.forward);
+            }            
+        }
+        else
+        {
+            // If the player doesn't click the trigger button, we are done with this update.
+            if (!NRInput.GetButtonDown(ControllerButton.TRIGGER) || CubeState.autoRotating)
+            {
+                return;
+            }
+
+            if (NRInput.GetButtonDown(ControllerButton.TRIGGER))
+            {
+                var laserAnchor = NRInput.AnchorsHelper.GetAnchor(NRInput.RaycastMode == RaycastModeEnum.Gaze ? ControllerAnchorEnum.GazePoseTrackerAnchor : ControllerAnchorEnum.RightLaserAnchor);
+                laserRay = new Ray(laserAnchor.transform.position, laserAnchor.transform.forward);
+            }
         }
 
-        if (NRInput.GetButtonDown(ControllerButton.TRIGGER))
+        if (laserRay != null)
         {
             readCube.ReadState();
 
             RaycastHit hit;
-            Transform laserAnchor = NRInput.AnchorsHelper.GetAnchor(NRInput.RaycastMode == RaycastModeEnum.Gaze ? ControllerAnchorEnum.GazePoseTrackerAnchor : ControllerAnchorEnum.RightLaserAnchor);
-            if (Physics.Raycast(new Ray(laserAnchor.transform.position, laserAnchor.transform.forward), out hit, 100.0f, layerMask))
+            
+            if (Physics.Raycast(laserRay.Value, out hit, 100.0f, layerMask))
             {
                 GameObject face = hit.collider.gameObject;
 
@@ -57,7 +103,7 @@ public class SelectFace : MonoBehaviour
                     cubeState.back
                 };
 
-                foreach(List<GameObject> cubeSide in cubeSides)
+                foreach (List<GameObject> cubeSide in cubeSides)
                 {
                     if (cubeSide.Contains(face))
                     {

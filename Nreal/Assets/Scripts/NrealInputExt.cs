@@ -41,4 +41,38 @@ public class NrealInputExt
         point = new Vector3();
         return false;
     }
+
+    /// <summary>
+    /// Tries to return the laser end postion of the hand input
+    /// </summary>
+    /// <param name="point">Returns the world postions</param>
+    /// <returns>Indicates the success</returns>
+    public static bool GetLaserEndWorldPositionFromHand(out Vector3 point, HandEnum handEnum)
+    {
+        RaycastHit hitResult;
+        return GetLaserEndWorldPositionFromHand(out point, out hitResult, handEnum);
+    }
+
+    /// <summary>
+    /// Tries to return the laser end postion of the hand input
+    /// </summary>
+    /// <param name="point">Returns the world postions</param>
+    /// <param name="hitInfo">Returns the hit information of the raycast</param>
+    /// <returns>Indicates the success</returns>
+    public static bool GetLaserEndWorldPositionFromHand(out Vector3 point, out RaycastHit hitInfo, HandEnum handEnum)
+    {
+        var handState = NRInput.Hands.GetHandState(handEnum);
+        var laserRay = new Ray(handState.pointerPose.position, handState.pointerPose.forward);
+        RaycastHit hitResult;
+        if (Physics.Raycast(laserRay, out hitResult, 10))
+        {
+            hitInfo = hitResult;
+            point = Camera.main.WorldToScreenPoint(hitResult.point);
+            return true;
+        }
+
+        hitInfo = new RaycastHit();
+        point = new Vector3();
+        return false;
+    }
 }
