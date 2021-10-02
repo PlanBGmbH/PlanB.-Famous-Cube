@@ -20,23 +20,32 @@ namespace NRKernal
         /// <summary> Handle of the trackable native. </summary>
         internal UInt64 TrackableNativeHandle = 0;
 
-        /// <summary> The native interface. </summary>
-        internal NativeInterface NativeInterface;
+        private NRTrackableSubsystem m_TrackableSubsystem;
+        internal NRTrackableSubsystem TrackableSubsystem
+        {
+            get
+            {
+                if (m_TrackableSubsystem == null)
+                {
+                    m_TrackableSubsystem = NRSessionManager.Instance.TrackableFactory.TrackableSubsystem;
+                }
+                return m_TrackableSubsystem;
+            }
+        }
 
         /// <summary> Constructor. </summary>
         /// <param name="trackableNativeHandle"> Handle of the trackable native.</param>
         /// <param name="nativeinterface">       The nativeinterface.</param>
-        internal NRTrackable(UInt64 trackableNativeHandle, NativeInterface nativeinterface)
+        internal NRTrackable(UInt64 trackableNativeHandle)
         {
             TrackableNativeHandle = trackableNativeHandle;
-            NativeInterface = nativeinterface;
         }
 
         /// <summary> Get the id of trackable. </summary>
         /// <returns> The data base index. </returns>
         public int GetDataBaseIndex()
         {
-            UInt32 identify = NativeInterface.NativeTrackable.GetIdentify(TrackableNativeHandle);
+            UInt32 identify = TrackableSubsystem.GetIdentify(TrackableNativeHandle);
             identify &= 0X0000FFFF;
             return (int)identify;
         }
@@ -49,7 +58,7 @@ namespace NRKernal
             {
                 return TrackingState.Stopped;
             }
-            return NativeInterface.NativeTrackable.GetTrackingState(TrackableNativeHandle);
+            return TrackableSubsystem.GetTrackingState(TrackableNativeHandle);
         }
 
         /// <summary> Type of the trackable. </summary>
@@ -62,7 +71,7 @@ namespace NRKernal
             {
                 return trackableType;
             }
-            trackableType = NativeInterface.NativeTrackable.GetTrackableType(TrackableNativeHandle);
+            trackableType = TrackableSubsystem.GetTrackableType(TrackableNativeHandle);
             return trackableType;
         }
 

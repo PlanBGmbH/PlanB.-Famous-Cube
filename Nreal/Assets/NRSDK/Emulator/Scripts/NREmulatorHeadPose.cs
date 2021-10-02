@@ -9,20 +9,19 @@
 
 namespace NRKernal
 {
+#if UNITY_EDITOR
     using UnityEngine;
-    /// <summary> A nr emulator head pose. </summary>
     public class NREmulatorHeadPose : MonoBehaviour
     {
-        /// <summary> The camera target. </summary>
-        private GameObject m_CameraTarget;
 
+        private GameObject m_CameraTarget;
         /// <summary> regular speed. </summary>
         public float HeadMoveSpeed = 1.0f;
         /// <summary> How sensitive it with mouse. </summary>
         public float HeadRotateSpeed = 1.0f;
 
-#if UNITY_EDITOR
-        /// <summary> Starts this object. </summary>
+        public Pose headPose { get; private set; }
+
         private void Start()
         {
             DontDestroyOnLoad(this);
@@ -34,10 +33,7 @@ namespace NRKernal
                 DontDestroyOnLoad(m_CameraTarget);
             }
         }
-#endif
 
-#if UNITY_EDITOR
-        /// <summary> Updates this object. </summary>
         private void Update()
         {
             if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
@@ -45,9 +41,7 @@ namespace NRKernal
                 UpdateHeadPosByInput();
             }
         }
-#endif
 
-        /// <summary> Updates the head position by input. </summary>
         void UpdateHeadPosByInput()
         {
             Quaternion q = m_CameraTarget.transform.rotation;
@@ -65,11 +59,9 @@ namespace NRKernal
             Vector3 pos = p + m_CameraTarget.transform.position;
             m_CameraTarget.transform.position = pos;
 
-            NREmulatorManager.Instance?.NativeEmulatorApi?.SetHeadTrackingPose(pos, q);
+            headPose = new Pose(pos, q);
         }
 
-        /// <summary> Gets base input. </summary>
-        /// <returns> The base input. </returns>
         private Vector3 GetBaseInput()
         {
             Vector3 p_Velocity = new Vector3();
@@ -92,4 +84,5 @@ namespace NRKernal
             return p_Velocity;
         }
     }
+#endif
 }

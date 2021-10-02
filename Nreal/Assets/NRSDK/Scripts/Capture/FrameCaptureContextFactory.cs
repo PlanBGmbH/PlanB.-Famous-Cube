@@ -21,12 +21,7 @@ namespace NRKernal.Record
         /// <returns> A FrameCaptureContext. </returns>
         public static FrameCaptureContext Create()
         {
-#if UNITY_EDITOR
-            AbstractFrameProvider provider = new EditorFrameProvider();
-#else
-            AbstractFrameProvider provider = new RGBCameraFrameProvider();
-#endif
-            FrameCaptureContext context = new FrameCaptureContext(provider);
+            FrameCaptureContext context = new FrameCaptureContext();
 
             m_ContextList.Add(context);
             return context;

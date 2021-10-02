@@ -16,6 +16,7 @@ namespace NRKernal.Record
     /// <summary> A nr photo capture. </summary>
     public class NRPhotoCapture : IDisposable
     {
+        private const int CameraDataReadyTimeOut = 3000;
         /// <summary> The supported resolutions. </summary>
         private static IEnumerable<Resolution> m_SupportedResolutions;
 
@@ -29,7 +30,7 @@ namespace NRKernal.Record
                 {
                     var resolutions = new List<Resolution>();
                     var resolution = new Resolution();
-                    var rgbcamera_resolution = NRDevice.Instance.GetRGBCameraResolution();
+                    var rgbcamera_resolution = NRDevice.Subsystem.GetDeviceResolution(NativeDevice.RGB_CAMERA);
                     resolution.width = rgbcamera_resolution.width;
                     resolution.height = rgbcamera_resolution.height;
                     resolutions.Add(resolution);
@@ -94,9 +95,16 @@ namespace NRKernal.Record
                 m_CaptureContext.StartCaptureMode(setupParams);
                 m_CaptureContext.StartCapture();
 
-                NRKernalUpdater.Instance.StartCoroutine(OnPhotoModeStartedReady(() =>
+                NRKernalUpdater.Instance.StartCoroutine(OnPhotoModeStartedReady((ready) =>
                 {
-                    result.resultType = CaptureResultType.Success;
+                    if (ready)
+                    {
+                        result.resultType = CaptureResultType.Success;
+                    }
+                    else
+                    {
+                        result.resultType = CaptureResultType.TimeOutError;
+                    }
                     onPhotoModeStartedCallback?.Invoke(result);
                 }));
             }
@@ -111,17 +119,25 @@ namespace NRKernal.Record
         /// <summary> Executes the 'photo mode started ready' action. </summary>
         /// <param name="callback"> The callback.</param>
         /// <returns> A list of. </returns>
-        public System.Collections.IEnumerator OnPhotoModeStartedReady(Action callback)
+        private System.Collections.IEnumerator OnPhotoModeStartedReady(Action<bool> callback)
         {
+            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
             while (!this.m_CaptureContext.GetFrameProvider().IsFrameReady())
             {
+                if (stopwatch.ElapsedMilliseconds > CameraDataReadyTimeOut)
+                {
+                    callback?.Invoke(false);
+                    NRDebugger.Error("[PhotoCapture] Get rgbcamera data timeout...");
+                    yield break;
+                }
                 NRDebugger.Debug("[PhotoCapture] Wait for the first frame ready...");
                 yield return new WaitForEndOfFrame();
             }
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
-            callback?.Invoke();
+            callback?.Invoke(true);
         }
 
         /// <summary> Stops photo mode asynchronous. </summary>
@@ -186,7 +202,12 @@ namespace NRKernal.Record
             /// <summary>
             /// Specifies that an unknown error occurred.
             /// </summary>            
-            UnknownError = 1
+            UnknownError = 1,
+
+            /// <summary>
+            /// Get rgb camera data timeout.
+            /// </summary>            
+            TimeOutError = 2,
         }
 
         /// <summary>

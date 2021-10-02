@@ -15,7 +15,7 @@ namespace NRKernal
     /// <summary>
     /// Manages AR system state and handles the session lifecycle. this class, application can create
     /// a session, configure it, start/pause or stop it. </summary>
-    public class NRTrackableManager
+    public class NRTrackableManager : ILifecycle
     {
         /// <summary> Dictionary of trackables. </summary>
         private Dictionary<UInt64, NRTrackable> m_TrackableDict = new Dictionary<UInt64, NRTrackable>();
@@ -34,23 +34,86 @@ namespace NRKernal
         /// <summary> Temp trackable handle list. </summary>
         private List<UInt64> m_TempTrackableHandles = new List<UInt64>();
 
-        /// <summary> The native interface. </summary>
-        private NativeInterface m_NativeInterface = null;
+        private NRTrackableSubsystem m_TrackableSubsystem;
+        public NRTrackableSubsystem TrackableSubsystem
+        {
+            get
+            {
+                if (m_TrackableSubsystem == null)
+                {
+                    string trackable_match = NRTrackableSubsystemDescriptor.Name;
+                    List<NRTrackableSubsystemDescriptor> trackableDes = new List<NRTrackableSubsystemDescriptor>();
+                    NRSubsystemManager.GetSubsystemDescriptors(trackableDes);
+                    foreach (var descripe in trackableDes)
+                    {
+                        if (descripe.id.Equals(trackable_match))
+                        {
+                            m_TrackableSubsystem = descripe.Create();
+                        }
+                    }
+                }
+
+                return m_TrackableSubsystem;
+            }
+        }
+
+        private NRPlaneSubsystem m_PlaneSubsystem;
+        public NRPlaneSubsystem PlaneSubsystem
+        {
+            get
+            {
+                if (m_PlaneSubsystem == null)
+                {
+                    string trackable_match = NRPlaneSubsystemDescriptor.Name;
+                    List<NRPlaneSubsystemDescriptor> trackableDes = new List<NRPlaneSubsystemDescriptor>();
+                    NRSubsystemManager.GetSubsystemDescriptors(trackableDes);
+                    foreach (var descripe in trackableDes)
+                    {
+                        if (descripe.id.Equals(trackable_match))
+                        {
+                            m_PlaneSubsystem = descripe.Create();
+                        }
+                    }
+                }
+
+                return m_PlaneSubsystem;
+            }
+        }
+
+        private NRTrackableImageSubsystem m_TrackableImagesSubsystem;
+        public NRTrackableImageSubsystem TrackableImageSubsystem
+        {
+            get
+            {
+                if (m_TrackableImagesSubsystem == null)
+                {
+                    string trackable_match = NRTrackableImageSubsystemDescriptor.Name;
+                    List<NRTrackableImageSubsystemDescriptor> trackableDes = new List<NRTrackableImageSubsystemDescriptor>();
+                    NRSubsystemManager.GetSubsystemDescriptors(trackableDes);
+                    foreach (var descripe in trackableDes)
+                    {
+                        if (descripe.id.Equals(trackable_match))
+                        {
+                            m_TrackableImagesSubsystem = descripe.Create();
+                        }
+                    }
+                }
+
+                return m_TrackableImagesSubsystem;
+            }
+        }
 
         /// <summary> Constructor. </summary>
         /// <param name="nativeInterface"> The native interface.</param>
-        public NRTrackableManager(NativeInterface nativeInterface)
-        {
-            m_NativeInterface = nativeInterface;
-        }
+        public NRTrackableManager() { }
 
         /// <summary> Creates a new NRTrackable. </summary>
         /// <param name="trackable_handle"> Handle of the trackable.</param>
         /// <param name="nativeInterface">  The native interface.</param>
         /// <returns> A NRTrackable. </returns>
-        private NRTrackable Create(UInt64 trackable_handle, NativeInterface nativeInterface)
+        private NRTrackable Create(UInt64 trackable_handle)
         {
-            if (trackable_handle == 0)
+            if (trackable_handle == 0 || !TrackableSubsystem.running)
             {
                 return null;
             }
@@ -61,18 +124,14 @@ namespace NRKernal
                 return result;
             }
 
-            if (nativeInterface == null)
-            {
-                return null;
-            }
-            TrackableType trackableType = nativeInterface.NativeTrackable.GetTrackableType(trackable_handle);
+            TrackableType trackableType = TrackableSubsystem.GetTrackableType(trackable_handle);
             if (trackableType == TrackableType.TRACKABLE_PLANE)
             {
-                result = new NRTrackablePlane(trackable_handle, nativeInterface);
+                result = new NRTrackablePlane(trackable_handle);
             }
             else if (trackableType == TrackableType.TRACKABLE_IMAGE)
             {
-                result = new NRTrackableImage(trackable_handle, nativeInterface);
+                result = new NRTrackableImage(trackable_handle);
             }
             else
             {
@@ -102,16 +161,16 @@ namespace NRKernal
         /// <param name="trackable_type"> Type of the trackable.</param>
         private void UpdateTrackables(TrackableType trackable_type)
         {
-            if (m_NativeInterface == null || m_NativeInterface.TrackingHandle == 0)
+            if (!TrackableSubsystem.running)
             {
                 return;
             }
 
-            if (m_NativeInterface.NativeTrackable.UpdateTrackables(trackable_type, m_TempTrackableHandles))
+            if (TrackableSubsystem.UpdateTrackables(trackable_type, m_TempTrackableHandles))
             {
                 for (int i = 0; i < m_TempTrackableHandles.Count; i++)
                 {
-                    Create(m_TempTrackableHandles[i], m_NativeInterface);
+                    Create(m_TempTrackableHandles[i]);
                 }
             }
         }
@@ -185,6 +244,34 @@ namespace NRKernal
                 return TrackableType.TRACKABLE_IMAGE;
             }
             return TrackableType.TRACKABLE_BASE;
+        }
+
+        public void Start()
+        {
+            TrackableSubsystem.Start();
+            PlaneSubsystem.Start();
+            TrackableImageSubsystem.Start();
+        }
+
+        public void Pause()
+        {
+            TrackableSubsystem.Pause();
+            PlaneSubsystem.Pause();
+            TrackableImageSubsystem.Pause();
+        }
+
+        public void Resume()
+        {
+            TrackableSubsystem.Resume();
+            PlaneSubsystem.Resume();
+            TrackableImageSubsystem.Resume();
+        }
+
+        public void Stop()
+        {
+            TrackableSubsystem.Stop();
+            PlaneSubsystem.Stop();
+            TrackableImageSubsystem.Stop();
         }
     }
 }

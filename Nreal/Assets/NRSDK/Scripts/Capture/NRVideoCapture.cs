@@ -32,49 +32,40 @@ namespace NRKernal.Record
 
         }
 
-        /// <summary> The supported resolutions. </summary>
-        private static IEnumerable<Resolution> m_SupportedResolutions = null;
-
         /// <summary> A list of all the supported device resolutions for recording videos. </summary>
         /// <value> The supported resolutions. </value>
         public static IEnumerable<Resolution> SupportedResolutions
         {
             get
             {
-                if (m_SupportedResolutions == null)
-                {
-                    var resolutions = new List<Resolution>();
-
 #if !UNITY_EDITOR
-                    NativeResolution rgbResolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.RGB);
+                NativeResolution rgbResolution = NRFrame.GetDeviceResolution(NativeDevice.RGB_CAMERA);
 #else
-                    NativeResolution rgbResolution = new NativeResolution(1280, 720);
+                NativeResolution rgbResolution = new NativeResolution(1280, 720);
 #endif
-                    Resolution stand_resolution = new Resolution()
-                    {
-                        width = rgbResolution.width,
-                        height = rgbResolution.height,
-                        refreshRate = 30,
-                    };
-                    Resolution low_resolution = new Resolution()
-                    {
-                        width = stand_resolution.width / 2,
-                        height = stand_resolution.height / 2,
-                        refreshRate = 30,
-                    };
-                    Resolution high_resolution = new Resolution()
-                    {
-                        width = stand_resolution.width * 3 / 2,
-                        height = stand_resolution.height * 3 / 2,
-                        refreshRate = 30,
-                    };
-                    resolutions.Add(stand_resolution);
-                    resolutions.Add(high_resolution);
-                    resolutions.Add(low_resolution);
-                    m_SupportedResolutions = resolutions;
-                }
+                Resolution stand_resolution = new Resolution()
+                {
+                    width = rgbResolution.width,
+                    height = rgbResolution.height,
+                    refreshRate = NativeConstants.RECORD_FPS_DEFAULT,
+                };
+                yield return stand_resolution;
 
-                return m_SupportedResolutions;
+                Resolution low_resolution = new Resolution()
+                {
+                    width = stand_resolution.width / 2,
+                    height = stand_resolution.height / 2,
+                    refreshRate = NativeConstants.RECORD_FPS_DEFAULT,
+                };
+                yield return low_resolution;
+
+                Resolution high_resolution = new Resolution()
+                {
+                    width = stand_resolution.width * 3 / 2,
+                    height = stand_resolution.height * 3 / 2,
+                    refreshRate = NativeConstants.RECORD_FPS_DEFAULT,
+                };
+                yield return high_resolution;
             }
         }
 
@@ -119,9 +110,7 @@ namespace NRKernal.Record
         /// <returns> The frame rates at which the video can be recorded. </returns>
         public static IEnumerable<int> GetSupportedFrameRatesForResolution(Resolution resolution)
         {
-            List<int> frameRates = new List<int>();
-            frameRates.Add(30);
-            return frameRates;
+            yield return NativeConstants.RECORD_FPS_DEFAULT;
         }
 
         /// <summary> Dispose must be called to shutdown the PhotoCapture instance. </summary>
@@ -275,10 +264,10 @@ namespace NRKernal.Record
             /// </summary>
             MicAudio = 0,
 
-            ///// <summary>
-            ///// Only include the application audio in the video recording.
-            ///// </summary>
-            //ApplicationAudio = 1,
+            /// <summary>
+            /// Only include the application audio in the video recording.
+            /// </summary>
+            ApplicationAudio = 1,
 
             ///// <summary>
             ///// Include both the application audio as well as the mic audio in the video recording.

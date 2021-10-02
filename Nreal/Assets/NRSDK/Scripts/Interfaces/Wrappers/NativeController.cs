@@ -372,11 +372,19 @@ namespace NRKernal
         {
             if (m_ControllerHandle == 0)
             {
-                return string.Empty;
+                return "";
             }
+
             byte[] bytes = new byte[128];
             var result = NativeApi.NRControllerGetVersion(m_ControllerHandle, controllerIndex, bytes, bytes.Length);
-            return System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+            if (result == NativeResult.Success)
+            {
+                return System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+            }
+            else
+            {
+                return "";
+            }
         }
 
         public HandednessType GetHandednessType()

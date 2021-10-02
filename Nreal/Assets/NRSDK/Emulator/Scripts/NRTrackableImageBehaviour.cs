@@ -42,18 +42,17 @@ namespace NRKernal
         }
 
 #if UNITY_EDITOR
-        /// <summary> Updates this object. </summary>
         private void Update()
         {
             float extent = transform.lossyScale.x * 1000;
             if (NREmulatorManager.Instance.IsInGameView(transform.position))
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackableData<NRTrackableImage>
+                NREmulatorTrackableProvider.UpdateTrackableData<NRTrackableImage>
                 (transform.position, transform.rotation, extent, extent, (uint)DatabaseIndex, TrackingState.Tracking);
             }
             else
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackableData<NRTrackableImage>
+                NREmulatorTrackableProvider.UpdateTrackableData<NRTrackableImage>
                 (transform.position, transform.rotation, extent, extent, (uint)DatabaseIndex, TrackingState.Stopped);
             }
         }

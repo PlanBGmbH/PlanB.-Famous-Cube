@@ -41,7 +41,6 @@ namespace NRKernal.NRExamples
         {
             polygonList.Clear();
 
-            Pose centerPos = new Pose(tran.position, tran.rotation);
             var unityWorldTPlane = Matrix4x4.TRS(tran.position, tran.rotation, Vector3.one);
             for (int i = 0; i < VectorsDataEditor.Length; i++)
             {
@@ -96,7 +95,7 @@ namespace NRKernal.NRExamples
                 vertices3D[i] = transform.InverseTransformPoint(vectors[i - 1]);
             }
 
-            int[] triangles = GenerateTriangles(m_PosList);
+            int[] triangles = GenerateTriangles(vectors);
 
             if (m_PlaneMesh == null)
             {
@@ -128,10 +127,7 @@ namespace NRKernal.NRExamples
             m_Collider.sharedMesh = m_PlaneMesh;
         }
 
-        /// <summary> Generates the triangles. </summary>
-        /// <param name="posList"> List of positions.</param>
-        /// <returns> An array of int. </returns>
-        private int[] GenerateTriangles(List<Vector3> posList)
+        public static int[] GenerateTriangles(List<Vector3> posList)
         {
             List<int> indices = new List<int>();
             for (int i = 0; i < posList.Count; i++)

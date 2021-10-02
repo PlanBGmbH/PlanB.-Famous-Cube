@@ -6219,7 +6219,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 803008384}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1, z: 1.3}
+  m_LocalPosition: {x: 0, y: 0.025, z: 1.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1234883758}
@@ -9671,7 +9671,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: ad5df0a202aa0664aa132f268e664317,
+      objectReference: {fileID: 21300000, guid: 441993c4d8f34574fa76768fc7693771,
         type: 3}
     - target: {fileID: 8288902925528648973, guid: d48ec07b4c5ca954796f489d8c49c058,
         type: 3}

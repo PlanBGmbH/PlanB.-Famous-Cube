@@ -157,8 +157,6 @@ namespace NRKernal
             currentHandState.currentGesture = targetHandState.currentGesture;
 
             Quaternion handRootQuation = m_HandRootPose.rotation;
-            var rootPose = new Pose(HAND_ROOT_DEFAULT_LOCAL_POSITION, Quaternion.identity);
-
             foreach (var jointPoseItem in targetHandState.jointsPoseDict)
             {
                 var relativePosition = jointPoseItem.Value.position - HAND_ROOT_DEFAULT_LOCAL_POSITION;

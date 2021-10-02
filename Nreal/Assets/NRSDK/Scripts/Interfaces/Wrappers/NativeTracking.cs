@@ -37,10 +37,10 @@ namespace NRKernal
             return result == NativeResult.Success;
         }
 
-        /// <summary> Sets tracking mode. </summary>
+        /// <summary> Inits tracking mode. </summary>
         /// <param name="mode"> The mode.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool SetTrackingMode(TrackingMode mode)
+        public bool InitTrackingMode(TrackingMode mode)
         {
             if (m_TrackingHandle == 0)
             {

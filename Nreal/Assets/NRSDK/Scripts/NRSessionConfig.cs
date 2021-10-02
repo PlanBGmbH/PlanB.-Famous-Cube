@@ -31,19 +31,19 @@ namespace NRKernal
         [Tooltip("A scriptable object specifying the NRSDK TrackingImageDatabase configuration.")]
         public NRTrackingImageDatabase TrackingImageDatabase;
 
-        /// <summary> A prefab specifying the NRSDK TrackingImageDatabase configuration. </summary>
+        /// <summary> Chooses whether notification will be used. </summary>
         [Tooltip("Chooses whether notification will be used.")]
-        public bool EnableNotification;
+        public bool EnableNotification = false;
 
-        /// <summary> A prefab specifying the NRSDK TrackingImageDatabase configuration. </summary>
+        /// <summary> An error prompt will pop up when the device fails to connect. </summary>
         [Tooltip("An error prompt will pop up when the device fails to connect.")]
         public NRGlassesInitErrorTip GlassesErrorTipPrefab;
 
-        /// <summary> A prefab specifying the NRSDK TrackingImageDatabase configuration. </summary>
+        /// <summary> An warnning prompt will pop up when the lost tracking. </summary>
         [Tooltip("An warnning prompt will pop up when the lost tracking.")]
         public NRTrackingModeChangedTip TrackingModeChangeTipPrefab;
 
-        /// <summary> Read it from PlayerdSetting automatically . </summary>
+        /// <summary> It will be read automatically from PlayerdSetting. </summary>
         [Tooltip("It will be read automatically from PlayerdSetting. ")]
         [HideInInspector]
         public bool UseMultiThread = false;

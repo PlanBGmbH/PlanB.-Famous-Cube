@@ -89,7 +89,6 @@ namespace NRKernal
     </activity>
     <meta-data android:name='nreal_sdk' android:value='true'/>
   </application>
-  <uses-permission android:name='android.permission.CAMERA'/>
   <uses-permission android:name='android.permission.BLUETOOTH'/>
   <uses-permission android:name='android.permission.BLUETOOTH_ADMIN' />
   <uses-permission android:name='android.permission.QUERY_ALL_PACKAGES' />
@@ -161,7 +160,7 @@ namespace NRKernal
             //bool needrequestLegacyExternalStorage = (GetAndroidTargetApiLevel() >= 29);
             //androidManifest.SetExternalStorage(needrequestLegacyExternalStorage);
             androidManifest.SetPackageReadPermission();
-            androidManifest.SetCameraPermission();
+            //androidManifest.SetCameraPermission();
             androidManifest.SetBlueToothPermission();
             androidManifest.SetSDKMetaData();
             androidManifest.SetAPKDisplayedOnLauncher(isShowOnDesktop);

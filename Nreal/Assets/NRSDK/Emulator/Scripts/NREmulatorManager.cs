@@ -9,8 +9,8 @@
 
 namespace NRKernal
 {
-    using System.Collections;
-    using System.Collections.Generic;
+
+#if UNITY_EDITOR
     using UnityEngine;
 
     /// <summary> Manager for nr emulators. </summary>
@@ -19,10 +19,6 @@ namespace NRKernal
         /// <summary> Gets or sets the instance. </summary>
         /// <value> The instance. </value>
         public static NREmulatorManager Instance { get; set; }
-
-        /// <summary> Gets or sets the native emulator API. </summary>
-        /// <value> The native emulator API. </value>
-        public NativeEmulator NativeEmulatorApi { get; set; }
 
         /// <summary> Identifier for the simulation plane. </summary>
         public static int SIMPlaneID = 0;
@@ -36,28 +32,8 @@ namespace NRKernal
         /// <summary> Starts this object. </summary>
         private void Start()
         {
-#if UNITY_EDITOR
             DontDestroyOnLoad(this);
             Instance = this;
-            NativeEmulatorApi = new NativeEmulator();
-            CreateSimulator();
-#endif
-        }
-
-
-        /// <summary> Executes the 'destroy' action. </summary>
-        private void OnDestroy()
-        {
-#if UNITY_EDITOR
-            NativeEmulatorApi.DestorySIMController();
-#endif
-        }
-
-        /// <summary> Creates the simulator. </summary>
-        public void CreateSimulator()
-        {
-            NativeEmulatorApi.CreateSIMTracking();
-            NativeEmulatorApi.CreateSIMController();
         }
 
         /// <summary> Query if 'worldPos' is in game view. </summary>
@@ -80,5 +56,6 @@ namespace NRKernal
             }
         }
     }
+#endif
 }
 

@@ -15,20 +15,6 @@ namespace NRKernal
     /// The class is to emulate controller with mouse and keyboard input in unity editor mode. </summary>
     public class EditorControllerProvider : ControllerProviderBase
     {
-        /// <summary> The mouse delta. </summary>
-        private Vector2 mouseDelta = new Vector2();
-
-        /// <summary> The axis horizontal. </summary>
-        private const string AXIS_HORIZONTAL = "Horizontal";
-        /// <summary> The axis vertical. </summary>
-        private const string AXIS_VERTICAL = "Vertical";
-        /// <summary> The axis mouse x coordinate. </summary>
-        private const string AXIS_MOUSE_X = "Mouse X";
-        /// <summary> The axis mouse y coordinate. </summary>
-        private const string AXIS_MOUSE_Y = "Mouse Y";
-        /// <summary> The rotate sensitivity. </summary>
-        private const float ROTATE_SENSITIVITY = 4;
-
         /// <summary> Gets the number of controllers. </summary>
         /// <value> The number of controllers. </value>
         public override int ControllerCount
@@ -66,6 +52,12 @@ namespace NRKernal
             UpdateControllerState(0);
         }
 
+        public override void Recenter()
+        {
+            base.Recenter();
+            needRecenter = true;
+        }
+
         /// <summary> Executes the 'destroy' action. </summary>
         public override void OnDestroy()
         {
@@ -79,54 +71,117 @@ namespace NRKernal
             states[index].controllerType = ControllerType.CONTROLLER_TYPE_EDITOR;
             states[index].availableFeature = ControllerAvailableFeature.CONTROLLER_AVAILABLE_FEATURE_ROTATION;
             states[index].connectionState = ControllerConnectionState.CONTROLLER_CONNECTION_STATE_CONNECTED;
-            UpdateRotation(index);
+            states[index].rotation = rotation;
 
-            states[index].touchPos = new Vector2(Input.GetAxis(AXIS_HORIZONTAL), Input.GetAxis(AXIS_VERTICAL));
-            states[index].isTouching = !states[index].touchPos.Equals(Vector2.zero);
+            states[index].touchPos = touchPos;
+            states[index].isTouching = isTouching;
             states[index].recentered = false;
-
-            states[index].buttonsState =
-                (Input.GetKey(KeyCode.Mouse0) ? ControllerButton.TRIGGER : 0)
-                | (Input.GetKey(KeyCode.Mouse1) ? ControllerButton.HOME : 0)
-                | (Input.GetKey(KeyCode.Mouse2) ? ControllerButton.APP : 0);
-            states[index].buttonsDown = 
-                (Input.GetKeyDown(KeyCode.Mouse0) ? ControllerButton.TRIGGER : 0)
-                | (Input.GetKeyDown(KeyCode.Mouse1) ? ControllerButton.HOME : 0)
-                | (Input.GetKeyDown(KeyCode.Mouse2) ? ControllerButton.APP : 0);
-            states[index].buttonsUp = 
-                (Input.GetKeyUp(KeyCode.Mouse0) ? ControllerButton.TRIGGER : 0)
-                | (Input.GetKeyUp(KeyCode.Mouse1) ? ControllerButton.HOME : 0)
-                | (Input.GetKeyUp(KeyCode.Mouse2) ? ControllerButton.APP : 0);
             states[index].isCharging = false;
             states[index].batteryLevel = 100;
-            CheckRecenter(index);
-        }
 
-        /// <summary> Updates the rotation described by index. </summary>
-        /// <param name="index"> Zero-based index of the.</param>
-        private void UpdateRotation(int index)
-        {
-            if (Input.GetKey(KeyCode.LeftShift))
+            if (NRInput.EmulateVirtualDisplayInEditor)
             {
-                mouseDelta.Set(
-                    Input.GetAxis(AXIS_MOUSE_X),
-                    -Input.GetAxis(AXIS_MOUSE_Y));
-                Vector3 deltaDegrees = mouseDelta * ROTATE_SENSITIVITY;
-                Quaternion yaw = Quaternion.AngleAxis(deltaDegrees.x, Vector3.up);
-                Quaternion pitch = Quaternion.AngleAxis(deltaDegrees.y, Vector3.right);
-                states[index].rotation = states[index].rotation * yaw * pitch;
+                IControllerStateParser stateParser = ControllerStateParseUtility.GetControllerStateParser(states[index].controllerType, index);
+                if (stateParser != null)
+                {
+                    stateParser.ParserControllerState(states[index]);
+                }
+            }
+            else
+            {
+                var trigger_button_state = (states[index].buttonsState) & (ControllerButton.TRIGGER);
+                var app_button_state = (states[index].buttonsState) & (ControllerButton.APP);
+                var home_button_state = (states[index].buttonsState) & (ControllerButton.HOME);
+
+                states[index].buttonsState =
+                    ((buttonState[0] == 1) ? ControllerButton.TRIGGER : 0)
+                    | ((buttonState[1] == 1) ? ControllerButton.APP : 0)
+                    | ((buttonState[2] == 1) ? ControllerButton.HOME : 0);
+                states[index].buttonsDown =
+                    (trigger_button_state != ControllerButton.TRIGGER && buttonState[0] == 1 ? ControllerButton.TRIGGER : 0)
+                    | (app_button_state != ControllerButton.APP && buttonState[1] == 1 ? ControllerButton.APP : 0)
+                    | (home_button_state != ControllerButton.HOME && buttonState[2] == 1 ? ControllerButton.HOME : 0);
+                states[index].buttonsUp =
+                    (trigger_button_state == ControllerButton.TRIGGER && buttonState[0] == 0 ? ControllerButton.TRIGGER : 0)
+                    | (app_button_state == ControllerButton.APP && buttonState[1] == 0 ? ControllerButton.APP : 0)
+                    | (home_button_state == ControllerButton.HOME && buttonState[2] == 0 ? ControllerButton.HOME : 0);
+            }
+
+            CheckRecenter(index);
+            if (needRecenter)
+            {
+                states[0].recentered = true;
+                resetRotation = Quaternion.Inverse(originRotation);
+                needRecenter = false;
             }
         }
 
-        /// <summary> Check recenter. </summary>
-        /// <param name="index"> Zero-based index of the.</param>
+        bool needRecenter;
+        float timeLast = 0;
         private void CheckRecenter(int index)
         {
-            if (states[index].GetButtonDown(ControllerButton.APP))
+            if (states[index].GetButton(ControllerButton.HOME))
             {
-                states[index].recentered = true;
-                states[index].rotation = Quaternion.identity;
+                timeLast += Time.deltaTime;
+                if (timeLast > 2f)
+                {
+                    needRecenter = true;
+                    timeLast = 0f;
+                }
             }
+            else
+            {
+                timeLast = 0f;
+            }
+        }
+
+        // Receive input data.
+        private static Vector2 touchPos;
+        private static bool isTouching = false;
+        private static int[] buttonState = new int[3] { 0, 0, 0 };
+        private static Quaternion rotation = Quaternion.identity;
+        private static Quaternion originRotation = Quaternion.identity;
+        private static Quaternion resetRotation = Quaternion.identity;
+
+        public static void SetControllerTouchPoint(float x, float y)
+        {
+            touchPos.x = x;
+            touchPos.y = y;
+        }
+
+        public static void SetControllerIsTouching(bool istouching)
+        {
+            isTouching = istouching;
+        }
+
+        public static void SetControllerButtonState(ControllerButton button, int state)
+        {
+            switch (button)
+            {
+                case ControllerButton.TRIGGER:
+                    buttonState[0] = state;
+                    buttonState[1] = 0;
+                    buttonState[2] = 0;
+                    break;
+                case ControllerButton.APP:
+                    buttonState[0] = 0;
+                    buttonState[1] = state;
+                    buttonState[2] = 0;
+                    break;
+                case ControllerButton.HOME:
+                    buttonState[0] = 0;
+                    buttonState[1] = 0;
+                    buttonState[2] = state;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public static void SetControllerRotation(Quaternion qua)
+        {
+            originRotation = qua;
+            rotation = resetRotation * originRotation;
         }
     }
 }

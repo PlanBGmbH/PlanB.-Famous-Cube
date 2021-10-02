@@ -19,14 +19,24 @@ namespace NRKernal
         private static Dictionary<Type, ControllerProviderBase> m_ControllerProviderDict = new Dictionary<Type, ControllerProviderBase>();
 
         /// <summary> Type of the android controller provider. </summary>
-        public static Type androidControllerProviderType = typeof(NRControllerProvider);
+        public static Type controllerProviderType
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return typeof(EditorControllerProvider);
+#else
+               return typeof(NRControllerProvider);
+#endif
+            }
+        }
 
         /// <summary> Creates controller provider. </summary>
         /// <param name="states"> The states.</param>
         /// <returns> The new controller provider. </returns>
         public static ControllerProviderBase CreateControllerProvider(ControllerState[] states)
         {
-            ControllerProviderBase provider = GetOrCreateControllerProvider(androidControllerProviderType, states);
+            ControllerProviderBase provider = GetOrCreateControllerProvider(controllerProviderType, states);
             return provider;
         }
 
@@ -53,5 +63,5 @@ namespace NRKernal
             return null;
         }
     }
-    
+
 }

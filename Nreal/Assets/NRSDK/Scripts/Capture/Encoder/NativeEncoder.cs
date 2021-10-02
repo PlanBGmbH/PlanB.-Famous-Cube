@@ -16,21 +16,15 @@ namespace NRKernal.Record
     /// <summary> A native encoder. </summary>
     public class NativeEncoder
     {
-        /// <summary> The nr native encode library. </summary>
-        public const String NRNativeEncodeLibrary = "media_enc";
-        /// <summary> Handle of the encode. </summary>
+        public const string NRNativeEncodeLibrary = "media_enc";
         public UInt64 EncodeHandle;
 
-        /// <summary> Creates a new bool. </summary>
-        /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Create()
         {
             var result = NativeApi.HWEncoderCreate(ref EncodeHandle);
             return result == 0;
         }
 
-        /// <summary> Starts this object. </summary>
-        /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Start()
         {
             var result = NativeApi.HWEncoderStart(EncodeHandle);
@@ -38,8 +32,6 @@ namespace NRKernal.Record
             return result == 0;
         }
 
-        /// <summary> Sets a configration. </summary>
-        /// <param name="config"> The configuration.</param>
         public void SetConfigration(NativeEncodeConfig config)
         {
             var result = NativeApi.HWEncoderSetConfigration(EncodeHandle, config.ToString());
@@ -51,12 +43,15 @@ namespace NRKernal.Record
         /// <param name="time_stamp"> The time stamp.</param>
         public void UpdateSurface(IntPtr texture_id, UInt64 time_stamp)
         {
-            var result = NativeApi.HWEncoderUpdateSurface(EncodeHandle, texture_id, time_stamp);
-            NativeErrorListener.Check(result, this, "UpdateSurface");
+            NativeApi.HWEncoderUpdateSurface(EncodeHandle, texture_id, time_stamp);
         }
 
-        /// <summary> Stops this object. </summary>
-        /// <returns> True if it succeeds, false if it fails. </returns>
+        public void UpdateAudioData(byte[] audioData, int samplerate, int bytePerSample, int channel)
+        {
+            //NRDebugger.Info("[NativeEncode] UpdateAudioData, audioData len:{0} samplerate:{1} bytePerSample:{2} channel:{3}", audioData.Length, samplerate, bytePerSample, channel);
+            NativeApi.HWEncoderNotifyAudioData(EncodeHandle, audioData, audioData.Length / bytePerSample, bytePerSample, channel, samplerate, 1);
+        }
+
         public bool Stop()
         {
             var result = NativeApi.HWEncoderStop(EncodeHandle);
@@ -64,14 +59,12 @@ namespace NRKernal.Record
             return result == 0;
         }
 
-        /// <summary> Destroys this object. </summary>
         public void Destroy()
         {
             var result = NativeApi.HWEncoderDestroy(EncodeHandle);
             NativeErrorListener.Check(result, this, "Destroy");
         }
 
-        /// <summary> A native api. </summary>
         private struct NativeApi
         {
             /// <summary> Hardware encoder create. </summary>
@@ -100,6 +93,10 @@ namespace NRKernal.Record
             /// <returns> A NativeResult. </returns>
             [DllImport(NRNativeEncodeLibrary)]
             public static extern NativeResult HWEncoderUpdateSurface(UInt64 encoder_handle, IntPtr texture_id, UInt64 time_stamp);
+
+            [DllImport(NRNativeEncodeLibrary)]
+            public static extern NativeResult HWEncoderNotifyAudioData(UInt64 encoder, byte[] audioSamples, int nSamples,
+                             int nBytesPerSample, int nChannels, int samples_per_sec, int sample_fmt); //sample_fmt :0:s16, 8 float
 
             /// <summary> Hardware encoder stop. </summary>
             /// <param name="encoder_handle"> Handle of the encoder.</param>

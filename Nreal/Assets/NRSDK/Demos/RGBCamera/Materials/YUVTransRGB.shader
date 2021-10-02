@@ -2,9 +2,9 @@
 {
 	Properties
 	{
-		_MainTex("Texture", 2D) = "white" {}
-		_UTex("U", 2D) = "white" {}
-		_VTex("V", 2D) = "white" {}
+		_MainTex("Texture", 2D) = "black" {}
+		_UTex("U", 2D) = "black" {}
+		_VTex("V", 2D) = "black" {}
 	}
 		SubShader
 	{
@@ -16,8 +16,6 @@
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
-			// make fog work
-			#pragma multi_compile_fog
 
 			#include "UnityCG.cginc"
 
@@ -44,7 +42,6 @@
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
 				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-				UNITY_TRANSFER_FOG(o,o.vertex);
 				return o;
 			}
 

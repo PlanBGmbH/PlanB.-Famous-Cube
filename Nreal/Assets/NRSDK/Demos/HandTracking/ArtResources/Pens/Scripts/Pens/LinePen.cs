@@ -43,8 +43,8 @@ public class LinePen : BasePen
         m_LineRenderer = m_LineRendererObj.GetComponent<LineRenderer>();
         m_LineRenderer.numCapVertices = 8;
         m_LineRenderer.numCornerVertices = 8;
-        m_LineRenderer.startWidth = 0.01f;
-        m_LineRenderer.endWidth = 0.01f;
+        m_LineRenderer.startWidth = lineWidth;
+        m_LineRenderer.endWidth = lineWidth;
     }
 
     private void Draw(Vector3 pos)

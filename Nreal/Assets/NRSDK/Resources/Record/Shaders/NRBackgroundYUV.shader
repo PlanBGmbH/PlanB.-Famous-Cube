@@ -2,17 +2,18 @@ Shader "NRSDK/NRBackgroundYUV"
 {
 	Properties
 	{
-		_MainTex("Main Texture", 2D) = "black" {}
-		_UTex("U", 2D) = "white" {}
-		_VTex("V", 2D) = "white" {}
+		_MainTex("Texture", 2D) = "black" {}
+		_UTex("U", 2D) = "black" {}
+		_VTex("V", 2D) = "black" {}
 	}
 
-		Subshader
+	SubShader
 	{
+		Tags { "RenderType" = "Opaque" }
+		LOD 100
+
 		Pass
 		{
-			ZWrite Off
-
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -28,20 +29,22 @@ Shader "NRSDK/NRBackgroundYUV"
 			struct v2f
 			{
 				float2 uv : TEXCOORD0;
+				UNITY_FOG_COORDS(1)
 				float4 vertex : SV_POSITION;
 			};
+
+			sampler2D _MainTex;
+			float4 _MainTex_ST;
+			sampler2D _UTex;
+			sampler2D _VTex;
 
 			v2f vert(appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = v.uv;
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
-
-			sampler2D _MainTex;
-			sampler2D _UTex;
-			sampler2D _VTex;
 
 			fixed4 frag(v2f i) : SV_Target
 			{
@@ -58,10 +61,7 @@ Shader "NRSDK/NRBackgroundYUV"
 				col_bg.rgb = GammaToLinearSpace(col_bg.rgb);
 				return col_bg;
 			}
-
 			ENDCG
 		}
 	}
-
-		FallBack Off
 }

@@ -36,7 +36,7 @@ public class ChangeInteractionMode : MonoBehaviour
         HandInteractionActive = false;
         this.BuHandInteraction.SetActive(true);
         this.BuLaserInteraction.SetActive(false);
-        this.Handmenu.transform.position = new Vector3(this.Handmenu.transform.position.x, this.Handmenu.transform.position.y - 0.1f, this.Handmenu.transform.position.z + 0.1f);
+        //this.Handmenu.transform.position = new Vector3(this.Handmenu.transform.position.x, this.Handmenu.transform.position.y - 0.1f, this.Handmenu.transform.position.z + 0.1f);
         NRInput.SetInputSource(InputSourceEnum.Controller);
     }
 
@@ -48,7 +48,7 @@ public class ChangeInteractionMode : MonoBehaviour
         HandInteractionActive = true;
         this.BuLaserInteraction.SetActive(true);
         this.BuHandInteraction.SetActive(false);
-        this.Handmenu.transform.position = new Vector3(this.Handmenu.transform.position.x, this.Handmenu.transform.position.y + 0.1f, this.Handmenu.transform.position.z - 0.1f);
+        //this.Handmenu.transform.position = new Vector3(this.Handmenu.transform.position.x, this.Handmenu.transform.position.y + 0.1f, this.Handmenu.transform.position.z - 0.1f);
         NRInput.SetInputSource(InputSourceEnum.Hands);
     }
 }

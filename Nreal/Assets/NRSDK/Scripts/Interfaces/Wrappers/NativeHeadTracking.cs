@@ -49,7 +49,7 @@ namespace NRKernal
 
         /// <summary> Creates a new bool. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public bool Create()
+        public bool Start()
         {
             if (m_NativeInterface.TrackingHandle == 0)
             {
@@ -112,6 +112,13 @@ namespace NRKernal
             recommend_time += predict_time;
 
             return GetHeadPose(ref pose, recommend_time);
+        }
+
+        public ulong GetHMDTimeNanos()
+        {
+            ulong timestamp = 0;
+            NativeApi.NRTrackingGetHMDTimeNanos(m_NativeInterface.TrackingHandle, ref timestamp);
+            return timestamp;
         }
 
         public bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp)

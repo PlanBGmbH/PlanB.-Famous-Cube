@@ -7,9 +7,12 @@
 * 
 *****************************************************************************/
 
+using System;
+
 namespace NRKernal
 {
     /// <summary> Values that represent native eyes. </summary>
+    [Obsolete("Use 'NativeDevice' instead.")]
     public enum NativeEye
     {
         /// <summary> 

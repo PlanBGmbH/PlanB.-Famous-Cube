@@ -199,6 +199,14 @@ namespace NRKernal
             return true;
         }
 
+        private void OnApplicationPause(bool pause)
+        {
+            if (pause)
+            {
+                this.CacheWorldMatrix();
+            }
+        }
+
         /// <summary> Change to 6 degree of freedom. </summary>
         public bool ChangeTo6Dof(OnTrackingModeChanged OnModeChanged) { return ChangeMode(TrackingType.Tracking6Dof, OnModeChanged); }
 
@@ -210,6 +218,20 @@ namespace NRKernal
 
         private Matrix4x4 cachedWorldMatrix = Matrix4x4.identity;
         /// <summary> Cache the world matrix. </summary>
+        public void CacheWorldMatrix()
+        {
+            Pose cachePose;
+            if (UseRelative)
+            {
+                cachePose = new Pose(transform.localPosition, transform.localRotation);
+            }
+            else
+            {
+                cachePose = new Pose(transform.position, transform.rotation);
+            }
+            CacheWorldMatrix(cachePose);
+        }
+
         public void CacheWorldMatrix(Pose pose)
         {
             Plane horizontal_plane = new Plane(Vector3.up, Vector3.zero);
@@ -218,15 +240,52 @@ namespace NRKernal
             cachedWorldMatrix = ConversionUtility.GetTMatrix(pose.position, rotation_use_gravity);
         }
 
-        /// <summary> Reset world matrix ,position:(0,0,0) ,rotation:(x,0,z) </summary>
+        /// <summary> 
+        /// Reset world matrix ,position:(0,0,0) ,rotation:(x,0,z) 
+        /// </summary>
         public void ResetWorldMatrix()
         {
+            Pose pose;
+            if (UseRelative)
+            {
+                pose = new Pose(transform.localPosition, transform.localRotation);
+            }
+            else
+            {
+                pose = new Pose(transform.position, transform.rotation);
+            }
+
             Plane horizontal_plane = new Plane(Vector3.up, Vector3.zero);
-            Pose pose = new Pose(transform.position, transform.rotation);
             Vector3 forward_use_gravity = horizontal_plane.ClosestPointOnPlane(pose.forward).normalized;
             Quaternion rotation_use_gravity = Quaternion.LookRotation(forward_use_gravity, Vector3.up);
             var matrix = ConversionUtility.GetTMatrix(pose.position, rotation_use_gravity);
             cachedWorldMatrix = Matrix4x4.Inverse(matrix) * cachedWorldMatrix;
+        }
+
+        /// <summary>
+        /// Get the world offset matrix from native.
+        /// </summary>
+        /// <returns></returns>
+        public Matrix4x4 GetWorldOffsetMatrixFromNative()
+        {
+            Matrix4x4 parentTransfromMatrix;
+            if (UseRelative)
+            {
+                if (transform.parent == null)
+                {
+                    parentTransfromMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
+                }
+                else
+                {
+                    parentTransfromMatrix = Matrix4x4.TRS(transform.parent.position, transform.parent.rotation, Vector3.one);
+                }
+            }
+            else
+            {
+                parentTransfromMatrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one);
+            }
+
+            return parentTransfromMatrix * cachedWorldMatrix;
         }
 
         private Pose ApplyWorldMatrix(Pose pose)
@@ -278,36 +337,6 @@ namespace NRKernal
             GetNodePoseData(XRNode.Head, out headPose);
             headPose = cachedWorldMatrix.Equals(Matrix4x4.identity) ? headPose : ApplyWorldMatrix(headPose);
             GetNodePoseData(XRNode.CenterEye, out centerPose);
-            // NRDebugger.Info("HeadPose:{0} centerAnchor pose:{1}" ,headPose.position.ToString(), centerPose.position.ToString());
-            switch (m_TrackingType)
-            {
-                case TrackingType.Tracking6Dof:
-                    if (UseRelative)
-                    {
-                        transform.localRotation = headPose.rotation;
-                        transform.localPosition = headPose.position;
-                    }
-                    else
-                    {
-                        transform.rotation = headPose.rotation;
-                        transform.position = headPose.position;
-                    }
-                    break;
-                case TrackingType.Tracking3Dof:
-                    if (UseRelative)
-                    {
-                        transform.localRotation = headPose.rotation;
-                    }
-                    else
-                    {
-                        transform.rotation = headPose.rotation;
-                    }
-                    break;
-                case TrackingType.Tracking0Dof:
-                    break;
-                default:
-                    break;
-            }
             centerCamera.transform.localPosition = Vector3.zero;
             centerCamera.transform.localRotation = Quaternion.identity;
             centerAnchor.localPosition = centerPose.position;
@@ -315,6 +344,7 @@ namespace NRKernal
 #else
             headPose = NRFrame.HeadPose;
             headPose = cachedWorldMatrix.Equals(Matrix4x4.identity) ? headPose : ApplyWorldMatrix(headPose);
+#endif
             switch (m_TrackingType)
             {
                 case TrackingType.Tracking6Dof:
@@ -333,21 +363,26 @@ namespace NRKernal
                     if (UseRelative)
                     {
                         transform.localRotation = headPose.rotation;
+#if UNITY_EDITOR
                         transform.localPosition = Vector3.zero;
+#else
+                        transform.localPosition = headPose.position;
+#endif
                     }
                     else
                     {
                         transform.rotation = headPose.rotation;
+#if UNITY_EDITOR
                         transform.position = Vector3.zero;
+#else
+                        transform.position = headPose.position;
+#endif
                     }
                     break;
                 case TrackingType.Tracking0Dof:
-
-                    break;
                 default:
                     break;
             }
-#endif
         }
 
         /// <summary> Check hmd pose state. </summary>

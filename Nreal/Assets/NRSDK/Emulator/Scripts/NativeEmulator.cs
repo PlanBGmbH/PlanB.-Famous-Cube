@@ -9,12 +9,12 @@
 
 namespace NRKernal
 {
+#if UNITY_EDITOR
     using System;
     using UnityEngine;
     using System.Runtime.InteropServices;
 
-
-    /// <summary> A native emulator. </summary>
+    [Obsolete]
     internal partial class NativeEmulator
     {
         /// <summary> Default constructor. </summary>
@@ -95,11 +95,11 @@ namespace NRKernal
         {
             if (typeof(NRTrackablePlane).Equals(typeof(T)))
             {
-                return NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackablePlaneData(centerPos, centerQua, extentX, extentZ, identifier, state);
+                return NREmulatorTrackableProvider.UpdateTrackablePlaneData(centerPos, centerQua, extentX, extentZ, identifier, state);
             }
             else if (typeof(NRTrackableImage).Equals(typeof(T)))
             {
-                return NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackableImageData(centerPos, centerQua, extentX, extentZ, identifier, state);
+                return NREmulatorTrackableProvider.UpdateTrackableImageData(centerPos, centerQua, extentX, extentZ, identifier, state);
             }
             else
             {
@@ -108,7 +108,6 @@ namespace NRKernal
         }
 
         #endregion
-
 
         #region Controller
 
@@ -326,4 +325,5 @@ namespace NRKernal
         }
 
     }
+#endif
 }

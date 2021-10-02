@@ -150,7 +150,7 @@ namespace NRKernal
             if (m_HandStatesService != null && m_HandStatesService.StopService())
             {
                 NRDebugger.Info("[HandsManager] Hand Tracking Stop: Success");
-                NRInput.SwitchControllerProvider(ControllerProviderFactory.androidControllerProviderType);
+                NRInput.SwitchControllerProvider(ControllerProviderFactory.controllerProviderType);
                 ResetHandStates();
                 OnHandTrackingStopped?.Invoke();
                 return true;
@@ -252,16 +252,16 @@ namespace NRKernal
 
                 if (handState.pointerPoseValid)
                 {
+                    var cameraWorldUp = NRFrame.GetWorldMatrixFromUnityToNative().MultiplyVector(Vector3.up).normalized;
                     var rayEndPoint = palmPose.position;
-                    var right = Vector3.Cross(rayEndPoint - cameraTransform.position, Vector3.up).normalized;
+                    var right = Vector3.Cross(rayEndPoint - cameraTransform.position, cameraWorldUp).normalized;
                     var horizontalVec = right * (handState.handEnum == HandEnum.RightHand ? -1f : 1f);
-                    var rayStartPoint = cameraTransform.position + horizontalVec * 0.14f + Vector3.down * 0.16f;
+                    var rayStartPoint = cameraTransform.position + horizontalVec * 0.14f - cameraWorldUp * 0.16f;
 
                     var foward = (rayEndPoint - rayStartPoint).normalized;
                     var upwards = Vector3.Cross(right, foward);
-
                     var pointerRotation = Quaternion.LookRotation(foward, upwards);
-                    var pointerPosition = rayEndPoint + Vector3.up * 0.01f + foward * 0.06f - horizontalVec * 0.03f;
+                    var pointerPosition = rayEndPoint + cameraWorldUp * 0.01f + foward * 0.06f - horizontalVec * 0.03f;
                     handState.pointerPose = new Pose(pointerPosition, pointerRotation);
                 }
             }

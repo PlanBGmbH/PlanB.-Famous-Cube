@@ -132,7 +132,6 @@ namespace NRKernal.Release
         public static Dictionary<string, string> GetAllPackagesByManifest()
         {
             string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Packages/manifest.json");
-            var contents = File.ReadAllLines(path);
             var json = JsonMapper.ToObject(File.ReadAllText(path));
             var packages = json["dependencies"];
             Dictionary<string, string> dict = new Dictionary<string, string>();

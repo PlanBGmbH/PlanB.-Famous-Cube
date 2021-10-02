@@ -391,9 +391,7 @@ namespace NRKernal
             }
             Pose unitypose;
             ConversionUtility.ApiPoseToUnityPose(jointPose, out unitypose);
-            var worldPos = CameraRigTransform.TransformPoint(unitypose.position);
-            var worldRot = CameraRigTransform.rotation * unitypose.rotation;
-            return new Pose(worldPos, worldRot);
+            return ConversionUtility.ApiWorldToUnityWorld(unitypose);
         }
 
         private partial struct NativeApi

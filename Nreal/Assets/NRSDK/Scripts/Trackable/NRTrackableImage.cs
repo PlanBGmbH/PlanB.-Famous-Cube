@@ -15,11 +15,18 @@ namespace NRKernal
     /// <summary> A trackable image in the real world detected by NRInternel. </summary>
     public class NRTrackableImage : NRTrackable
     {
+        internal NRTrackableImageSubsystem TrackableImageSubsystem
+        {
+            get
+            {
+                return NRSessionManager.Instance.TrackableFactory.TrackableImageSubsystem;
+            }
+        }
+
         /// <summary> Constructor. </summary>
         /// <param name="nativeHandle">    Handle of the native.</param>
         /// <param name="nativeInterface"> The native interface.</param>
-        internal NRTrackableImage(UInt64 nativeHandle, NativeInterface nativeInterface)
-          : base(nativeHandle, nativeInterface)
+        internal NRTrackableImage(UInt64 nativeHandle) : base(nativeHandle)
         {
         }
 
@@ -32,7 +39,8 @@ namespace NRKernal
             {
                 return Pose.identity;
             }
-            return NativeInterface.NativeTrackableImage.GetCenterPose(TrackableNativeHandle);
+            var native_pose = TrackableImageSubsystem.GetCenterPose(TrackableNativeHandle);
+            return ConversionUtility.ApiWorldToUnityWorld(native_pose);
         }
 
         /// <summary> Gets the width of marker. </summary>
@@ -65,7 +73,7 @@ namespace NRKernal
                 {
                     return Vector2.zero;
                 }
-                return NativeInterface.NativeTrackableImage.GetSize(TrackableNativeHandle);
+                return TrackableImageSubsystem.GetSize(TrackableNativeHandle);
             }
         }
     }

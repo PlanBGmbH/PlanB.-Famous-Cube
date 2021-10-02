@@ -20,7 +20,7 @@ namespace NRKernal.Record
         {
             var encoder = this.GetContext().GetEncoder();
             ((VideoEncoder)encoder).EncodeConfig.SetOutPutPath(path);
-            NRDebugger.Info("[NRRecordBehaviour] Encode SetOutPutPath: " + ((VideoEncoder)encoder).EncodeConfig.ToString());
+            NRDebugger.Info("[NRRecordBehaviour] Config " + ((VideoEncoder)encoder).EncodeConfig.ToString());
         }
     }
 }

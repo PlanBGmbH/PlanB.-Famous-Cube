@@ -82,6 +82,13 @@ namespace NRKernal
         public const int NRKERNALUPDATER_ORDER = -1000;
         #endregion
 
+        #region settings
+        public const int RECORD_FPS_DEFAULT = 30;
+        public const int RECORD_VIDEO_BITRATE_DEFAULT = 10240000;
+        public const int RECORD_AUDIO_BITRATE_DEFAULT = 128000;
+        public const int RECORD_AUDIO_SAMPLERATE_DEFAULT = 16000;
+        #endregion
+
         #region XR
         public const string XRPLUGIN = "com.nreal.xr";
         public const string XRPLUGIN_MIN_VERSION = "0.1.0";

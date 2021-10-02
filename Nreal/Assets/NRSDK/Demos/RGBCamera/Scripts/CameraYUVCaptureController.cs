@@ -24,8 +24,7 @@ namespace NRKernal.NRExamples
         /// <value> The yuv camera texture. </value>
         private NRRGBCamTextureYUV YuvCamTexture { get; set; }
 
-        /// <summary> Starts this object. </summary>
-        private void Start()
+        void Start()
         {
             YuvCamTexture = new NRRGBCamTextureYUV();
             BindYuvTexture(YuvCamTexture.GetTexture());
@@ -35,12 +34,21 @@ namespace NRKernal.NRExamples
         /// <summary> Updates this object. </summary>
         void Update()
         {
+            if (YuvCamTexture == null)
+            {
+                return;
+            }
+
             FrameCount.text = YuvCamTexture.FrameCount.ToString();
         }
 
         /// <summary> Plays this object. </summary>
         public void Play()
         {
+            if (YuvCamTexture == null)
+            {
+                YuvCamTexture = new NRRGBCamTextureYUV();
+            }
             YuvCamTexture.Play();
 
             // The origin texture will be destroyed after call "Stop",
@@ -61,20 +69,22 @@ namespace NRKernal.NRExamples
         /// <summary> Pauses this object. </summary>
         public void Pause()
         {
-            YuvCamTexture.Pause();
+            YuvCamTexture?.Pause();
         }
 
         /// <summary> Stops this object. </summary>
         public void Stop()
         {
-            YuvCamTexture.Stop();
+            YuvCamTexture?.Stop();
+            YuvCamTexture = null;
             CaptureImage.enabled = false;
         }
 
         /// <summary> Executes the 'destroy' action. </summary>
         void OnDestroy()
         {
-            YuvCamTexture.Stop();
+            YuvCamTexture?.Stop();
+            YuvCamTexture = null;
         }
     }
 }

@@ -100,8 +100,8 @@ namespace NRKernal
 
         public bool DoRender()
         {
-            FrameInfo framinfo = (FrameInfo)Marshal.PtrToStructure(FrameInfoPtr, typeof(FrameInfo));
 #if !UNITY_EDITOR
+            FrameInfo framinfo = (FrameInfo)Marshal.PtrToStructure(FrameInfoPtr, typeof(FrameInfo));
             var result = NativeApi.NRRenderingDoRender(m_RenderingHandle, framinfo.leftTex, framinfo.rightTex, ref framinfo.headPose);
             return result == NativeResult.Success;
 #else

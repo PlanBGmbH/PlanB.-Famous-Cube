@@ -16,11 +16,19 @@ namespace NRKernal
     /// <summary> A plane in the real world detected by NRInternel. </summary>
     public class NRTrackablePlane : NRTrackable
     {
+        internal NRPlaneSubsystem PlaneSubsystem
+        {
+            get
+            {
+                return NRSessionManager.Instance.TrackableFactory.PlaneSubsystem;
+            }
+        }
+
+
         /// <summary> Constructor. </summary>
         /// <param name="nativeHandle">    Handle of the native.</param>
         /// <param name="nativeInterface"> The native interface.</param>
-        internal NRTrackablePlane(UInt64 nativeHandle, NativeInterface nativeInterface)
-          : base(nativeHandle, nativeInterface)
+        internal NRTrackablePlane(UInt64 nativeHandle) : base(nativeHandle)
         {
         }
 
@@ -34,7 +42,7 @@ namespace NRKernal
             {
                 return trackablePlaneType;
             }
-            trackablePlaneType = NativeInterface.NativePlane.GetPlaneType(TrackableNativeHandle);
+            trackablePlaneType = PlaneSubsystem.GetPlaneType(TrackableNativeHandle);
             return trackablePlaneType;
         }
 
@@ -49,8 +57,8 @@ namespace NRKernal
             {
                 return centerPose;
             }
-            centerPose = NativeInterface.NativePlane.GetCenterPose(TrackableNativeHandle);
-            return centerPose;
+            centerPose = PlaneSubsystem.GetCenterPose(TrackableNativeHandle);
+            return ConversionUtility.ApiWorldToUnityWorld(centerPose);
         }
 
         /// <summary>
@@ -64,7 +72,7 @@ namespace NRKernal
                 {
                     return 0;
                 }
-                return NativeInterface.NativePlane.GetExtentX(TrackableNativeHandle);
+                return PlaneSubsystem.GetExtentX(TrackableNativeHandle);
             }
         }
 
@@ -79,7 +87,7 @@ namespace NRKernal
                 {
                     return 0;
                 }
-                return NativeInterface.NativePlane.GetExtentZ(TrackableNativeHandle);
+                return PlaneSubsystem.GetExtentZ(TrackableNativeHandle);
             }
         }
 
@@ -100,7 +108,7 @@ namespace NRKernal
                 return;
             }
 
-            NativeInterface.NativePlane.GetBoundaryPolygon(TrackableNativeHandle, polygonList);
+            PlaneSubsystem.GetBoundaryPolygon(TrackableNativeHandle, polygonList);
         }
     }
 }

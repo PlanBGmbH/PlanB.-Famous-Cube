@@ -13,13 +13,14 @@ namespace NRKernal
     using UnityEngine;
     using System.Runtime.InteropServices;
 
+    /// <summary> Callback, called when the nr display resolution. </summary>
+    /// <param name="width">  The width.</param>
+    /// <param name="height"> The height.</param>
+    public delegate void NRDisplayResolutionCallback(int width, int height);
+
     /// <summary> HMD Eye offset Native API . </summary>
     internal partial class NativeMultiDisplay
     {
-        /// <summary> Callback, called when the nr display resolution. </summary>
-        /// <param name="width">  The width.</param>
-        /// <param name="height"> The height.</param>
-        public delegate void NRDisplayResolutionCallback(int width, int height);
         /// <summary> Handle of the multi display. </summary>
         private UInt64 m_MultiDisplayHandle;
 

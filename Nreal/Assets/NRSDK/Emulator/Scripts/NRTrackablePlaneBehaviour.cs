@@ -36,12 +36,12 @@ namespace NRKernal
             float extent = transform.lossyScale.x * 1000;
             if (NREmulatorManager.Instance.IsInGameView(transform.position))
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackableData<NRTrackablePlane>
+                NREmulatorTrackableProvider.UpdateTrackableData<NRTrackablePlane>
                 (transform.position, transform.rotation, extent, extent, (uint)DatabaseIndex, TrackingState.Tracking);
             }
             else
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.UpdateTrackableData<NRTrackablePlane>
+                NREmulatorTrackableProvider.UpdateTrackableData<NRTrackablePlane>
                 (transform.position, transform.rotation, extent, extent, (uint)DatabaseIndex, TrackingState.Stopped);
             }
         }

@@ -53,13 +53,13 @@ namespace NRKernal
         }
 
         /// <summary> Gets center pose. </summary>
-        /// <param name="trackble_handle"> Handle of the trackble.</param>
+        /// <param name="trackable_handle"> Handle of the trackble.</param>
         /// <returns> The center pose. </returns>
-        public Pose GetCenterPose(UInt64 trackble_handle)
+        public Pose GetCenterPose(UInt64 trackable_handle)
         {
             Pose pose = Pose.identity;
             NativeMat4f center_native_pos = NativeMat4f.identity;
-            NativeApi.NRTrackablePlaneGetCenterPose(m_NativeInterface.TrackingHandle, trackble_handle, ref center_native_pos);
+            NativeApi.NRTrackablePlaneGetCenterPose(m_NativeInterface.TrackingHandle, trackable_handle, ref center_native_pos);
             ConversionUtility.ApiPoseToUnityPose(center_native_pos, out pose);
             return pose;
         }

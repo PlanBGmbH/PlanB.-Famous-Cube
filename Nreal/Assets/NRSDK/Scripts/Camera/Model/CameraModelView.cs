@@ -98,6 +98,7 @@ namespace NRKernal
         {
             ImageFormat = format;
             this.CreateRGBCameraProxy(format);
+            m_NativeCameraProxy.Regist(this);
         }
 
         /// <summary> Use RGB_888 format default. </summary>
@@ -110,7 +111,6 @@ namespace NRKernal
             }
 
             m_NativeCameraProxy = CameraProxyFactory.CreateRGBCameraProxy();
-            m_NativeCameraProxy.Regist(this);
             m_NativeCameraProxy.SetImageFormat(format);
         }
 

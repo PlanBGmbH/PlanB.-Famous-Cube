@@ -8,9 +8,11 @@
 *****************************************************************************/
 
 using NRKernal.Record;
+using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace NRKernal.NRExamples
 {
@@ -18,13 +20,14 @@ namespace NRKernal.NRExamples
     [HelpURL("https://developer.nreal.ai/develop/unity/video-capture")]
     public class VideoCapture2LocalExample : MonoBehaviour
     {
-        /// <summary> The previewer. </summary>
-        public NRPreviewer Previewer;
-        public BlendMode blendMode;
+        [SerializeField] private Button m_PlayButton;
+        [SerializeField] private NRPreviewer m_Previewer;
+
+        public BlendMode blendMode = BlendMode.Blend;
         public ResolutionLevel resolutionLevel;
-        public LayerMask cullingMask;
-        public bool useAudio;
-        public bool useGreenBackGround;
+        public LayerMask cullingMask = -1;
+        public NRVideoCapture.AudioState audioState = NRVideoCapture.AudioState.ApplicationAudio;
+        public bool useGreenBackGround = false;
 
         public enum ResolutionLevel
         {
@@ -45,16 +48,14 @@ namespace NRKernal.NRExamples
             }
         }
 
-        /// <summary> The video capture. </summary>
-        NRVideoCapture m_VideoCapture = null;
-
-        void Start()
+        void Awake()
         {
-            CreateVideoCaptureTest();
+            RefreshUIState();
         }
 
-        /// <summary> Tests create video capture. </summary>
-        void CreateVideoCaptureTest()
+        /// <summary> The video capture. </summary>
+        NRVideoCapture m_VideoCapture = null;
+        void CreateVideoCapture(Action callback)
         {
             NRVideoCapture.CreateAsync(false, delegate (NRVideoCapture videoCapture)
             {
@@ -62,6 +63,7 @@ namespace NRKernal.NRExamples
                 if (videoCapture != null)
                 {
                     m_VideoCapture = videoCapture;
+                    callback?.Invoke();
                 }
                 else
                 {
@@ -70,26 +72,54 @@ namespace NRKernal.NRExamples
             });
         }
 
+        public void OnClickPlayButton()
+        {
+            if (m_VideoCapture == null)
+            {
+                CreateVideoCapture(() =>
+                {
+                    StartVideoCapture();
+                });
+            }
+            else if (m_VideoCapture.IsRecording)
+            {
+                this.StopVideoCapture();
+            }
+            else
+            {
+                this.StartVideoCapture();
+            }
+        }
+
+        void RefreshUIState()
+        {
+            bool flag = m_VideoCapture == null || !m_VideoCapture.IsRecording;
+            m_PlayButton.GetComponent<Image>().color = flag ? Color.red : Color.green;
+        }
+
         /// <summary> Starts video capture. </summary>
         public void StartVideoCapture()
         {
-            if (m_VideoCapture != null)
+            if (m_VideoCapture == null || m_VideoCapture.IsRecording)
             {
-                CameraParameters cameraParameters = new CameraParameters();
-                Resolution cameraResolution = GetResolutionByLevel(resolutionLevel);
-                cameraParameters.hologramOpacity = 0.0f;
-                cameraParameters.frameRate = cameraResolution.refreshRate;
-                cameraParameters.cameraResolutionWidth = cameraResolution.width;
-                cameraParameters.cameraResolutionHeight = cameraResolution.height;
-                cameraParameters.pixelFormat = CapturePixelFormat.BGRA32;
-                // Set the blend mode.
-                cameraParameters.blendMode = blendMode;
-                // Set audio state, audio record needs the permission of "android.permission.RECORD_AUDIO",
-                // Add it to your "AndroidManifest.xml" file in "Assets/Plugin".
-                cameraParameters.audioState = useAudio ? NRVideoCapture.AudioState.MicAudio : NRVideoCapture.AudioState.None;
-
-                m_VideoCapture.StartVideoModeAsync(cameraParameters, OnStartedVideoCaptureMode);
+                NRDebugger.Warning("Can not start video capture!");
+                return;
             }
+
+            CameraParameters cameraParameters = new CameraParameters();
+            Resolution cameraResolution = GetResolutionByLevel(resolutionLevel);
+            cameraParameters.hologramOpacity = 0.0f;
+            cameraParameters.frameRate = cameraResolution.refreshRate;
+            cameraParameters.cameraResolutionWidth = cameraResolution.width;
+            cameraParameters.cameraResolutionHeight = cameraResolution.height;
+            cameraParameters.pixelFormat = CapturePixelFormat.BGRA32;
+            // Set the blend mode.
+            cameraParameters.blendMode = blendMode;
+            // Set audio state, audio record needs the permission of "android.permission.RECORD_AUDIO",
+            // Add it to your "AndroidManifest.xml" file in "Assets/Plugin".
+            cameraParameters.audioState = audioState;
+
+            m_VideoCapture.StartVideoModeAsync(cameraParameters, OnStartedVideoCaptureMode);
         }
 
         private Resolution GetResolutionByLevel(ResolutionLevel level)
@@ -116,14 +146,15 @@ namespace NRKernal.NRExamples
         /// <summary> Stops video capture. </summary>
         public void StopVideoCapture()
         {
-            if (m_VideoCapture == null)
+            if (m_VideoCapture == null || !m_VideoCapture.IsRecording)
             {
+                NRDebugger.Warning("Can not stop video capture!");
                 return;
             }
 
             NRDebugger.Info("Stop Video Capture!");
             m_VideoCapture.StopRecordingAsync(OnStoppedRecordingVideo);
-            Previewer.SetData(m_VideoCapture.PreviewTexture, false);
+            m_Previewer.SetData(null, false);
         }
 
         /// <summary> Executes the 'started video capture mode' action. </summary>
@@ -139,7 +170,7 @@ namespace NRKernal.NRExamples
             NRDebugger.Info("Started Video Capture Mode!");
             m_VideoCapture.StartRecordingAsync(VideoSavePath, OnStartedRecordingVideo);
             // Set preview texture.
-            Previewer.SetData(m_VideoCapture.PreviewTexture, true);
+            m_Previewer.SetData(m_VideoCapture.PreviewTexture, true);
         }
 
         /// <summary> Executes the 'started recording video' action. </summary>
@@ -158,7 +189,9 @@ namespace NRKernal.NRExamples
                 // Set green background color.
                 m_VideoCapture.GetContext().GetBehaviour().SetBackGroundColor(Color.green);
             }
-            m_VideoCapture.GetContext().GetBehaviour().CaptureCamera.cullingMask = cullingMask.value;
+            m_VideoCapture.GetContext().GetBehaviour().SetCameraMask(cullingMask.value);
+
+            RefreshUIState();
         }
 
         /// <summary> Executes the 'stopped recording video' action. </summary>
@@ -180,6 +213,18 @@ namespace NRKernal.NRExamples
         void OnStoppedVideoCaptureMode(NRVideoCapture.VideoCaptureResult result)
         {
             NRDebugger.Info("Stopped Video Capture Mode!");
+            RefreshUIState();
+
+            // Release video capture resource.
+            m_VideoCapture.Dispose();
+            m_VideoCapture = null;
+        }
+
+        void OnDestroy()
+        {
+            // Release video capture resource.
+            m_VideoCapture?.Dispose();
+            m_VideoCapture = null;
         }
     }
 }

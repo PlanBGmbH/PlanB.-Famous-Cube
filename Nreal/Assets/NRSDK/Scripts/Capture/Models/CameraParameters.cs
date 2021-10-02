@@ -20,7 +20,7 @@ namespace NRKernal.Record
         {
             this.camMode = webCamMode;
             this.hologramOpacity = 1f;
-            this.frameRate = 30;
+            this.frameRate = NativeConstants.RECORD_FPS_DEFAULT;
 
             this.cameraResolutionWidth = 1280;
             this.cameraResolutionHeight = 720;

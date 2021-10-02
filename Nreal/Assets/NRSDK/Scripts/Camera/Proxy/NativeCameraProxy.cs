@@ -12,6 +12,7 @@ namespace NRKernal
     using System;
     using UnityEngine;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     /// <summary> A native camera proxy. </summary>
     public class NativeCameraProxy
@@ -118,8 +119,16 @@ namespace NRKernal
         protected FixedSizedQueue m_CameraFrames;
         /// <summary> The frame pool. </summary>
         protected ObjectPool FramePool;
+
         /// <summary> The active textures. </summary>
-        protected static List<CameraModelView> m_ActiveTextures;
+        protected List<CameraModelView> m_ActiveTextures;
+        public List<CameraModelView> ActiveTextures
+        {
+            get
+            {
+                return m_ActiveTextures;
+            }
+        }
 
         /// <summary> Specialized constructor for use only by derived class. </summary>
         /// <param name="provider"> The provider.</param>
@@ -172,16 +181,21 @@ namespace NRKernal
             {
                 m_ActiveTextures.Add(tex);
             }
+
+            NRDebugger.Debug("[NativeCamera] Regist:" + m_ActiveTextures.Count);
         }
 
-        public static CameraImageFormat GetActiveCameraImageFormat()
+        public static CameraImageFormat GetActiveCameraImageFormat(string id)
         {
-            if (m_ActiveTextures != null && m_ActiveTextures.Count > 0)
+            NativeCameraProxy controller = CameraProxyFactory.GetInstance(id);
+            if (controller != null && controller.ActiveTextures != null && controller.ActiveTextures.Count > 0)
             {
-                return m_ActiveTextures[0].ImageFormat;
+                NRDebugger.Info("[NativeCamera] Use the first texture format:" + controller.ActiveTextures[0].ImageFormat.ToString());
+                return controller.ActiveTextures[0].ImageFormat;
             }
             else
             {
+                NRDebugger.Info("[NativeCamera] Use the default texture format: RGB_888");
                 return CameraImageFormat.RGB_888;
             }
         }
@@ -190,18 +204,11 @@ namespace NRKernal
         /// <param name="tex"> The tex to remove.</param>
         public void Remove(CameraModelView tex)
         {
-            int index = -1;
-            for (int i = 0; i < m_ActiveTextures.Count; i++)
+            if (m_ActiveTextures != null && m_ActiveTextures.Contains(tex))
             {
-                if (tex == m_ActiveTextures[i])
-                {
-                    index = i;
-                }
+                m_ActiveTextures.Remove(tex);
             }
-            if (index != -1)
-            {
-                m_ActiveTextures.RemoveAt(index);
-            }
+            NRDebugger.Debug("[NativeCamera] Remove:" + m_ActiveTextures.Count);
         }
 
         /// <summary> Sets image format. </summary>
@@ -228,6 +235,7 @@ namespace NRKernal
             {
                 Initialize();
             }
+
             if (m_IsPlaying)
             {
                 return;
@@ -235,14 +243,12 @@ namespace NRKernal
 
             m_IsPlaying = true;
 
-            AsyncTaskExecuter.Instance.RunAction(() =>
-            {
-                lock (this)
-                {
-                    NRDebugger.Info("[CameraController] Start to play, result:" + m_IsPlaying);
-                    m_IsPlaying = CameraDataProvider.StartCapture();
-                }
-            });
+            NRDebugger.Info("[CameraController] StartCapture begin.");
+            //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            //stopwatch.Start();
+            CameraDataProvider.StartCapture();
+            NRDebugger.Info("[CameraController] StartCapture end.");
+            //NRDebugger.Info("[CameraController] Start to play, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
         }
 
         /// <summary> Query if this object has frame. </summary>
@@ -265,7 +271,6 @@ namespace NRKernal
             {
                 // Get the newest frame of the queue.
                 m_CurrentFrame = m_CameraFrames.Dequeue();
-
                 m_LastFrame = Time.frameCount;
             }
 
@@ -312,12 +317,14 @@ namespace NRKernal
             // If there is no a active texture, pause and release camera resource.
             if (m_ActiveTextures.Count == 0)
             {
-                lock (this)
-                {
-                    m_IsPlaying = !CameraDataProvider.StopCapture();
-                    NRDebugger.Info("[CameraController] Start to Stop,result:" + !m_IsPlaying);
-                    Release();
-                }
+                m_IsPlaying = false;
+                NRDebugger.Info("[CameraController] StopCapture begin.");
+                //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                //stopwatch.Start();
+                CameraDataProvider.StopCapture();
+                NRDebugger.Info("[CameraController] StopCapture end.");
+                //NRDebugger.Info("[CameraController] Stop rgbcamera, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
+                Release();
             }
         }
 

@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace NRKernal
@@ -19,15 +20,17 @@ namespace NRKernal
         /// <summary> Values that represent levels. </summary>
         public enum Level
         {
-            /// <summary> An enum constant representing the high option. </summary>
-            High,
-            /// <summary> An enum constant representing the middle option. </summary>
+            All = 0,
+            Low,
             Middle,
-            /// <summary> An enum constant representing the low option. </summary>
-            Low
+            High,
+            Off
         }
 
-        /// <summary> A notification. </summary>
+        // Only the message which level is higher than notifLevel would be shown.
+        public Level notifLevel = Level.All;
+
+        /// <summary> Notification object base. </summary>
         public class Notification
         {
             /// <summary> The notification listener. </summary>
@@ -173,7 +176,7 @@ namespace NRKernal
             {
                 base.UpdateState();
 
-                var level = NRDevice.Instance.TemperatureLevel;
+                var level = NRDevice.Subsystem.TemperatureLevel;
                 if (currentState != level)
                 {
                     if (level != GlassesTemperatureLevel.TEMPERATURE_LEVEL_NORMAL)
@@ -292,12 +295,10 @@ namespace NRKernal
         }
         /// <summary> Queue of notifications. </summary>
         private Queue<NotificationMsg> NotificationQueue = new Queue<NotificationMsg>();
-        /// <summary> The lock time. </summary>
         private float m_LockTime = 0f;
-        private const float updateInterval = 1f;
+        private const float UpdateInterval = 1f;
         private float m_TimeLast = 0f;
 
-        /// <summary> Awakes this object. </summary>
         void Awake()
         {
             LowPowerNotificationPrefab.gameObject.SetActive(false);
@@ -306,14 +307,10 @@ namespace NRKernal
             NativeErrorNotificationPrefab.gameObject.SetActive(false);
         }
 
-        /// <summary> Starts this object. </summary>
-        public void Start()
+        void Start()
         {
             DontDestroyOnLoad(gameObject);
             RegistNotification();
-
-            NRKernalUpdater.OnUpdate -= OnUpdate;
-            NRKernalUpdater.OnUpdate += OnUpdate;
         }
 
         /// <summary> Regist notification. </summary>
@@ -339,11 +336,35 @@ namespace NRKernal
             NotificationDict.Add(notification, window);
         }
 
-        /// <summary> Executes the 'update' action. </summary>
-        private void OnUpdate()
+        /// <summary>
+        /// Close all notification windows.
+        /// </summary>
+        public void ClearAll()
         {
+            notifLevel = Level.Off;
+        }
+
+        void Update()
+        {
+            // For Editor test
+            //if (Input.GetKeyDown(KeyCode.M))
+            //{
+            //    var notifys = NotificationDict.Keys.ToArray();
+            //    this.Dispath(notifys[UnityEngine.Random.Range(0, notifys.Length - 1)], Level.Middle);
+            //}
+            //if (Input.GetKeyDown(KeyCode.N))
+            //{
+            //    var notifys = NotificationDict.Keys.ToArray();
+            //    this.Dispath(notifys[UnityEngine.Random.Range(0, notifys.Length - 1)], Level.High);
+            //}
+            //if (Input.GetKeyDown(KeyCode.B))
+            //{
+            //    var notifys = NotificationDict.Keys.ToArray();
+            //    this.Dispath(notifys[3], Level.High);
+            //}
+
             m_TimeLast += Time.deltaTime;
-            if (m_TimeLast < updateInterval)
+            if (m_TimeLast < UpdateInterval)
             {
                 return;
             }
@@ -365,20 +386,23 @@ namespace NRKernal
             }
             else
             {
-                m_LockTime -= updateInterval;
+                m_LockTime -= UpdateInterval;
             }
         }
 
-        /// <summary> Dispaths. </summary>
+        /// <summary> Dispaths notification message. </summary>
         /// <param name="notification"> The notification.</param>
         /// <param name="lev">          The level.</param>
         public void Dispath(Notification notification, Level lev)
         {
-            NotificationQueue.Enqueue(new NotificationMsg()
+            if (lev >= notifLevel)
             {
-                notification = notification,
-                level = lev
-            });
+                NotificationQueue.Enqueue(new NotificationMsg()
+                {
+                    notification = notification,
+                    level = lev
+                });
+            }
         }
 
         /// <summary> Oprate notification message. </summary>
@@ -410,13 +434,24 @@ namespace NRKernal
                 NRNotificationWindow notification = Instantiate(prefab);
                 notification.gameObject.SetActive(true);
                 notification.transform.SetParent(transform);
-                notification.FillData(notification_level, duration, onConfirm);
 
                 if (notification_obj is NativeErrorNotification)
                 {
                     string title = ((NativeErrorNotification)notification_obj).ErrorTitle;
                     string content = ((NativeErrorNotification)notification_obj).ErrorContent;
-                    notification.SetTitle(title).SetContent(content);
+                    notification.SetLevle(notification_level)
+                                .SetDuration(duration)
+                                .SetTitle(title)
+                                .SetContent(content)
+                                .SetConfirmAction(onConfirm)
+                                .Build();
+                }
+                else
+                {
+                    notification.SetLevle(notification_level)
+                                .SetDuration(duration)
+                                .SetConfirmAction(onConfirm)
+                                .Build();
                 }
             }
         }

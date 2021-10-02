@@ -88,8 +88,8 @@ namespace NRKernal
         {
             if (!m_IsSessionDestroyed)
             {
-                var nativeInterface = NRSessionManager.Instance.NativeAPI;
-                if (nativeInterface != Trackable.NativeInterface)
+                var subsystem = NRSessionManager.Instance.TrackableFactory.TrackableSubsystem;
+                if (subsystem != Trackable.TrackableSubsystem)
                 {
                     Debug.LogErrorFormat("The session which created this anchor has been destroyed. " +
                     "The anchor on GameObject {0} can no longer update.",

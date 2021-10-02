@@ -65,7 +65,7 @@ namespace NRKernal
 
         /// <summary> Gets or sets the native a pi. </summary>
         /// <value> The native a pi. </value>
-        public NativeInterface NativeAPI { get; private set; }
+        public NativeInterface NativeAPI { get; set; }
 
         /// <summary> Gets or sets the nr renderer. </summary>
         /// <value> The nr renderer. </value>
@@ -76,6 +76,10 @@ namespace NRKernal
         public NRVirtualDisplayer VirtualDisplayer { get; set; }
 
         public NRTrackingModeChangedListener TrackingLostListener { get; set; }
+
+        /// <summary> Gets or sets the trackable factory. </summary>
+        /// <value> The trackable factory. </value>
+        public NRTrackableManager TrackableFactory { get; set; }
 
         /// <summary> Gets the center camera anchor. </summary>
         /// <value> The center camera anchor. </value>
@@ -134,9 +138,32 @@ namespace NRKernal
         public static event SessionError OnKernalError;
         #endregion
 
+        private NRTrackingSubsystem m_TrackingSystem;
+        public NRTrackingSubsystem TrackingSubSystem
+        {
+            get
+            {
+                if (m_TrackingSystem == null)
+                {
+                    string tracking_match = NRTrackingSubsystemDescriptor.Name;
+                    List<NRTrackingSubsystemDescriptor> trackings = new List<NRTrackingSubsystemDescriptor>();
+                    NRSubsystemManager.GetSubsystemDescriptors(trackings);
+                    foreach (var tracking in trackings)
+                    {
+                        if (tracking.id.Equals(tracking_match))
+                        {
+                            m_TrackingSystem = tracking.Create();
+                        }
+                    }
+                }
+
+                return m_TrackingSystem;
+            }
+        }
+
 #if USING_XR_SDK
-        public const string display_match = "NRSDK Display";
-        public const string input_match = "NRSDK Head Tracking";
+        private const string display_match = "NRSDK Display";
+        private const string input_match = "NRSDK Head Tracking";
         
         private XRDisplaySubsystem m_XRDisplaySubsystem;
         public XRDisplaySubsystem XRDisplaySubsystem{
@@ -229,20 +256,24 @@ namespace NRKernal
             }
 
             NativeAPI = new NativeInterface();
+            TrackableFactory = new NRTrackableManager();
             AsyncTaskExecuter.Instance.RunAction(() =>
             {
                 NRDebugger.Debug("[NRSessionManager] Create tracking");
                 switch (NRHMDPoseTracker.TrackingMode)
                 {
                     case NRHMDPoseTracker.TrackingType.Tracking6Dof:
-                        NativeAPI.NativeTracking.Create();
-                        NativeAPI.NativeTracking.SetTrackingMode(TrackingMode.MODE_6DOF);
+                        TrackingSubSystem.InitTrackingMode(TrackingMode.MODE_6DOF);
                         break;
                     case NRHMDPoseTracker.TrackingType.Tracking3Dof:
-                        NativeAPI.NativeTracking.Create();
                         NRSessionBehaviour.SessionConfig.PlaneFindingMode = TrackablePlaneFindingMode.DISABLE;
                         NRSessionBehaviour.SessionConfig.ImageTrackingMode = TrackableImageFindingMode.DISABLE;
-                        NativeAPI.NativeTracking.SetTrackingMode(TrackingMode.MODE_3DOF);
+                        TrackingSubSystem.InitTrackingMode(TrackingMode.MODE_3DOF);
+                        break;
+                    case NRHMDPoseTracker.TrackingType.Tracking0Dof:
+                        NRSessionBehaviour.SessionConfig.PlaneFindingMode = TrackablePlaneFindingMode.DISABLE;
+                        NRSessionBehaviour.SessionConfig.ImageTrackingMode = TrackableImageFindingMode.DISABLE;
+                        TrackingSubSystem.InitTrackingMode(TrackingMode.MODE_0DOF);
                         break;
                     default:
                         break;
@@ -263,12 +294,14 @@ namespace NRKernal
             LoadNotification();
         }
 
+        public NRNotificationListener NotificationListener { get; private set; }
         /// <summary> Loads the notification. </summary>
         private void LoadNotification()
         {
-            if (GameObject.FindObjectOfType<NRNotificationListener>() == null)
+            NotificationListener = GameObject.FindObjectOfType<NRNotificationListener>();
+            if (NotificationListener == null)
             {
-                GameObject.Instantiate(Resources.Load("NRNotificationListener"));
+                NotificationListener = GameObject.Instantiate(Resources.Load<NRNotificationListener>("NRNotificationListener"));
             }
         }
 
@@ -361,13 +394,14 @@ namespace NRKernal
         {
             if (SessionState != SessionState.Running || m_IsSessionError)
             {
+                Debug.LogError(SessionState.ToString());
                 return;
             }
 
 #if USING_XR_SDK && !UNITY_EDITOR
             m_LostTrackingReason = GetLostTrackingReason();
 #else
-            m_LostTrackingReason = NativeAPI.NativeHeadTracking.GetTrackingLostReason();
+            m_LostTrackingReason = TrackingSubSystem.GetTrackingLostReason();
             NRFrame.OnUpdate();
 #endif
         }
@@ -406,7 +440,7 @@ namespace NRKernal
             }
             AsyncTaskExecuter.Instance.RunAction(() =>
             {
-                NativeAPI.NativeTracking.Recenter();
+                TrackingSubSystem.Recenter();
             });
         }
 
@@ -446,17 +480,14 @@ namespace NRKernal
                 XRInputSubsystem?.Start();
 #endif
 
+                TrackableFactory.Start();
                 AsyncTaskExecuter.Instance.RunAction(() =>
                 {
                     NRDebugger.Debug("[NRSessionManager] Start tracking");
-                    NativeAPI.NativeTracking.Start();
-                    NativeAPI.NativeHeadTracking.Create();
+                    TrackingSubSystem.Start();
                     SessionState = SessionState.Running;
                 });
 
-#if UNITY_EDITOR
-                InitEmulator();
-#endif
                 SetConfiguration(NRSessionBehaviour.SessionConfig);
             });
         }
@@ -490,8 +521,9 @@ namespace NRKernal
             }
 
             // Do not put it in other thread...
+            TrackableFactory.Pause();
             NRRenderer?.Pause();
-            NativeAPI.NativeTracking?.Pause();
+            TrackingSubSystem.Pause();
             NRDevice.Instance.Pause();
 #if USING_XR_SDK && !UNITY_EDITOR
             XRDisplaySubsystem?.Stop();
@@ -509,7 +541,8 @@ namespace NRKernal
             }
 
             // Do not put it in other thread...
-            NativeAPI.NativeTracking.Resume();
+            TrackableFactory.Resume();
+            TrackingSubSystem.Resume();
             NRRenderer?.Resume();
             NRDevice.Instance.Resume();
 #if USING_XR_SDK && !UNITY_EDITOR
@@ -529,12 +562,12 @@ namespace NRKernal
 
             // Do not put it in other thread...
             SessionState = SessionState.Destroyed;
+            TrackableFactory.Stop();
             NRRenderer?.Destroy();
-            NativeAPI.NativeHeadTracking.Destroy();
-            NativeAPI.NativeTracking.Destroy();
+            TrackingSubSystem.Stop();
             NRDevice.Instance.Destroy();
             NRInput.Destroy();
-            VirtualDisplayer.Destory();
+            VirtualDisplayer.Stop();
 
 #if USING_XR_SDK && !UNITY_EDITOR
             ShutDownNativeSystems();
@@ -561,19 +594,5 @@ namespace NRKernal
         [DllImport("NrealXRPlugin", CharSet = CharSet.Auto)]
         static extern LostTrackingReason GetLostTrackingReason();
 #endif
-
-        /// <summary> Initializes the emulator. </summary>
-        private void InitEmulator()
-        {
-            if (!NREmulatorManager.Inited && !GameObject.Find("NREmulatorManager"))
-            {
-                NREmulatorManager.Inited = true;
-                GameObject.Instantiate(Resources.Load("Prefabs/NREmulatorManager"));
-            }
-            if (!GameObject.Find("NREmulatorHeadPos"))
-            {
-                GameObject.Instantiate(Resources.Load("Prefabs/NREmulatorHeadPose"));
-            }
-        }
     }
 }

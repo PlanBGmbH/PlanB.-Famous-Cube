@@ -26,7 +26,7 @@ namespace NRKernal
             get
             {
 #if !UNITY_EDITOR
-                NativeResolution resolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.RGB);
+                NativeResolution resolution = NRFrame.GetDeviceResolution(NativeDevice.RGB_CAMERA);
 #else   
                 NativeResolution resolution = new NativeResolution(1280, 720);
 #endif
@@ -73,8 +73,8 @@ namespace NRKernal
         public override void UpdateFrame(UInt64 camera_handle, UInt64 camera_image_handle, UInt64 userdata)
         {
             int RawDataSize = 0;
-            this.CameraDataProvider.GetRawData(camera_image_handle, (int)NativeEye.RGB, ref this.m_TexturePtr, ref RawDataSize);
-            var timestamp = this.CameraDataProvider.GetHMDTimeNanos(camera_image_handle, (int)NativeEye.RGB);
+            this.CameraDataProvider.GetRawData(camera_image_handle, (int)NativeDevice.RGB_CAMERA, ref this.m_TexturePtr, ref RawDataSize);
+            var timestamp = this.CameraDataProvider.GetHMDTimeNanos(camera_image_handle, (int)NativeDevice.RGB_CAMERA);
             this.QueueFrame(this.m_TexturePtr, RawDataSize, timestamp);
             this.CameraDataProvider.DestroyImage(camera_image_handle);
         }

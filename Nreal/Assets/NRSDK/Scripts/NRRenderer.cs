@@ -37,20 +37,16 @@ namespace NRKernal
         private const int PAUSENATIVERENDEREVENT = 0x0004;
         private const int STOPNATIVERENDEREVENT = 0x0005;
 
-        /// <summary> Values that represent eyes. </summary>
         public enum Eyes
         {
-            /// <summary> An enum constant representing the left option. </summary>
+            /// <summary> Left Display. </summary>
             Left = 0,
-            /// <summary> An enum constant representing the right option. </summary>
+            /// <summary> Right Display. </summary>
             Right = 1,
-            /// <summary> An enum constant representing the count option. </summary>
             Count = 2
         }
 
-        /// <summary> The left camera. </summary>
         public Camera leftCamera;
-        /// <summary> The right camera. </summary>
         public Camera rightCamera;
         /// <summary> Gets or sets the native renderring. </summary>
         /// <value> The m native renderring. </value>
@@ -106,7 +102,7 @@ namespace NRKernal
         private RendererState m_CurrentState = RendererState.UnInitialized;
         /// <summary> Gets the current state. </summary>
         /// <value> The current state. </value>
-        public RendererState currentState
+        public RendererState CurrentState
         {
             get
             {
@@ -189,7 +185,7 @@ namespace NRKernal
         private IEnumerator StartUp()
         {
             var virtualDisplay = GameObject.FindObjectOfType<NRVirtualDisplayer>();
-            while (virtualDisplay == null || !virtualDisplay.IsPlaying)
+            while (virtualDisplay == null || !virtualDisplay.Subsystem.running)
             {
                 NRDebugger.Info("[NRRender] Wait virtual display ready...");
                 yield return new WaitForEndOfFrame();
@@ -289,7 +285,7 @@ namespace NRKernal
             EyeTextureCount = _TextureBufferSize * (int)Eyes.Count;
             eyeTextures = new RenderTexture[EyeTextureCount];
 
-            var resolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.LEFT);
+            var resolution = NRDevice.Subsystem.GetDeviceResolution(NativeDevice.LEFT_DISPLAY);
             NRDebugger.Info("[CreateRenderTextures] Resolution :" + resolution.ToString());
 
             for (int i = 0; i < EyeTextureCount; i++)

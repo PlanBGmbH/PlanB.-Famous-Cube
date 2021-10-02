@@ -21,7 +21,7 @@ namespace NRKernal.Record
         /// <summary> Default constructor. </summary>
         public RGBCameraFrameProvider()
         {
-            var active_format = NativeCameraProxy.GetActiveCameraImageFormat();
+            var active_format = NativeCameraProxy.GetActiveCameraImageFormat(NRRgbCamera.ID);
             NRDebugger.Info("[CameraFrameProvider] Use format:{0}", active_format);
             switch (active_format)
             {
@@ -88,6 +88,7 @@ namespace NRKernal.Record
         public override void Release()
         {
             m_CameraTexture.Stop();
+            m_CameraTexture = null;
         }
     }
 }

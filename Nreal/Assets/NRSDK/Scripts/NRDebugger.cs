@@ -72,11 +72,10 @@ namespace NRKernal
     /// <summary> A tool for log. </summary>
     public class NRDebugger
     {
-        /// <summary> The log helper. </summary>
         private static ILogHelper m_LogHelper = new DefaultLogHelper();
 
         /// <summary> The log level. </summary>
-        private static LogLevel m_LogLevel = LogLevel.Info;
+        private static LogLevel m_LogLevel = LogLevel.Warning;
         /// <summary> Gets or sets the log level. </summary>
         /// <value> The log level. </value>
         public static LogLevel logLevel

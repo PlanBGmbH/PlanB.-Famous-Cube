@@ -71,6 +71,7 @@ namespace NRKernal.NRExamples
                     else
                     {
                         isOnPhotoProcess = false;
+                        this.Close();
                         NRDebugger.Error("Start PhotoMode faild." + result.resultType);
                     }
                 });
@@ -141,13 +142,8 @@ namespace NRKernal.NRExamples
         /// <param name="result"> The result.</param>
         void OnStoppedPhotoMode(NRPhotoCapture.PhotoCaptureResult result)
         {
-            if (m_PhotoCaptureObject == null)
-            {
-                NRDebugger.Error("The NRPhotoCapture has not been created.");
-                return;
-            }
             // Shutdown our photo capture resource
-            m_PhotoCaptureObject.Dispose();
+            m_PhotoCaptureObject?.Dispose();
             m_PhotoCaptureObject = null;
             isOnPhotoProcess = false;
         }
@@ -155,12 +151,9 @@ namespace NRKernal.NRExamples
         /// <summary> Executes the 'destroy' action. </summary>
         void OnDestroy()
         {
-            if (m_PhotoCaptureObject == null)
-            {
-                return;
-            }
             // Shutdown our photo capture resource
             m_PhotoCaptureObject?.Dispose();
+            m_PhotoCaptureObject = null;
         }
     }
 }

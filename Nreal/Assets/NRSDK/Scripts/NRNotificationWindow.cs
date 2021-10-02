@@ -34,31 +34,28 @@ namespace NRKernal
         public NotificationInfo m_MiddleLevelInfo;
 
         /// <summary> The icon. </summary>
-        [SerializeField]
-        private Image m_Icon;
+        [SerializeField] Image m_Icon;
         /// <summary> The title. </summary>
-        [SerializeField]
-        private Text m_Title;
+        [SerializeField] Text m_Title;
         /// <summary> The message. </summary>
-        [SerializeField]
-        private Text m_Message;
+        [SerializeField] Text m_Message;
         /// <summary> The confirm control. </summary>
-        [SerializeField]
-        private Button m_ConfirmBtn;
+        [SerializeField] Button m_ConfirmBtn;
 
-        public Action OnConfirm;
-
-        /// <summary> The duration. </summary>
-        private float m_Duration = 2f;
+        protected NRNotificationListener.Level m_Level = NRNotificationListener.Level.Low;
+        protected event Action OnConfirm;
+        protected float m_Duration = 2f;
+        private string m_TitleExtra;
+        private string m_MessageExtra;
 
         /// <summary> Fill data. </summary>
         /// <param name="level">    The level.</param>
         /// <param name="duration"> (Optional) The duration.</param>
-        public virtual NRNotificationWindow FillData(NRNotificationListener.Level level, float duration = 2f, Action onConfirm = null)
+        public virtual NRNotificationWindow Build()
         {
             NotificationInfo info;
 
-            switch (level)
+            switch (m_Level)
             {
                 case NRNotificationListener.Level.High:
                     info = m_HighLevelInfo;
@@ -73,11 +70,24 @@ namespace NRKernal
                     return this;
             }
 
-            m_Title.text = info.title;
-            m_Message.text = info.message;
-            m_Duration = duration;
             m_Icon.sprite = info.sprite;
-            OnConfirm += onConfirm;
+            if (!string.IsNullOrEmpty(m_TitleExtra))
+            {
+                m_Title.text = m_TitleExtra;
+            }
+            else
+            {
+                m_Title.text = info.title;
+            }
+
+            if (!string.IsNullOrEmpty(m_MessageExtra))
+            {
+                m_Message.text = m_MessageExtra;
+            }
+            else
+            {
+                m_Message.text = info.message;
+            }
 
             m_ConfirmBtn?.onClick.AddListener(() =>
             {
@@ -95,13 +105,31 @@ namespace NRKernal
 
         public NRNotificationWindow SetTitle(string title)
         {
-            m_Title.text = title;
+            this.m_TitleExtra = title;
             return this;
         }
 
         public NRNotificationWindow SetContent(string content)
         {
-            m_Message.text = content;
+            this.m_MessageExtra = content;
+            return this;
+        }
+
+        public NRNotificationWindow SetLevle(NRNotificationListener.Level level)
+        {
+            this.m_Level = level;
+            return this;
+        }
+
+        public NRNotificationWindow SetConfirmAction(Action callback)
+        {
+            this.OnConfirm += callback;
+            return this;
+        }
+
+        public NRNotificationWindow SetDuration(float duration)
+        {
+            this.m_Duration = duration;
             return this;
         }
 

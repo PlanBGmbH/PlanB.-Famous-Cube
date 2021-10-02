@@ -155,19 +155,11 @@ namespace NRKernal
             return pm;
         }
 
-        public static Pose GetRelativePoseFromHead(Pose localpose)
+        public static Pose ApiWorldToUnityWorld(Pose apiworld)
         {
-            var headParent = NRSessionManager.Instance.NRSessionBehaviour.transform.parent;
-            if (headParent == null)
-            {
-                return localpose;
-            }
-            else
-            {
-                var newposition = headParent.TransformDirection(localpose.position);
-                var newrotation = headParent.rotation * localpose.rotation;
-                return new Pose(newposition, newrotation);
-            }
+            Matrix4x4 world_offse_matrix = NRFrame.GetWorldMatrixFromUnityToNative();
+            Matrix4x4 native_pose_matrix = world_offse_matrix * Matrix4x4.TRS(apiworld.position, apiworld.rotation, Vector3.one);
+            return new Pose(ConversionUtility.GetPositionFromTMatrix(native_pose_matrix), ConversionUtility.GetRotationFromTMatrix(native_pose_matrix));
         }
     }
 }

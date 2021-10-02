@@ -30,7 +30,6 @@ namespace NRKernal
             NativeTrackableImage = new NativeTrackableImage(this);
             NativePlane = new NativePlane(this);
             NativeTrackable = new NativeTrackable(this);
-            TrackableFactory = new NRTrackableManager(this);
             Configration = new NativeConfigration(this);
             NativeRenderring = new NativeRenderring();
         }
@@ -41,35 +40,31 @@ namespace NRKernal
 
         /// <summary> Gets or sets the native head tracking. </summary>
         /// <value> The native head tracking. </value>
-        public NativeHeadTracking NativeHeadTracking { get; set; }
+        internal NativeHeadTracking NativeHeadTracking { get; set; }
 
         /// <summary> Gets or sets the native tracking. </summary>
         /// <value> The native tracking. </value>
-        public NativeTracking NativeTracking { get; set; }
+        internal NativeTracking NativeTracking { get; set; }
 
         /// <summary> Gets or sets the native trackable image. </summary>
         /// <value> The native trackable image. </value>
-        public NativeTrackableImage NativeTrackableImage { get; set; }
+        internal NativeTrackableImage NativeTrackableImage { get; set; }
 
         /// <summary> Gets or sets the native plane. </summary>
         /// <value> The native plane. </value>
-        public NativePlane NativePlane { get; set; }
+        internal NativePlane NativePlane { get; set; }
 
         /// <summary> Gets or sets the native trackable. </summary>
         /// <value> The native trackable. </value>
-        public NativeTrackable NativeTrackable { get; set; }
-
-        /// <summary> Gets or sets the trackable factory. </summary>
-        /// <value> The trackable factory. </value>
-        public NRTrackableManager TrackableFactory { get; set; }
+        internal NativeTrackable NativeTrackable { get; set; }
 
         /// <summary> Gets or sets the configration. </summary>
         /// <value> The configration. </value>
-        public NativeConfigration Configration { get; set; }
+        internal NativeConfigration Configration { get; set; }
 
         /// <summary> Gets or sets the configration. </summary>
         /// <value> The configration. </value>
-        public NativeRenderring NativeRenderring { get; set; }
+        internal NativeRenderring NativeRenderring { get; set; }
 
         private partial struct NativeApi
         {

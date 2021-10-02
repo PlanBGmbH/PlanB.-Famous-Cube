@@ -12,7 +12,7 @@ namespace NRKernal
     using UnityEngine;
     using System;
 
-    /// <summary> A nr kernal updater used to drive the lifecycle. </summary>
+    /// <summary> Used to drive the lifecycle. </summary>
     [ScriptOrder(NativeConstants.NRKERNALUPDATER_ORDER)]
     public class NRKernalUpdater : MonoBehaviour
     {
@@ -35,8 +35,12 @@ namespace NRKernal
         [RuntimeInitializeOnLoadMethod]
         static void Initialize()
         {
-#if !UNITY_EDITOR
+#if NRDEBUG
+            NRDebugger.logLevel = LogLevel.All;
+#elif !UNITY_EDITOR
             NRDebugger.logLevel = Debug.isDebugBuild ? LogLevel.Debug : LogLevel.Info;
+#else
+            NRDebugger.logLevel = LogLevel.Warning;
 #endif
             if (m_Instance == null)
             {

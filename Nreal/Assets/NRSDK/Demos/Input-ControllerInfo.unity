@@ -587,6 +587,11 @@ Prefab:
       propertyPath: m_OverrideCameraCenter
       value: 
       objectReference: {fileID: 874008911}
+    - target: {fileID: 114189359072911506, guid: ad152f08ed7eb6e4abd93376a0203e38,
+        type: 2}
+      propertyPath: m_EmulateVirtualDisplayInEditor
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ad152f08ed7eb6e4abd93376a0203e38, type: 2}
   m_IsPrefabAsset: 0

@@ -9,6 +9,8 @@
 
 namespace NRKernal.Record
 {
+    using System;
+
     /// <summary> Values that represent codec types. </summary>
     public enum CodecType
     {
@@ -30,6 +32,7 @@ namespace NRKernal.Record
         /// <summary> Only virtual image. </summary>
         VirtualOnly,
         /// <summary> Arrange virtual image and rgb camera image from left to right. </summary>
+        [Obsolete]
         WidescreenBlend
     }
 
@@ -65,7 +68,7 @@ namespace NRKernal.Record
     }
 
     /// <summary> A native encode configuration. </summary>
-    public struct NativeEncodeConfig
+    public class NativeEncodeConfig
     {
         /// <summary> Gets or sets the width. </summary>
         /// <value> The width. </value>
@@ -98,27 +101,11 @@ namespace NRKernal.Record
 
         public bool addMicphoneAudio { get; private set; }
 
-        /// <summary> Constructor. </summary>
-        /// <param name="w">         The width.</param>
-        /// <param name="h">         The height.</param>
-        /// <param name="bitrate">   The bitrate.</param>
-        /// <param name="f">         An int to process.</param>
-        /// <param name="codectype"> The codectype.</param>
-        /// <param name="path">      Full pathname of the file.</param>
-        /// <param name="usealpha">  (Optional) True to usealpha.</param>
-        public NativeEncodeConfig(int w, int h, int bitrate, int f, CodecType codectype, string path, bool useaudio = true, bool usealpha = false)
-        {
-            this.width = w;
-            this.height = h;
-            this.bitRate = bitrate;
-            this.fps = 30;
-            this.codecType = (int)codectype;
-            this.outPutPath = path;
-            this.useStepTime = 0;
-            this.useAlpha = usealpha;
-            this.addMicphoneAudio = useaudio;
-            this.useLinnerTexture = NRRenderer.isLinearColorSpace;
-        }
+        public bool audioUseExternalData { get; private set; }
+
+        public int audioSampleRate { get; private set; }
+
+        public int audioBitRate { get; private set; }
 
         /// <summary> Constructor. </summary>
         /// <param name="cameraparam"> The cameraparam.</param>
@@ -127,14 +114,17 @@ namespace NRKernal.Record
         {
             this.width = cameraparam.blendMode == BlendMode.WidescreenBlend ? 2 * cameraparam.cameraResolutionWidth : cameraparam.cameraResolutionWidth;
             this.height = cameraparam.cameraResolutionHeight;
-            this.bitRate = 10240000;
+            this.bitRate = NativeConstants.RECORD_VIDEO_BITRATE_DEFAULT;
             this.fps = cameraparam.frameRate;
             this.codecType = GetCodecTypeByPath(path);
             this.outPutPath = path;
             this.useStepTime = 0;
             this.addMicphoneAudio = cameraparam.audioState == NRVideoCapture.AudioState.MicAudio ? true : false;
+            this.audioUseExternalData = cameraparam.audioState == NRVideoCapture.AudioState.ApplicationAudio ? true : false;
             this.useAlpha = cameraparam.hologramOpacity < float.Epsilon;
             this.useLinnerTexture = NRRenderer.isLinearColorSpace;
+            this.audioBitRate = NativeConstants.RECORD_AUDIO_BITRATE_DEFAULT;
+            this.audioSampleRate = NativeConstants.RECORD_AUDIO_SAMPLERATE_DEFAULT;
         }
 
         /// <summary> Sets out put path. </summary>
@@ -162,13 +152,6 @@ namespace NRKernal.Record
             {
                 return 0;
             }
-        }
-
-        /// <summary> Constructor. </summary>
-        /// <param name="config"> The configuration.</param>
-        public NativeEncodeConfig(NativeEncodeConfig config)
-            : this(config.width, config.height, config.bitRate, config.fps, (CodecType)config.codecType, config.outPutPath, config.addMicphoneAudio, config.useAlpha)
-        {
         }
 
         /// <summary> Convert this object into a string representation. </summary>

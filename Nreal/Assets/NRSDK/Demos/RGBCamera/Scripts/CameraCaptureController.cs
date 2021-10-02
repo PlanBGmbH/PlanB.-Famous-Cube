@@ -24,8 +24,7 @@ namespace NRKernal.NRExamples
         /// <value> The RGB camera texture. </value>
         private NRRGBCamTexture RGBCamTexture { get; set; }
 
-        /// <summary> Starts this object. </summary>
-        private void Start()
+        void Start()
         {
             RGBCamTexture = new NRRGBCamTexture();
             CaptureImage.texture = RGBCamTexture.GetTexture();
@@ -35,14 +34,23 @@ namespace NRKernal.NRExamples
         /// <summary> Updates this object. </summary>
         void Update()
         {
+            if (RGBCamTexture == null)
+            {
+                return;
+            }
             FrameCount.text = RGBCamTexture.FrameCount.ToString();
         }
 
         /// <summary> Plays this object. </summary>
         public void Play()
         {
-            RGBCamTexture.Play();
+            if (RGBCamTexture == null)
+            {
+                RGBCamTexture = new NRRGBCamTexture();
+                CaptureImage.texture = RGBCamTexture.GetTexture();
+            }
 
+            RGBCamTexture.Play();
             // The origin texture will be destroyed after call "Stop",
             // Rebind the texture.
             CaptureImage.texture = RGBCamTexture.GetTexture();
@@ -51,19 +59,21 @@ namespace NRKernal.NRExamples
         /// <summary> Pauses this object. </summary>
         public void Pause()
         {
-            RGBCamTexture.Pause();
+            RGBCamTexture?.Pause();
         }
 
         /// <summary> Stops this object. </summary>
         public void Stop()
         {
-            RGBCamTexture.Stop();
+            RGBCamTexture?.Stop();
+            RGBCamTexture = null;
         }
 
         /// <summary> Executes the 'destroy' action. </summary>
         void OnDestroy()
         {
-            RGBCamTexture.Stop();
+            RGBCamTexture?.Stop();
+            RGBCamTexture = null;
         }
     }
 }

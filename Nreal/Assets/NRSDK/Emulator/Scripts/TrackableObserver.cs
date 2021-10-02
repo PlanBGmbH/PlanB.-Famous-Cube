@@ -1,89 +1,96 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using NRKernal;
+﻿/****************************************************************************
+* Copyright 2019 Nreal Techonology Limited. All rights reserved.
+*                                                                                                                                                          
+* This file is part of NRSDK.                                                                                                          
+*                                                                                                                                                           
+* https://www.nreal.ai/               
+* 
+*****************************************************************************/
 
-/// <summary> A trackable observer. </summary>
-public class TrackableObserver : MonoBehaviour
+namespace NRKernal
 {
-    /// <summary> Tracking delegate. </summary>
-    /// <param name="pos"> The position.</param>
-    /// <param name="qua"> The qua.</param>
-    public delegate void TrackingDelegate(Vector3 pos, Quaternion qua);
-    /// <summary> The found event. </summary>
-    public TrackingDelegate FoundEvent;
-    /// <summary> The lost evnet. </summary>
-    public Action LostEvnet;
+    using System;
+    using System.Collections.Generic;
+    using UnityEngine;
 
-    /// <summary> Type of the target. </summary>
-    public TrackableType TargetType;
-
-    /// <summary> The trackable behaviour. </summary>
-    private NRTrackableBehaviour m_TrackableBehaviour;
-    /// <summary> The temporary tracking images. </summary>
-    private List<NRTrackableImage> m_TempTrackingImages = new List<NRTrackableImage>();
-    /// <summary> The temporary tracking plane. </summary>
-    private List<NRTrackablePlane> m_TempTrackingPlane = new List<NRTrackablePlane>();
-
-    /// <summary> Values that represent trackable types. </summary>
-    public enum TrackableType
+    /// <summary> A trackable observer. </summary>
+    public class TrackableObserver : MonoBehaviour
     {
-        /// <summary> An enum constant representing the trackable image option. </summary>
-        TrackableImage,
-        /// <summary> An enum constant representing the trackable plane option. </summary>
-        TrackablePlane,
-    }
+        /// <summary> Tracking delegate. </summary>
+        /// <param name="pos"> The position.</param>
+        /// <param name="qua"> The qua.</param>
+        public delegate void TrackingDelegate(Vector3 pos, Quaternion qua);
+        /// <summary> The found event. </summary>
+        public event TrackingDelegate FoundEvent;
+        /// <summary> The lost evnet. </summary>
+        public event Action LostEvent;
 
-    /// <summary> Use this for initialization. </summary>
-    void Start()
-    {
-        m_TrackableBehaviour = GetComponent<NRTrackableBehaviour>();
-    }
+        /// <summary> Type of the target. </summary>
+        public TrackableType TargetType;
 
-    /// <summary> Update is called once per frame. </summary>
-    void Update()
-    {
-        if (TargetType == TrackableType.TrackableImage)
+        /// <summary> The trackable behaviour. </summary>
+        private NRTrackableBehaviour m_TrackableBehaviour;
+        /// <summary> The temporary tracking images. </summary>
+        private List<NRTrackableImage> m_TempTrackingImages = new List<NRTrackableImage>();
+        /// <summary> The temporary tracking plane. </summary>
+        private List<NRTrackablePlane> m_TempTrackingPlane = new List<NRTrackablePlane>();
+
+        /// <summary> Values that represent trackable types. </summary>
+        public enum TrackableType
         {
-            NRFrame.GetTrackables<NRTrackableImage>(m_TempTrackingImages, NRTrackableQueryFilter.All);
-            foreach (var trackableImage in m_TempTrackingImages)
+            /// <summary> An enum constant representing the trackable image option. </summary>
+            TrackableImage,
+            /// <summary> An enum constant representing the trackable plane option. </summary>
+            TrackablePlane,
+        }
+
+        /// <summary> Use this for initialization. </summary>
+        void Start()
+        {
+            m_TrackableBehaviour = GetComponent<NRTrackableBehaviour>();
+        }
+
+        /// <summary> Update is called once per frame. </summary>
+        void Update()
+        {
+            if (TargetType == TrackableType.TrackableImage)
             {
-                if (trackableImage.GetDataBaseIndex() == m_TrackableBehaviour.DatabaseIndex)
+                NRFrame.GetTrackables<NRTrackableImage>(m_TempTrackingImages, NRTrackableQueryFilter.All);
+                foreach (var trackableImage in m_TempTrackingImages)
                 {
-                    if (trackableImage.GetTrackingState() == TrackingState.Tracking)
+                    if (trackableImage.GetDataBaseIndex() == m_TrackableBehaviour.DatabaseIndex)
                     {
-                        if (FoundEvent != null)
-                            FoundEvent(trackableImage.GetCenterPose().position, trackableImage.GetCenterPose().rotation);
+                        if (trackableImage.GetTrackingState() == TrackingState.Tracking)
+                        {
+                            FoundEvent?.Invoke(trackableImage.GetCenterPose().position, trackableImage.GetCenterPose().rotation);
+                        }
+                        else
+                        {
+                            LostEvent?.Invoke();
+                        }
+                        break;
                     }
-                    else
-                    {
-                        if (LostEvnet != null)
-                            LostEvnet();
-                    }
-                    break;
                 }
             }
-        }
-        else if (TargetType == TrackableType.TrackablePlane)
-        {
-            NRFrame.GetTrackables<NRTrackablePlane>(m_TempTrackingPlane, NRTrackableQueryFilter.All);
-            foreach (var trackablePlane in m_TempTrackingPlane)
+            else if (TargetType == TrackableType.TrackablePlane)
             {
-                if (m_TrackableBehaviour.DatabaseIndex == -1)
-                    m_TrackableBehaviour.DatabaseIndex = trackablePlane.GetDataBaseIndex();
-                if (trackablePlane.GetDataBaseIndex() == m_TrackableBehaviour.DatabaseIndex)
+                NRFrame.GetTrackables<NRTrackablePlane>(m_TempTrackingPlane, NRTrackableQueryFilter.All);
+                foreach (var trackablePlane in m_TempTrackingPlane)
                 {
-                    if (trackablePlane.GetTrackingState() == TrackingState.Tracking)
+                    if (m_TrackableBehaviour.DatabaseIndex == -1)
+                        m_TrackableBehaviour.DatabaseIndex = trackablePlane.GetDataBaseIndex();
+                    if (trackablePlane.GetDataBaseIndex() == m_TrackableBehaviour.DatabaseIndex)
                     {
-                        if (FoundEvent != null)
-                            FoundEvent(trackablePlane.GetCenterPose().position, trackablePlane.GetCenterPose().rotation);
+                        if (trackablePlane.GetTrackingState() == TrackingState.Tracking)
+                        {
+                            FoundEvent?.Invoke(trackablePlane.GetCenterPose().position, trackablePlane.GetCenterPose().rotation);
+                        }
+                        else
+                        {
+                            LostEvent?.Invoke();
+                        }
+                        break;
                     }
-                    else
-                    {
-                        if (LostEvnet != null)
-                            LostEvnet();
-                    }
-                    break;
                 }
             }
         }

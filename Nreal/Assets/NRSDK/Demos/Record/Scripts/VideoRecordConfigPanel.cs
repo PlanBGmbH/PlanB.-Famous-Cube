@@ -24,7 +24,7 @@ namespace NRKernal.NRExamples
         [SerializeField]
         private Dropdown m_RenderModeDropDown;
         [SerializeField]
-        private Toggle m_UseAudioToggle;
+        private Dropdown m_AudioStateDropDown;
         [SerializeField]
         private Toggle m_UseGreenBGToggle;
 
@@ -38,6 +38,12 @@ namespace NRKernal.NRExamples
             BlendMode.Blend.ToString(),
             BlendMode.RGBOnly.ToString(),
             BlendMode.VirtualOnly.ToString()
+        };
+
+        List<string> _AudioStateOptions = new List<string>() {
+            NRVideoCapture.AudioState.MicAudio.ToString(),
+            NRVideoCapture.AudioState.ApplicationAudio.ToString(),
+            NRVideoCapture.AudioState.None.ToString()
         };
 
         void Start()
@@ -57,7 +63,6 @@ namespace NRKernal.NRExamples
                     default_quality_index = i;
                 }
             }
-
             m_QualityDropDown.value = default_quality_index;
             m_QualityDropDown.onValueChanged.AddListener((index) =>
             {
@@ -82,10 +87,22 @@ namespace NRKernal.NRExamples
                     out m_VideoCapture2LocalExample.blendMode);
             });
 
-            m_UseAudioToggle.isOn = m_VideoCapture2LocalExample.useAudio;
-            m_UseAudioToggle.onValueChanged.AddListener((val) =>
+
+            m_AudioStateDropDown.options.Clear();
+            m_AudioStateDropDown.AddOptions(_AudioStateOptions);
+            int default_audiostate_index = 0;
+            for (int i = 0; i < _AudioStateOptions.Count; i++)
             {
-                m_VideoCapture2LocalExample.useAudio = val;
+                if (_AudioStateOptions[i].Equals(m_VideoCapture2LocalExample.audioState.ToString()))
+                {
+                    default_audiostate_index = i;
+                }
+            }
+            m_AudioStateDropDown.value = default_audiostate_index;
+            m_AudioStateDropDown.onValueChanged.AddListener((index) =>
+            {
+                Enum.TryParse<NRVideoCapture.AudioState>(_AudioStateOptions[index],
+                    out m_VideoCapture2LocalExample.audioState);
             });
 
             m_UseGreenBGToggle.isOn = m_VideoCapture2LocalExample.useGreenBackGround;

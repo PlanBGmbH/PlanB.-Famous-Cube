@@ -17,12 +17,13 @@ namespace NRKernal
     {
         /// <summary> Handle of the native camera. </summary>
         private UInt64 m_NativeCameraHandle;
-        private static bool _IsErrorState = false;
+        private bool _IsErrorState = false;
 
         /// <summary> Creates a new bool. </summary>
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Create()
         {
+            _IsErrorState = false;
             var result = NativeApi.NRRGBCameraCreate(ref m_NativeCameraHandle);
             NativeErrorListener.Check(result, this, "Create", true);
             return result == NativeResult.Success;
@@ -145,10 +146,7 @@ namespace NRKernal
         /// <returns> True if it succeeds, false if it fails. </returns>
         public bool Release()
         {
-            if (_IsErrorState)
-            {
-                return false;
-            }
+            _IsErrorState = false;
             var result = NativeApi.NRRGBCameraDestroy(m_NativeCameraHandle);
             NativeErrorListener.Check(result, this, "Release");
             return result == NativeResult.Success;

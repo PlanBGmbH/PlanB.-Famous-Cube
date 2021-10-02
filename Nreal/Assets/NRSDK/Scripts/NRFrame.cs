@@ -52,17 +52,17 @@ namespace NRKernal
             }
         }
 
-        public static bool isHeadPoseReady { get; private set; }
+        public static bool isHeadPoseReady { get; private set; } = false;
 
         /// <summary> Gets head pose by recommond timestamp. </summary>
         /// <param name="pose">      [in,out] The pose.</param>
         /// <returns> True if it succeeds, false if it fails. </returns>
-        public static bool GetHeadPoseByTime(ref Pose pose)
+        [Obsolete("Use 'GetFramePresentHeadPose' instead.")]
+        public static bool GetHeadPoseRecommend(ref Pose pose)
         {
             if (SessionStatus == SessionState.Running)
             {
-                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPoseRecommend(ref pose);
-                return isHeadPoseReady;
+                return NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPoseRecommend(ref pose);
             }
             return false;
         }
@@ -75,8 +75,7 @@ namespace NRKernal
         {
             if (SessionStatus == SessionState.Running)
             {
-                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetHeadPose(ref pose, timestamp);
-                return isHeadPoseReady;
+                return NRSessionManager.Instance.TrackingSubSystem.GetHeadPose(ref pose, timestamp);
             }
             return false;
         }
@@ -91,7 +90,7 @@ namespace NRKernal
         {
             if (SessionStatus == SessionState.Running)
             {
-                isHeadPoseReady = NRSessionManager.Instance.NativeAPI.NativeHeadTracking.GetFramePresentHeadPose(ref pose, ref timestamp);
+                isHeadPoseReady = NRSessionManager.Instance.TrackingSubSystem.GetFramePresentHeadPose(ref pose, ref timestamp);
                 return isHeadPoseReady;
             }
             return false;
@@ -124,12 +123,19 @@ namespace NRKernal
             {
                 if (SessionStatus == SessionState.Running)
                 {
-                    m_EyePosFromHead.LEyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.LEFT);
-                    m_EyePosFromHead.REyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.RIGHT);
-                    m_EyePosFromHead.RGBEyePose = NRDevice.Instance.NativeHMD.GetEyePoseFromHead((int)NativeEye.RGB);
+                    m_EyePosFromHead.LEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.LEFT_DISPLAY);
+                    m_EyePosFromHead.REyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RIGHT_DISPLAY);
+                    m_EyePosFromHead.RGBEyePose = NRDevice.Subsystem.GetDevicePoseFromHead(NativeDevice.RGB_CAMERA);
                 }
                 return m_EyePosFromHead;
             }
+        }
+
+        /// <summary> Get the offset position between device and head. </summary>
+        /// <value> The device pose from head. </value>
+        public static Pose GetDevicePoseFromHead(NativeDevice device)
+        {
+            return NRDevice.Subsystem.GetDevicePoseFromHead(device);
         }
 
         /// <summary> Get the project matrix of camera in unity. </summary>
@@ -139,28 +145,43 @@ namespace NRKernal
         /// <returns> project matrix of camera. </returns>
         public static EyeProjectMatrixData GetEyeProjectMatrix(out bool result, float znear, float zfar)
         {
-            result = false;
-            EyeProjectMatrixData m_EyeProjectMatrix = new EyeProjectMatrixData();
-            result = NRDevice.Instance.NativeHMD.GetProjectionMatrix(ref m_EyeProjectMatrix, znear, zfar);
-            return m_EyeProjectMatrix;
+            return NRDevice.Subsystem.GetEyeProjectMatrix(out result, znear, zfar);
+        }
+
+        /// <summary> Get the intrinsic matrix of device. </summary>
+        /// <returns> The device intrinsic matrix. </returns>
+        public static NativeMat3f GetDeviceIntrinsicMatrix(NativeDevice device)
+        {
+            return NRDevice.Subsystem.GetDeviceIntrinsicMatrix(device);
+        }
+
+        /// <summary> Get the intrinsic matrix of device. </summary>
+        /// <returns> The device intrinsic matrix. </returns>
+        public static NRDistortionParams GetDeviceDistortion(NativeDevice device)
+        {
+            return NRDevice.Subsystem.GetDeviceDistortion(device);
         }
 
         /// <summary> Get the intrinsic matrix of rgb camera. </summary>
         /// <returns> The RGB camera intrinsic matrix. </returns>
         public static NativeMat3f GetRGBCameraIntrinsicMatrix()
         {
-            NativeMat3f result = new NativeMat3f();
-            NRDevice.Instance.NativeHMD.GetCameraIntrinsicMatrix((int)NativeEye.RGB, ref result);
-            return result;
+            return GetDeviceIntrinsicMatrix(NativeDevice.RGB_CAMERA);
         }
 
         /// <summary> Get the Distortion of rgbcamera. </summary>
         /// <returns> The RGB camera distortion. </returns>
         public static NRDistortionParams GetRGBCameraDistortion()
         {
-            NRDistortionParams result = new NRDistortionParams();
-            NRDevice.Instance.NativeHMD.GetCameraDistortion((int)NativeEye.RGB, ref result);
-            return result;
+            return GetDeviceDistortion(NativeDevice.RGB_CAMERA);
+        }
+
+        /// <summary> Get the resolution of device. </summary>
+        /// <param name="eye"> device index.</param>
+        /// <returns> The device resolution. </returns>
+        public static NativeResolution GetDeviceResolution(NativeDevice device)
+        {
+            return NRDevice.Subsystem.GetDeviceResolution(device);
         }
 
         private static UInt64 m_CurrentPoseTimeStamp = 0;
@@ -168,7 +189,11 @@ namespace NRKernal
         {
             get
             {
+#if USING_XR_SDK
+                return NRSessionManager.Instance.TrackingSubSystem.GetHMDTimeNanos();
+#else
                 return m_CurrentPoseTimeStamp;
+#endif
             }
         }
         /// <summary> Executes the 'update' action. </summary>
@@ -194,7 +219,20 @@ namespace NRKernal
                 return;
             }
             trackables.Clear();
-            NRSessionManager.Instance.NativeAPI.TrackableFactory.GetTrackables<T>(trackables, filter);
+            NRSessionManager.Instance.TrackableFactory.GetTrackables<T>(trackables, filter);
+        }
+
+        public static Matrix4x4 GetWorldMatrixFromUnityToNative()
+        {
+            var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
+            if (hmdPoseTracker == null)
+            {
+                return Matrix4x4.identity;
+            }
+            else
+            {
+                return hmdPoseTracker.GetWorldOffsetMatrixFromNative();
+            }
         }
     }
 }

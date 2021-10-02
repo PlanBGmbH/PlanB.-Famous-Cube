@@ -14,7 +14,7 @@ namespace NRKernal
     using System.Runtime.InteropServices;
     using System.Collections.Generic;
 
-    
+
     /// <summary> A controller state parse utility. </summary>
     public class ControllerStateParseUtility : MonoBehaviour
     {
@@ -25,6 +25,7 @@ namespace NRKernal
         private static Dictionary<ControllerType, System.Type> m_DefaultParserClassTypeDict = new Dictionary<ControllerType, System.Type>()
         {
             {ControllerType.CONTROLLER_TYPE_PHONE, typeof(NRPhoneControllerStateParser)},
+            {ControllerType.CONTROLLER_TYPE_EDITOR, typeof(NRPhoneControllerStateParser)},
             {ControllerType.CONTROLLER_TYPE_NREALLIGHT, typeof(NrealLightControllerStateParser)}
         };
 
@@ -82,5 +83,5 @@ namespace NRKernal
                 m_DefaultParserClassTypeDict.Add(controllerType, parserType);
         }
     }
-    
+
 }

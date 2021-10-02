@@ -24,17 +24,27 @@ namespace NRKernal.NRExamples
 
         public void ChangeTo3Dof()
         {
+            var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
             NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo3Dof((result) =>
             {
                 NRDebugger.Info("[ChangeModeController] ChangeTo3Dof result:" + result.success);
+                if (result.success)
+                {
+                    hmdPoseTracker.CacheWorldMatrix();
+                }
             });
         }
 
         public void ChangeTo6Dof()
         {
+            var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
             NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof((result) =>
             {
                 NRDebugger.Info("[ChangeModeController] ChangeTo6Dof result:" + result.success);
+                if (result.success)
+                {
+                    hmdPoseTracker.CacheWorldMatrix();
+                }
             });
         }
     }

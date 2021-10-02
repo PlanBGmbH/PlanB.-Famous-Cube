@@ -25,14 +25,12 @@ namespace NRKernal.Record
         private static RenderEventDelegate RenderThreadHandle = new RenderEventDelegate(RunOnRenderThread);
         private static IntPtr RenderThreadHandlePtr = Marshal.GetFunctionPointerForDelegate(RenderThreadHandle);
 #endif
-        /// <summary> True if is started, false if not. </summary>
-        private bool m_IsStarted = false;
 
-        /// <summary> The encode configuration. </summary>
+        private AudioRecordTool m_AudioEncodeTool;
         public NativeEncodeConfig EncodeConfig;
-
-        /// <summary> The tex pointer. </summary>
         private IntPtr m_TexPtr = IntPtr.Zero;
+        private byte[] m_AudioRawData;
+        private bool m_IsStarted = false;
 
         /// <summary> Default constructor. </summary>
         public VideoEncoder()
@@ -62,15 +60,7 @@ namespace NRKernal.Record
         /// <param name="param"> The parameter.</param>
         public void Config(CameraParameters param)
         {
-            Config(new NativeEncodeConfig(param));
-        }
-
-        /// <summary> Configurations the given configuration. </summary>
-        /// <param name="config"> The configuration.</param>
-        public void Config(NativeEncodeConfig config)
-        {
-            EncodeConfig = config;
-            NRDebugger.Info("[VideoEncoder] Encode record Config：" + config.ToString());
+            EncodeConfig = new NativeEncodeConfig(param);
         }
 
         /// <summary> Starts this object. </summary>
@@ -80,12 +70,45 @@ namespace NRKernal.Record
             {
                 return;
             }
+
+            if (EncodeConfig.audioUseExternalData)
+            {
+                InitAudioEncodeTool();
+                m_AudioEncodeTool?.StartRecord();
+            }
+
 #if !UNITY_EDITOR
             NativeEncoder.SetConfigration(EncodeConfig);
             GL.IssuePluginEvent(RenderThreadHandlePtr, STARTENCODEEVENT);
 #endif
-            NRDebugger.Info("[VideoEncoder] Encode record Start");
+            NRDebugger.Info("[VideoEncoder] Start");
             m_IsStarted = true;
+        }
+
+        private void InitAudioEncodeTool()
+        {
+            AudioListener audioListener = null;
+            if (NRSessionManager.Instance.NRHMDPoseTracker != null)
+            {
+                audioListener = NRSessionManager.Instance.NRHMDPoseTracker.centerCamera.gameObject.GetComponent<AudioListener>();
+            }
+            else if (GameObject.FindObjectOfType<AudioListener>() != null)
+            {
+                audioListener = GameObject.FindObjectOfType<AudioListener>();
+            }
+
+            if (audioListener != null)
+            {
+                m_AudioEncodeTool = audioListener.gameObject.GetComponent<AudioRecordTool>();
+                if (m_AudioEncodeTool == null)
+                {
+                    m_AudioEncodeTool = audioListener.gameObject.AddComponent<AudioRecordTool>();
+                }
+            }
+            else
+            {
+                throw (new MissingComponentException("Can not find a 'AudioListener' in current scene."));
+            }
         }
 
         /// <summary> Commits. </summary>
@@ -101,8 +124,18 @@ namespace NRKernal.Record
             {
                 m_TexPtr = rt.GetNativeTexturePtr();
             }
+
 #if !UNITY_EDITOR
             NativeEncoder.UpdateSurface(m_TexPtr, timestamp);
+
+            if (m_AudioEncodeTool != null)
+            {
+                bool result = m_AudioEncodeTool.Flush(ref m_AudioRawData);
+                if (result)
+                {
+                    NativeEncoder.UpdateAudioData(m_AudioRawData, m_AudioEncodeTool.SampleRate,2,1);
+                }
+            }
 #endif
         }
 
@@ -113,20 +146,27 @@ namespace NRKernal.Record
             {
                 return;
             }
+
+            m_AudioEncodeTool?.StopRecord();
 #if !UNITY_EDITOR
             GL.IssuePluginEvent(RenderThreadHandlePtr, STOPENCODEEVENT);
 #endif
-            NRDebugger.Info("[VideoEncoder] Encode record Stop");
+            NRDebugger.Info("[VideoEncoder] Stop");
             m_IsStarted = false;
         }
 
         /// <summary> Releases this object. </summary>
         public void Release()
         {
-            NRDebugger.Info("[VideoEncoder] Encode record Release...");
+            NRDebugger.Info("[VideoEncoder] Release...");
 #if !UNITY_EDITOR
             NativeEncoder.Destroy();
 #endif
+            if (m_AudioEncodeTool != null)
+            {
+                GameObject.Destroy(m_AudioEncodeTool);
+                m_AudioEncodeTool = null;
+            }
         }
     }
 }

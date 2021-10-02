@@ -38,7 +38,7 @@ namespace NRKernal
             }
             lostTrackingTip.transform.position = Vector3.one * 8888;
 #if !UNITY_EDITOR
-            resolution = NRDevice.Instance.NativeHMD.GetEyeResolution((int)NativeEye.LEFT);
+            resolution = NRFrame.GetDeviceResolution(NativeDevice.LEFT_DISPLAY);
 #endif
             lostTrackingTip.RT = UnityExtendedUtility.CreateRenderTexture(resolution.width, resolution.height, 24, RenderTextureFormat.Default);
             lostTrackingTip.m_RenderCamera.targetTexture = lostTrackingTip.RT;

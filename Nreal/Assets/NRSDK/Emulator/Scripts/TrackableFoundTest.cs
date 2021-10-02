@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using NRKernal;
+using UnityEngine;
 
 /// <summary> A trackable found test. </summary>
 public class TrackableFoundTest : MonoBehaviour
@@ -16,7 +17,7 @@ public class TrackableFoundTest : MonoBehaviour
 #endif
         Obj.SetActive(false);
         Observer.FoundEvent += Found;
-        Observer.LostEvnet += Lost;
+        Observer.LostEvent += Lost;
     }
 
     /// <summary> Founds. </summary>

@@ -12,7 +12,7 @@ namespace NRKernal.Record
     using UnityEngine;
 
     /// <summary> A frame blender. </summary>
-    public class FrameBlender : IFrameConsumer
+    public class FrameBlender : BlenderBase
     {
         /// <summary> Target camera. </summary>
         protected Camera m_TargetCamera;
@@ -26,39 +26,15 @@ namespace NRKernal.Record
         protected RenderTexture m_RGBSource;
         /// <summary> The temporary combine tex. </summary>
         protected Texture2D m_TempCombineTex;
-        /// <summary> Number of frames. </summary>
-        private int m_FrameCount;
-
-        /// <summary> Gets the blend mode. </summary>
-        /// <value> The blend mode. </value>
-        public BlendMode BlendMode
-        {
-            get
-            {
-                return m_BlendMode;
-            }
-        }
 
         /// <summary> The blend texture. </summary>
         private RenderTexture m_BlendTexture;
         /// <summary> Gets or sets the blend texture. </summary>
         /// <value> The blend texture. </value>
-        public RenderTexture BlendTexture
+        public override RenderTexture BlendTexture
         {
             get
             {
-                //if (m_BlendMode == BlendMode.Blend || m_BlendMode == BlendMode.VirtualOnly)
-                //{
-                //    if (m_TargetCamera != null)
-                //    {
-                //        return m_TargetCamera?.targetTexture;
-                //    }
-                //    else return null;
-                //}
-                //else
-                //{
-                //    return m_BlendTexture;
-                //}
                 return m_BlendTexture;
             }
             protected set
@@ -87,41 +63,11 @@ namespace NRKernal.Record
             }
         }
 
-        /// <summary> Gets or sets the width. </summary>
-        /// <value> The width. </value>
-        public int Width
-        {
-            get;
-            private set;
-        }
-
-        /// <summary> Gets or sets the height. </summary>
-        /// <value> The height. </value>
-        public int Height
-        {
-            get;
-            private set;
-        }
-
-        /// <summary> Gets or sets the number of frames. </summary>
-        /// <value> The number of frames. </value>
-        public int FrameCount
-        {
-            get
-            {
-                return m_FrameCount;
-            }
-            private set
-            {
-                m_FrameCount = value;
-            }
-        }
-
         /// <summary> Initializes this object. </summary>
         /// <param name="camera">  The camera.</param>
         /// <param name="encoder"> The encoder.</param>
         /// <param name="param">   The parameter.</param>
-        public virtual void Init(Camera camera, IEncoder encoder, CameraParameters param)
+        public override void Init(Camera camera, IEncoder encoder, CameraParameters param)
         {
             Width = param.cameraResolutionWidth;
             Height = param.cameraResolutionHeight;
@@ -156,7 +102,7 @@ namespace NRKernal.Record
 
         /// <summary> Executes the 'frame' action. </summary>
         /// <param name="frame"> The frame.</param>
-        public virtual void OnFrame(UniversalTextureFrame frame)
+        public override void OnFrame(UniversalTextureFrame frame)
         {
             Texture2D frametex = frame.textures[0] as Texture2D;
             if (m_BlendMode != BlendMode.RGBOnly)
@@ -268,14 +214,13 @@ namespace NRKernal.Record
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged
         /// resources. </summary>
-        public virtual void Dispose()
+        public override void Dispose()
         {
-            RenderTexture.active = null;
-            BlendTexture?.Release();
+            m_BlendTexture?.Release();
             m_RGBSource?.Release();
 
             GameObject.Destroy(m_TempCombineTex);
-            BlendTexture = null;
+            m_BlendTexture = null;
             m_RGBSource = null;
             m_TempCombineTex = null;
         }

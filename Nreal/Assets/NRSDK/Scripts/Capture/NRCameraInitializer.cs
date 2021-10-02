@@ -13,48 +13,26 @@ namespace NRKernal.Record
     using UnityEngine;
     using System.Collections;
 
-    /// <summary> A nr camera initializer. </summary>
+    /// <summary> A nr device param initializer. </summary>
     [RequireComponent(typeof(Camera))]
     public class NRCameraInitializer : MonoBehaviour
     {
-        /// <summary> Target camera. </summary>
+        /// <summary> Type of the device. </summary>
+        [SerializeField] NativeDevice m_DeviceType = NativeDevice.RGB_CAMERA;
+
         private Camera m_TargetCamera;
-        /// <summary> Type of the eye. </summary>
-        [SerializeField]
-        private NativeEye EyeType = NativeEye.RGB;
+        public bool IsInitialized { get; private set; } = false;
 
-#if UNITY_EDITOR
-        /// <summary> The matrix. </summary>
-        private Matrix4x4 RGBCameraMatrix = new Matrix4x4(
-                   new Vector4(1.92188f, 0f, 0f, 0f),
-                   new Vector4(0f, 3.41598f, 0f, 0f),
-                   new Vector4(0.0169f, 0.02256f, -1.00060f, -1f),
-                   new Vector4(0, 0f, -0.60018f, 0f)
-           );
-
-        private Pose RGBCameraPoseFromHead = new Pose(Vector3.zero, new Quaternion(0.1f, 0.0f, 0.0f, 1.0f));
-#endif
-
-        /// <summary> Starts this object. </summary>
         void Start()
         {
             m_TargetCamera = gameObject.GetComponent<Camera>();
-
-#if UNITY_EDITOR
-            m_TargetCamera.projectionMatrix = RGBCameraMatrix;
-            transform.localPosition = RGBCameraPoseFromHead.position;
-            transform.localRotation = RGBCameraPoseFromHead.rotation;
-#else
             StartCoroutine(Initialize());
-#endif
         }
 
-        /// <summary> Initializes this object. </summary>
-        /// <returns> An IEnumerator. </returns>
         private IEnumerator Initialize()
         {
+#if !UNITY_EDITOR
             bool result;
-
             EyeProjectMatrixData matrix_data = NRFrame.GetEyeProjectMatrix(out result, m_TargetCamera.nearClipPlane, m_TargetCamera.farClipPlane);
             while (!result)
             {
@@ -64,23 +42,23 @@ namespace NRKernal.Record
             }
 
             var eyeposFromHead = NRFrame.EyePoseFromHead;
-            switch (EyeType)
+            switch (m_DeviceType)
             {
-                case NativeEye.LEFT:
+                case NativeDevice.LEFT_DISPLAY:
                     m_TargetCamera.projectionMatrix = matrix_data.LEyeMatrix;
                     NRDebugger.Info("[NRCameraInitializer] Left Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
                     transform.localPosition = eyeposFromHead.LEyePose.position;
                     transform.localRotation = eyeposFromHead.LEyePose.rotation;
                     NRDebugger.Info("[NRCameraInitializer] Left Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
-                case NativeEye.RIGHT:
+                case NativeDevice.RIGHT_DISPLAY:
                     m_TargetCamera.projectionMatrix = matrix_data.REyeMatrix;
                     NRDebugger.Info("[NRCameraInitializer] Right Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
                     transform.localPosition = eyeposFromHead.REyePose.position;
                     transform.localRotation = eyeposFromHead.REyePose.rotation;
                     NRDebugger.Info("[NRCameraInitializer] Right Camera pos:{0} rotation:{1}", transform.localPosition.ToString(), transform.localRotation.ToString());
                     break;
-                case NativeEye.RGB:
+                case NativeDevice.RGB_CAMERA:
                     m_TargetCamera.projectionMatrix = matrix_data.RGBEyeMatrix;
                     NRDebugger.Info("[NRCameraInitializer] RGB Camera Project Matrix :" + m_TargetCamera.projectionMatrix.ToString());
                     transform.localPosition = eyeposFromHead.RGBEyePose.position;
@@ -90,13 +68,23 @@ namespace NRKernal.Record
                 default:
                     break;
             }
+#else
+            yield return new WaitForEndOfFrame();
+#endif
+
+            IsInitialized = true;
         }
 
         /// <summary> Switch to eye parameter. </summary>
         /// <param name="eye"> The eye.</param>
-        public void SwitchToEyeParam(NativeEye eye)
+        public void SwitchToEyeParam(NativeDevice eye)
         {
-            EyeType = eye;
+            if (m_DeviceType == eye)
+            {
+                return;
+            }
+
+            m_DeviceType = eye;
 #if !UNITY_EDITOR
             StartCoroutine(Initialize());
 #endif

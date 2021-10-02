@@ -15,7 +15,7 @@ namespace NRKernal
     using UnityEngine;
     using LitJson;
 
-    
+
     /// <summary> A tracking image database inspector. </summary>
     [CustomEditor(typeof(NRTrackingImageDatabase))]
     public class TrackingImageDatabaseInspector : Editor
@@ -43,7 +43,6 @@ namespace NRKernal
         /// <summary> The default width. </summary>
         private const float defaultWidth = 0.4f;
 
-        /// <summary> <para>Implement this function to make a custom inspector.</para> </summary>
         public override void OnInspectorGUI()
         {
             NRTrackingImageDatabase database = target as NRTrackingImageDatabase;
@@ -299,7 +298,6 @@ namespace NRKernal
             EditorUtility.SetDirty(database);
         }
 
-        /// <summary> Draw title. </summary>
         private void DrawTitle()
         {
             const string TITLE_STRING = "Images in Database";
@@ -317,7 +315,6 @@ namespace NRKernal
             EditorGUILayout.EndVertical();
         }
 
-        /// <summary> Draw container. </summary>
         private void DrawContainer()
         {
             var containerRect = new Rect(m_ContainerStart.x, m_ContainerStart.y, EditorGUIUtility.currentViewWidth - 30,
@@ -325,7 +322,6 @@ namespace NRKernal
             GUI.Box(containerRect, string.Empty);
         }
 
-        /// <summary> Draw column names. </summary>
         private void DrawColumnNames()
         {
             EditorGUILayout.BeginVertical();
@@ -404,7 +400,8 @@ namespace NRKernal
                     image.Width = defaultWidth * 1000;
                 }
                 //tempwidth = defaultWidth;
-                tempwidth = m_TempWidthDict[key] = image.Width / 1000;
+                tempwidth = image.Width / 1000;
+                m_TempWidthDict.Add(key, tempwidth);
             }
             tempwidth = EditorGUILayout.FloatField(tempwidth, textFieldStyle, GUILayout.MaxWidth(80f));
             m_TempWidthDict[key] = tempwidth;
@@ -502,5 +499,4 @@ namespace NRKernal
             EditorGUILayout.EndHorizontal();
         }
     }
-    
 }

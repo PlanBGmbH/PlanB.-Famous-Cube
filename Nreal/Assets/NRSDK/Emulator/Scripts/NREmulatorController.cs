@@ -9,10 +9,9 @@
 
 namespace NRKernal
 {
-    using System.Collections;
-    using System.Collections.Generic;
     using UnityEngine;
 
+#if UNITY_EDITOR
     /// <summary> A controller for handling nr emulators. </summary>
     public class NREmulatorController : MonoBehaviour
     {
@@ -67,8 +66,6 @@ namespace NRKernal
             Down,
         };
 
-#if UNITY_EDITOR
-        /// <summary> Starts this object. </summary>
         void Start()
         {
             DontDestroyOnLoad(this);
@@ -76,16 +73,10 @@ namespace NRKernal
             m_Target.transform.rotation = Quaternion.identity;
             DontDestroyOnLoad(m_Target);
         }
-#endif
 
-#if UNITY_EDITOR
-        /// <summary> Late update. </summary>
         void LateUpdate()
         {
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-            {
-                UpdateControllerRotateByInput();
-            }
+            UpdateControllerRotateByInput();
 
             if (NRInput.EmulateVirtualDisplayInEditor)
             {
@@ -97,24 +88,8 @@ namespace NRKernal
                 DefaultControllerPanel.SetActive(true);
                 UpdateDefaultControllerButtons();
             }
-
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerSubmit();
-
-            if (NRInput.GetButtonDown(ControllerButton.TRIGGER))
-            {
-                NRDebugger.Info("Click down Trigger button !!!");
-            }
-            else if (NRInput.GetButtonDown(ControllerButton.APP))
-            {
-                NRDebugger.Info("Click down App button !!!");
-            }
-            else if (NRInput.GetButtonDown(ControllerButton.HOME))
-            {
-                NRDebugger.Info("Click down Home button !!!");
-            }
         }
 
-        /// <summary> Updates the default controller buttons. </summary>
         private void UpdateDefaultControllerButtons()
         {
             if (Input.GetMouseButtonDown(0))
@@ -178,24 +153,23 @@ namespace NRKernal
                     | Input.GetKeyUp(KeyCode.RightArrow)
                     | Input.GetKeyUp(KeyCode.LeftArrow))
                 {
-                    NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(false);
+                    EditorControllerProvider.SetControllerIsTouching(false);
                 }
             }
         }
 
-        /// <summary> Updates the virtual controller buttons. </summary>
         private void UpdateVirtualControllerButtons()
         {
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(0);
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(true);
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerTouchPoint(NRVirtualDisplayer.GetEmulatorScreenTouch().x, NRVirtualDisplayer.GetEmulatorScreenTouch().y);
+            EditorControllerProvider.SetControllerButtonState(ControllerButton.APP, 0);
+            EditorControllerProvider.SetControllerButtonState(ControllerButton.HOME, 0);
+            EditorControllerProvider.SetControllerButtonState(ControllerButton.TRIGGER, 0);
+            EditorControllerProvider.SetControllerIsTouching(true);
+            EditorControllerProvider.SetControllerTouchPoint(NRVirtualDisplayer.GetEmulatorScreenTouch().x, NRVirtualDisplayer.GetEmulatorScreenTouch().y);
         }
-#endif
 
-        /// <summary> Updates the touch action. </summary>
         private void UpdateTouchAction()
         {
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(true);
+            EditorControllerProvider.SetControllerIsTouching(true);
             const int kActionMaxFrame = 20;
             float touchx = 0;
             float touchy = 0;
@@ -220,7 +194,7 @@ namespace NRKernal
                 touchy = 0.1f * kHeight + ((float)m_TouchActionCurFrame / kActionMaxFrame) * (0.8f * kHeight);
             }
 
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerTouchPoint(touchx - 1f, touchy - 1f);
+            EditorControllerProvider.SetControllerTouchPoint(touchx - 1f, touchy - 1f);
 
             if (m_TouchActionCurFrame == kActionMaxFrame)
             {
@@ -236,17 +210,17 @@ namespace NRKernal
 
         }
 
-        /// <summary> Updates the controller rotate by input. </summary>
         private void UpdateControllerRotateByInput()
         {
-            float mouse_x = Input.GetAxis("Mouse X") * HeadRotateSpeed;
-            float mouse_y = Input.GetAxis("Mouse Y") * HeadRotateSpeed;
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+            {
+                float mouse_x = Input.GetAxis("Mouse X") * HeadRotateSpeed;
+                float mouse_y = Input.GetAxis("Mouse Y") * HeadRotateSpeed;
 
-            Vector3 mouseMove = new Vector3(m_Target.transform.eulerAngles.x - mouse_y, m_Target.transform.eulerAngles.y + mouse_x, 0);
-            Quaternion q = Quaternion.Euler(mouseMove);
-            m_Target.transform.rotation = q;
-            NREmulatorManager.Instance.NativeEmulatorApi.SetControllerRotation(new Quaternion(q.x, q.y, q.z, q.w));
-
+                Quaternion q = Quaternion.Euler(-mouse_y, mouse_x, 0);
+                m_Target.transform.rotation = m_Target.transform.rotation * q;
+            }
+            EditorControllerProvider.SetControllerRotation(m_Target.transform.rotation);
         }
 
         /// <summary> Sets application button. </summary>
@@ -255,14 +229,14 @@ namespace NRKernal
         {
             if (touch)
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerTouchPoint(0f, 0.95f);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(true);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(1);
+                EditorControllerProvider.SetControllerTouchPoint(0f, 0f);
+                EditorControllerProvider.SetControllerIsTouching(true);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.APP, 1);
             }
             else
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(0);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(false);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.APP, 0);
+                EditorControllerProvider.SetControllerIsTouching(false);
             }
         }
 
@@ -272,14 +246,14 @@ namespace NRKernal
         {
             if (touch)
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerTouchPoint(0f, -0.95f);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(true);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(1);
+                EditorControllerProvider.SetControllerTouchPoint(0f, 0f);
+                EditorControllerProvider.SetControllerIsTouching(true);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.HOME, 1);
             }
             else
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(0);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(false);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.HOME, 0);
+                EditorControllerProvider.SetControllerIsTouching(false);
             }
         }
 
@@ -289,16 +263,16 @@ namespace NRKernal
         {
             if (touch)
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerTouchPoint(0f, 0.01f);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(true);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(1);
+                EditorControllerProvider.SetControllerTouchPoint(0f, 0f);
+                EditorControllerProvider.SetControllerIsTouching(true);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.TRIGGER, 1);
             }
             else
             {
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerButtonState(0);
-                NREmulatorManager.Instance.NativeEmulatorApi.SetControllerIsTouching(false);
+                EditorControllerProvider.SetControllerButtonState(ControllerButton.TRIGGER, 0);
+                EditorControllerProvider.SetControllerIsTouching(false);
             }
         }
-
     }
+#endif
 }

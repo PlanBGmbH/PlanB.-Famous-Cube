@@ -394,7 +394,7 @@ namespace NRKernal
             NRDevice.Instance.Init();
             m_VisualManager = gameObject.AddComponent<ControllerVisualManager>();
             m_VisualManager.Init(m_States);
-            SwitchControllerProvider(ControllerProviderFactory.androidControllerProviderType);
+            SwitchControllerProvider(ControllerProviderFactory.controllerProviderType);
 
 #if UNITY_EDITOR
             InitEmulator();
@@ -403,7 +403,7 @@ namespace NRKernal
             SetInputSourceSafely(m_InputSourceType);
         }
 
-        /// <summary> Initializes the emulator. </summary>
+#if UNITY_EDITOR
         private void InitEmulator()
         {
             if (!NREmulatorManager.Inited && !GameObject.Find("NREmulatorManager"))
@@ -416,6 +416,7 @@ namespace NRKernal
                 Instantiate(Resources.Load<GameObject>("Prefabs/NREmulatorController"));
             }
         }
+#endif
 
         /// <summary> Gets camera center. </summary>
         /// <returns> The camera center. </returns>
@@ -439,8 +440,8 @@ namespace NRKernal
         /// <summary> To guarantee the camera center was right. </summary>
         private void CheckCameraCenter()
         {
-            if (m_OverrideCameraCenter != null 
-                && NRSessionManager.Instance != null 
+            if (m_OverrideCameraCenter != null
+                && NRSessionManager.Instance != null
                 && NRSessionManager.Instance.NRSessionBehaviour != null)
             {
                 var cameraRigTransform = NRSessionManager.Instance.NRSessionBehaviour.transform;
