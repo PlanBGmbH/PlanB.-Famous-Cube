@@ -31,7 +31,7 @@ https://www.microsoft.com/en-us/hololens/
 
 [![Watch the video](https://img.youtube.com/vi/zgBqRHd4jSQ/hqdefault.jpg)](https://www.youtube.com/watch?v=zgBqRHd4jSQ)
 
-More informations about HoloLens 2 you find here:\
+More informations about Oculus Quest 2 you find here:\
 https://www.oculus.com/quest-2
 
 ## Share it on
