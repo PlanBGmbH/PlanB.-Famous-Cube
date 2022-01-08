@@ -1,7 +1,9 @@
+using Assets.Scripts;
 using NRKernal;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NrChangeInteractionMode : MonoBehaviour
 {
@@ -44,11 +46,8 @@ public class NrChangeInteractionMode : MonoBehaviour
     /// Event reciver for on click of the hand button
     /// </summary>
     public void OnClickHandInteraction()
-    {        
-        HandInteractionActive = true;
-        this.BuLaserInteraction.SetActive(true);
-        this.BuHandInteraction.SetActive(false);
-        //this.Handmenu.transform.position = new Vector3(this.Handmenu.transform.position.x, this.Handmenu.transform.position.y + 0.1f, this.Handmenu.transform.position.z - 0.1f);
+    {
         NRInput.SetInputSource(InputSourceEnum.Hands);
+        SceneManager.LoadSceneAsync(Const.Scene_MRTK_Cube);
     }
 }

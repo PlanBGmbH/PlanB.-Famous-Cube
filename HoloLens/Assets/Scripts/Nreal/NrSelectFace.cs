@@ -108,7 +108,7 @@ public class NrSelectFace : MonoBehaviour
                     if (cubeSide.Contains(face))
                     {
                         cubeState.PickUp(cubeSide);
-                        cubeSide[4].transform.parent.GetComponent<PivotRotation>().Rotate(cubeSide);
+                        cubeSide[4].transform.parent.GetComponent<NrPivotRotation>().Rotate(cubeSide);
                     }
                 }
             }

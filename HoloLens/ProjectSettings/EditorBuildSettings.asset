@@ -6,6 +6,15 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MRTK/Home.unity
+    path: Assets/Scenes/Start.unity
+    guid: 29fef7245dc514e4ba40cbd567c163f8
+  - enabled: 1
+    path: Assets/Scenes/MRTK/Cube.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/Nreal/Cube.unity
+    guid: 5f62e4dcc8c67ad4ea6f0de68b53dd19
+  - enabled: 1
+    path: Assets/Scenes/Nreal/Home.unity
+    guid: cabd80ec2c4c01e489cd2f57b3465231
   m_configObjects: {}

@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using Assets.Scripts;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Implements some common UI interaction of this app
@@ -74,6 +76,10 @@ public class HLInteractions : MonoBehaviour
     /// </summary>
     public void OnPressQuit()
     {
+#if UNITY_ANDROID
+        SceneManager.LoadSceneAsync(Const.Scene_Nreal_Cube);
+#else
         Application.Quit();
+#endif
     }
 }

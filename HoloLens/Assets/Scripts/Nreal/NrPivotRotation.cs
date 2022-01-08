@@ -77,9 +77,9 @@ public class NrPivotRotation : MonoBehaviour
         {
             SpinSide(activeSide);
 
-            if (ChangeInteractionMode.HandInteractionActive)
+            if (NrChangeInteractionMode.HandInteractionActive)
             {
-                var handState = NRInput.Hands.GetHandState(SelectFace.activeHandEnum);
+                var handState = NRInput.Hands.GetHandState(NrSelectFace.activeHandEnum);
 
                 if (!handState.isPinching)
                 {
@@ -110,9 +110,9 @@ public class NrPivotRotation : MonoBehaviour
         rotation = Vector3.zero;
         Vector3 laserEndPoint;
         bool hitSuccess = false;
-        if (ChangeInteractionMode.HandInteractionActive)
+        if (NrChangeInteractionMode.HandInteractionActive)
         {
-            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, SelectFace.activeHandEnum);
+            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, NrSelectFace.activeHandEnum);
         }
         else
         {
@@ -210,9 +210,9 @@ public class NrPivotRotation : MonoBehaviour
         Vector3 laserEndPoint;
 
         bool hitSuccess = false;
-        if (ChangeInteractionMode.HandInteractionActive)
+        if (NrChangeInteractionMode.HandInteractionActive)
         {            
-            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, SelectFace.activeHandEnum);
+            hitSuccess = NrealInputExt.GetLaserEndWorldPositionFromHand(out laserEndPoint, NrSelectFace.activeHandEnum);
         }
         else
         {

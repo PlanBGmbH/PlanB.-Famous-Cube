@@ -166,7 +166,12 @@ public class CubeShuffle : MonoBehaviour
     /// <param name="angle">Angle of movement</param>
     void RotateSide(List<GameObject> side, float angle)
     {
+#if UNITY_ANDROID
+        NrPivotRotation pr = side[4].transform.parent.GetComponent<NrPivotRotation>();
+#else
         PivotRotation pr = side[4].transform.parent.GetComponent<PivotRotation>();
+#endif
+
         pr.StartAutoRotate(side, angle);
     }
 }

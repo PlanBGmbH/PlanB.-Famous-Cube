@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Implements the reading of a cube side
-/// </summary>
 public class ReadCube : MonoBehaviour
 {
     /// <summary>
@@ -85,14 +82,14 @@ public class ReadCube : MonoBehaviour
     /// <summary>
     /// Cube map object of the program
     /// </summary>
-    CubeMap cubeMap;
-    
+    CubeMap[] cubeMaps;
+
     // Start is called before the first frame update
     void Start()
     {
         SetRaysTransForms();
         cubeState = FindObjectOfType<CubeState>();
-        cubeMap = FindObjectOfType<CubeMap>();
+        cubeMaps = FindObjectsOfType<CubeMap>();
         ReadState();
         CubeState.started = true;
 
@@ -112,14 +109,14 @@ public class ReadCube : MonoBehaviour
     {
         foreach (var oneSide in sides)
         {
-            foreach(var oneMesh in  oneSide.GetComponentsInChildren<MeshRenderer>())
+            foreach (var oneMesh in oneSide.GetComponentsInChildren<MeshRenderer>())
             {
                 oneMesh.material.DisableKeyword("_EMISSION");
             }
         }
     }
 
- 
+
 
     // Update is called once per frame
     void Update()
@@ -133,7 +130,7 @@ public class ReadCube : MonoBehaviour
     public void ReadState()
     {
         cubeState = FindObjectOfType<CubeState>();
-        cubeMap = FindObjectOfType<CubeMap>();
+
 
         cubeState.up = ReadFace(upRays, tUp);
         cubeState.down = ReadFace(downRays, tDown);
@@ -142,9 +139,12 @@ public class ReadCube : MonoBehaviour
         cubeState.front = ReadFace(frontRays, tFront);
         cubeState.back = ReadFace(backRays, tBack);
 
-        if (cubeMap != null)
+        cubeMaps = FindObjectsOfType<CubeMap>();
+
+
+        foreach (var oneMap in cubeMaps)
         {
-            cubeMap.Set();
+            oneMap.Set();
         }
     }
 
