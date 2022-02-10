@@ -42,7 +42,7 @@ namespace NRKernal
         /// <summary> DP device is not found. </summary>
         DPDeviceNotFind = 9,
 
-        /// <summary> Tracking systerm is not running. </summary>
+        /// <summary> Tracking system is not running. </summary>
         TrackingNotRunning = 10,
 
         /// <summary> Get glasses display failed. </summary>

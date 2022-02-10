@@ -43,7 +43,7 @@ namespace NRKernal.Record
 
         public void SetBackGroundColor(Color color)
         {
-            this.CaptureCamera.backgroundColor = new Color(color.r, color.g, color.b, 0);
+            this.CaptureCamera.backgroundColor = color; //new Color(color.r, color.g, color.b, 0);
         }
 
         /// <summary> Executes the 'frame' action. </summary>

@@ -56,8 +56,8 @@ namespace NRKernal
         /// <returns> A string that represents this object. </returns>
         public override string ToString()
         {
-            return string.Format("cameraModel:{0} distortParams1:{1} distortParams2:{2} distortParams3:{3} distortParams4:{4}",
-                cameraModel, distortParams1, distortParams2, distortParams3, distortParams4);
+            return string.Format("cameraModel:{0} distortParams1:{1} distortParams2:{2} distortParams3:{3} distortParams4:{4} distortParams5:{5} distortParams6:{6} distortParams7:{7}",
+                cameraModel, distortParams1, distortParams2, distortParams3, distortParams4, distortParams5, distortParams6, distortParams7);
         }
     }
 }

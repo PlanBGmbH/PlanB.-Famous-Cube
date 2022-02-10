@@ -119,7 +119,7 @@ namespace NRKernal.NRExamples
             // Add it to your "AndroidManifest.xml" file in "Assets/Plugin".
             cameraParameters.audioState = audioState;
 
-            m_VideoCapture.StartVideoModeAsync(cameraParameters, OnStartedVideoCaptureMode);
+            m_VideoCapture.StartVideoModeAsync(cameraParameters, OnStartedVideoCaptureMode, true);
         }
 
         private Resolution GetResolutionByLevel(ResolutionLevel level)

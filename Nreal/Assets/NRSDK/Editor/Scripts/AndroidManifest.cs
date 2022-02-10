@@ -177,8 +177,8 @@ namespace NRKernal
                 manifest.AppendChild(child);
                 XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.BLUETOOTH");
                 child.Attributes.Append(newAttribute);
-                newAttribute = CreateAndroidAttribute("name", "android.permission.BLUETOOTH_ADMIN");
-                child.Attributes.Append(newAttribute);
+                // newAttribute = CreateAndroidAttribute("name", "android.permission.BLUETOOTH_ADMIN");
+                // child.Attributes.Append(newAttribute);
             }
             //else
             //{
@@ -202,15 +202,16 @@ namespace NRKernal
         internal void SetSDKMetaData()
         {
             var activity = SelectSingleNode("/manifest/application");
-            var rightmetaData = SelectSingleNode("/manifest/application/meta-data[@android:name='nreal_sdk' and " +
-                    "@android:value='true']", nameSpaceManager);
 
-            var wrongmetaData = SelectSingleNode("/manifest/application/meta-data[@android:name='nreal_sdk']", nameSpaceManager);
-            if (rightmetaData == null)
+            // metadata for "nreal_sdk
+            var newMetaNRSDK = SelectSingleNode("/manifest/application/meta-data[@android:name='nreal_sdk' and " +
+                    "@android:value='true']", nameSpaceManager);
+            var oldMetaNRSDK = SelectSingleNode("/manifest/application/meta-data[@android:name='nreal_sdk']", nameSpaceManager);
+            if (newMetaNRSDK == null)
             {
-                if (wrongmetaData != null)
+                if (oldMetaNRSDK != null)
                 {
-                    activity.RemoveChild(wrongmetaData);
+                    activity.RemoveChild(oldMetaNRSDK);
                 }
                 XmlElement child = CreateElement("meta-data");
                 activity.AppendChild(child);
@@ -220,10 +221,24 @@ namespace NRKernal
                 newAttribute = CreateAndroidAttribute("value", "true");
                 child.Attributes.Append(newAttribute);
             }
-            //else
-            //{
-            //    NRDebugger.Info("Already has the sdk meta data.");
-            //}
+
+            // metadata for "com.nreal.supportDevices"
+            string supportDevices = NRProjectConfigHelper.GetProjectConfig().GetTargetDeviceTypesDesc();
+            var newMetaDevices = SelectSingleNode("/manifest/application/meta-data[@android:name='com.nreal.supportDevices' and " +
+                    "@android:value='']", nameSpaceManager);
+            var oldMetaDevices = SelectSingleNode("/manifest/application/meta-data[@android:name='com.nreal.supportDevices']", nameSpaceManager);
+            if (oldMetaDevices != null)
+                activity.RemoveChild(oldMetaDevices);
+            if (newMetaDevices == null)
+            {
+                XmlElement child = CreateElement("meta-data");
+                activity.AppendChild(child);
+
+                XmlAttribute newAttribute = CreateAndroidAttribute("name", "com.nreal.supportDevices");
+                child.Attributes.Append(newAttribute);
+                newAttribute = CreateAndroidAttribute("value", supportDevices);
+                child.Attributes.Append(newAttribute);
+            }
         }
 
         /// <summary> Sets a pk displayed on launcher. </summary>

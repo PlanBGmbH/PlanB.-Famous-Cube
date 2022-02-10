@@ -136,10 +136,10 @@ namespace NRKernal
         {
             NativeMat4f pm = NativeMat4f.identity;
 
-            float l = -fov.left_tan;
+            float l = fov.left_tan;
             float r = fov.right_tan;
             float t = fov.top_tan;
-            float b = -fov.bottom_tan;
+            float b = fov.bottom_tan;
 
             pm.column0.X = 2f / (r - l);
             pm.column1.Y = 2f / (t - b);
@@ -160,6 +160,23 @@ namespace NRKernal
             Matrix4x4 world_offse_matrix = NRFrame.GetWorldMatrixFromUnityToNative();
             Matrix4x4 native_pose_matrix = world_offse_matrix * Matrix4x4.TRS(apiworld.position, apiworld.rotation, Vector3.one);
             return new Pose(ConversionUtility.GetPositionFromTMatrix(native_pose_matrix), ConversionUtility.GetRotationFromTMatrix(native_pose_matrix));
+        }
+
+        public static Matrix4x4 UnityPoseToCVMatrix(Pose unityPose)
+        {
+            Matrix4x4 unityMat = GetTMatrix(unityPose.position, unityPose.rotation);
+            Matrix4x4 cv_T_unity = Matrix4x4.Scale(new Vector3(1, -1, 1));
+            Matrix4x4 cvWorld = cv_T_unity * unityMat * cv_T_unity.inverse;
+
+            return cvWorld;
+        }
+
+        public static Matrix4x4 UnityMatrixToCVMatrix(Matrix4x4 unityMat)
+        {
+            Matrix4x4 cv_T_unity = Matrix4x4.Scale(new Vector3(1, -1, 1));
+            Matrix4x4 cvWorld = cv_T_unity * unityMat * cv_T_unity.inverse;
+
+            return cvWorld;
         }
     }
 }

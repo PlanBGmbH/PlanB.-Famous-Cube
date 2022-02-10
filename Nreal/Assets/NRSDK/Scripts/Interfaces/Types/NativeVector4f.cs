@@ -39,6 +39,14 @@ namespace NRKernal
             W = v.w;
         }
 
+        public NativeVector4f(float x, float y, float z, float w)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
+        }
+
         /// <summary> Converts this object to an unity vector 4. </summary>
         /// <returns> This object as a Vector4. </returns>
         public Vector4 ToUnityVector4()

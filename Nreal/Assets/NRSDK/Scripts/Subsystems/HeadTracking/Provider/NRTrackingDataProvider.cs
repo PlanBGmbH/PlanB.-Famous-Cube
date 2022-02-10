@@ -80,6 +80,11 @@ namespace NRKernal
             return m_NativeTracking.InitTrackingMode(mode);
         }
 
+        public bool GetFramePresentTimeByCount(int count, ref ulong timestamp)
+        {
+			return m_NativeHeadTracking.GetFramePresentTimeByCount(count, ref timestamp);
+		}
+		
         public ulong GetHMDTimeNanos()
         {
             return m_NativeHeadTracking.GetHMDTimeNanos();

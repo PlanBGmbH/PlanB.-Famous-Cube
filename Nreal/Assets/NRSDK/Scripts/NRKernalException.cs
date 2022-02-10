@@ -12,8 +12,8 @@ namespace NRKernal
     public class NRKernalError : ApplicationException
     {
         public Level level;
-        /// <summary> The error. </summary>
-        protected string error;
+        /// <summary> The error message. </summary>
+        protected string msg;
         /// <summary> The inner exception. </summary>
         protected Exception innerException;
 
@@ -23,106 +23,179 @@ namespace NRKernal
         public NRKernalError(string msg, Level level = Level.Normal, Exception innerException = null) : base(msg)
         {
             this.innerException = innerException;
-            this.error = msg;
+            this.msg = msg;
             this.level = level;
         }
         /// <summary> Gets the error. </summary>
         /// <returns> The error. </returns>
-        public string GetError()
+        virtual public string GetErrorMsg()
         {
-            return error;
+            return msg;
+        }
+    }
+
+    #region native error
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /// internal errors
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary> A nr kernal error. </summary>
+    public class NRNativeError : NRKernalError
+    {
+        public NativeResult result;
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRNativeError(NativeResult result, string msg, Level level = Level.Normal, Exception innerException = null) : base(msg, level, innerException)
+        {
+            this.result = result;
+        }
+        /// <summary> Gets the error. </summary>
+        /// <returns> The error. </returns>
+        override public string GetErrorMsg()
+        {
+            return string.Format("Error Code-{0}: {1}", (int)result, msg);
         }
     }
 
     /// <summary> A nr invalid argument error. </summary>
-    public class NRInvalidArgumentError : NRKernalError
+    public class NRInvalidArgumentError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRInvalidArgumentError(string msg, Exception innerException = null) : base(msg, Level.Normal, innerException)
+        public NRInvalidArgumentError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.Normal, innerException)
         {
         }
     }
 
     /// <summary> A nr not enough memory error. </summary>
-    public class NRNotEnoughMemoryError : NRKernalError
+    public class NRNotEnoughMemoryError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRNotEnoughMemoryError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRNotEnoughMemoryError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
     /// <summary> A nr sdcard permission deny error. </summary>
-    public class NRSdcardPermissionDenyError : NRKernalError
+    public class NRSdcardPermissionDenyError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRSdcardPermissionDenyError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRSdcardPermissionDenyError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
     /// <summary> A nr un supported error. </summary>
-    public class NRUnSupportedError : NRKernalError
+    public class NRUnSupportedError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRUnSupportedError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRUnSupportedError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
     /// <summary> A nr glasses connect error. </summary>
-    public class NRGlassesConnectError : NRKernalError
+    public class NRGlassesConnectError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRGlassesConnectError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRGlassesConnectError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
     /// <summary> A nr sdk version mismatch error. </summary>
-    public class NRSdkVersionMismatchError : NRKernalError
+    public class NRSdkVersionMismatchError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRSdkVersionMismatchError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRSdkVersionMismatchError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
-    /// <summary> A nrrgb camera device not find error. </summary>
-    public class NRRGBCameraDeviceNotFindError : NRKernalError
+    /// <summary> A nr rgb camera device not find error. </summary>
+    public class NRRGBCameraDeviceNotFindError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRRGBCameraDeviceNotFindError(string msg, Exception innerException = null) : base(msg, Level.Normal, innerException)
+        public NRRGBCameraDeviceNotFindError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.Normal, innerException)
         {
         }
     }
 
-    /// <summary> A nrdp device not find error. </summary>
-    public class NRDPDeviceNotFindError : NRKernalError
+    /// <summary> Display device not find error. </summary>
+    public class NRDPDeviceNotFindError : NRNativeError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRDPDeviceNotFindError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        public NRDPDeviceNotFindError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
         {
         }
     }
 
-    public class NRMissingKeyComponentError : NRKernalError
+    /// <summary> MRSpace display device not find error. </summary>
+    public class NRGetDisplayFailureError : NRNativeError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRGetDisplayFailureError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
+        {
+        }
+    }
+
+    /// <summary> Display Mode mismatch error, as MRSpace mode is needed. </summary>
+    public class NRDisplayModeMismatchError : NRNativeError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRDisplayModeMismatchError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.High, innerException)
+        {
+        }
+    }
+
+    /// <summary> A device not support hand tracking calculation error. </summary>
+    public class NRUnSupportedHandtrackingCalculationError : NRNativeError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRUnSupportedHandtrackingCalculationError(NativeResult result, string msg, Exception innerException = null) : base(result, msg, Level.Normal, innerException)
+        {
+        }
+    }
+    #endregion
+
+    #region native error
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /// internal errors
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary> A nr internal error. </summary>
+    public class NRInternalError : NRKernalError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRInternalError(string msg, Level level = Level.Normal, Exception innerException = null) : base(msg, level, innerException)
+        {
+        }
+    }
+
+
+    public class NRMissingKeyComponentError : NRInternalError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
@@ -132,7 +205,7 @@ namespace NRKernal
         }
     }
 
-    public class NRPermissionDenyError : NRKernalError
+    public class NRPermissionDenyError : NRInternalError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
@@ -142,14 +215,26 @@ namespace NRKernal
         }
     }
 
-    /// <summary> A device not support hand tracking calculation error. </summary>
-    public class NRUnSupportedHandtrackingCalculationError : NRKernalError
+
+    public class NRUnSupportDeviceError : NRInternalError
     {
         /// <summary> Constructor. </summary>
         /// <param name="msg">            The message.</param>
         /// <param name="innerException"> (Optional) The inner exception.</param>
-        public NRUnSupportedHandtrackingCalculationError(string msg, Exception innerException = null) : base(msg, Level.Normal, innerException)
+        public NRUnSupportDeviceError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
         {
         }
     }
+
+    /// <summary> A nr glasses not available error. </summary>
+    public class NRGlassesNotAvailbleError : NRInternalError
+    {
+        /// <summary> Constructor. </summary>
+        /// <param name="msg">            The message.</param>
+        /// <param name="innerException"> (Optional) The inner exception.</param>
+        public NRGlassesNotAvailbleError(string msg, Exception innerException = null) : base(msg, Level.High, innerException)
+        {
+        }
+    }
+    #endregion
 }

@@ -314,6 +314,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_TrackingType: 0
+  TrackingModeAutoAdapt: 1
   UseRelative: 1
   leftCamera: {fileID: 20850121355348172}
   centerCamera: {fileID: 20880588574554076}

@@ -38,5 +38,23 @@ namespace NRKernal
         /// The value is positive. </summary>
         [MarshalAs(UnmanagedType.R4)]
         public float bottom_tan;
+
+        public NativeFov4f(float left, float right, float top, float bottom)
+        {
+            left_tan = left;
+            right_tan = right;
+            top_tan = top;
+            bottom_tan = bottom;
+        }
+
+        public float[] ToXRFloats()
+        {
+            return new float[] {
+                left_tan,
+                right_tan,
+                bottom_tan,
+                top_tan,
+            };
+        }
     }
 }

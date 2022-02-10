@@ -83,6 +83,47 @@ namespace NRKernal
             }
         }
 
+        /// <summary> A ckeck for buildTarget . </summary>
+        private class CkeckBuildTargetAndroid : Check
+        {
+            /// <summary> Default constructor. </summary>
+            public CkeckBuildTargetAndroid(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                return EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android;
+            }
+
+            /// <summary> Draw graphical user interface. </summary>
+            public override void DrawGUI()
+            {
+                string message = @"In order to develop on NRSDK, BuildTarget must be set to Android. 
+in panel of Player Settings, choose 'Androi' in platform list, and click 'Switch Platform' button.";
+                DrawContent("BuildTarget is Android", message);
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+                {
+                    EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+                }
+            }
+        }
+
         /// <summary> A ckeck android vsyn. </summary>
         private class CkeckAndroidVsyn : Check
         {
@@ -562,9 +603,47 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
             }
         }
 
+        /// <summary> A ckeck that android build system is gradle. </summary>
+        private class CkeckAndroidBuildGradle: Check
+        {
+            /// <summary> Default constructor. </summary>
+            public CkeckAndroidBuildGradle(MessageType level) : base(level)
+            {
+                _key = this.GetType().Name;
+            }
+
+            /// <summary> Query if this object is valid. </summary>
+            /// <returns> True if valid, false if not. </returns>
+            public override bool IsValid()
+            {
+                return EditorUserBuildSettings.androidBuildSystem == AndroidBuildSystem.Gradle;
+            }
+
+            /// <summary> Draw graphical user interface. </summary>
+            public override void DrawGUI()
+            {
+                string message = @"";
+                DrawContent("Gradle plugin is valid", message);
+            }
+
+            /// <summary> Query if this object is fixable. </summary>
+            /// <returns> True if fixable, false if not. </returns>
+            public override bool IsFixable()
+            {
+                return true;
+            }
+
+            /// <summary> Fixes this object. </summary>
+            public override void Fix()
+            {
+                EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+            }
+        }
+
         /// <summary> The checks. </summary>
         private static Check[] checks = new Check[]
         {
+            new CkeckBuildTargetAndroid(MessageType.Error),
             new CkeckAndroidVsyn(MessageType.Error),
             new CkeckAndroidMinAPILevel(MessageType.Error),
             //new CkeckAndroidSDCardPermission(),
@@ -574,6 +653,7 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
 #if USING_XR_SDK
             new CkeckDependency(MessageType.Error)
 #endif
+            new CkeckAndroidBuildGradle(MessageType.Error),
             //new CkeckColorSpace(Level.Error),
         };
 
@@ -587,7 +667,6 @@ in dropdown list of Player Settings > Other Settings > Color Space, choose 'Line
         static ProjectTipsWindow()
         {
             EditorApplication.update -= Update;
-            EditorApplication.update += Update;
         }
 
         /// <summary> Shows the window. </summary>

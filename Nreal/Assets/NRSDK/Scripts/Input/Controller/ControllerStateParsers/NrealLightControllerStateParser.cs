@@ -13,7 +13,7 @@ namespace NRKernal
     using UnityEngine;
 
     /// <summary>
-    /// The class parses the raw states of Nreal Light Controller to usable states by invoking
+    /// The class parses the raw states of Nreal Controller to usable states by invoking
     /// parsing method every frame. </summary>
     public class NrealLightControllerStateParser : IControllerStateParser
     {

@@ -14,6 +14,7 @@ namespace NRKernal
 
     public class NRDefaultPhoneScreenProvider : NRPhoneScreenProviderBase
     {
+        SystemButtonState m_buttonState = new SystemButtonState();
         private static AndroidJavaObject m_VirtualDisplayFragment;
         public class AndroidSystemButtonDataProxy : AndroidJavaProxy, ISystemButtonDataProxy
         {
@@ -39,6 +40,25 @@ namespace NRKernal
             }
         }
 
+        public override void OnPreUpdate()
+        {
+            base.OnPreUpdate();
+            m_buttonState.Reset();
+
+            var data = m_VirtualDisplayFragment.Call<AndroidJavaObject>("GetSystemButtonState");
+            if (data != null)
+            {
+                bool btnApp = data.Call<bool>("GetButtonApp");
+                bool btnTouch = data.Call<bool>("GetButtonTouch");
+                bool btnHome = data.Call<bool>("GetButtonHome");
+                float touchX = data.Call<float>("GetTouchX");
+                float touchY = data.Call<float>("GetTouchY");
+                m_buttonState.Set(btnApp, btnTouch, btnHome, touchX, touchY);
+
+                OnSystemButtonDataChanged(m_buttonState);
+            }
+        }
+
         public override void RegistFragment(AndroidJavaObject unityActivity, ISystemButtonDataProxy proxy)
         {
             NRDebugger.Info("[VirtualController] RegistFragment...");
@@ -56,7 +76,8 @@ namespace NRKernal
 
         public override ISystemButtonDataProxy CreateAndroidDataProxy()
         {
-            return new AndroidSystemButtonDataProxy(this);
+            // return new AndroidSystemButtonDataProxy(this);
+            return null;
         }
     }
 }

@@ -157,5 +157,13 @@ namespace NRKernal
                 }
             }
         }
+
+        /// <summary> Convert this object into a string representation. </summary>
+        /// <returns> A string that represents this object. </returns>
+        public override string ToString()
+        {
+            return string.Format("column0:{0}\ncolumn1:{1}\ncolumn2:{2}\n",
+                column0.ToString(), column1.ToString(), column2.ToString());
+        }
     }
 }

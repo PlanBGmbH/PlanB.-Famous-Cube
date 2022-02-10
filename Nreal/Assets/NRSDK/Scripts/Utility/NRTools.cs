@@ -88,6 +88,13 @@ namespace NRKernal
             TimeSpan ts = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0, 0);
             return Convert.ToUInt64(ts.TotalMilliseconds);
         }
+
+        /// <summary> Gets time stamp. </summary>
+        /// <returns> The time stamp. </returns>
+        public static ulong GetTimeStampNanos()
+        {
+            return GetTimeStamp() * 1000000;
+        }
         #endregion
     }
 }

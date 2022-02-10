@@ -205,7 +205,7 @@ namespace NRKernal
             {
                 KernalError = exception;
 
-                // Trigger the notification window when the error is NRRGBCameraDeviceNotFindError
+                // Trigger the notification window
                 if (KernalError is NRRGBCameraDeviceNotFindError
                     || KernalError is NRPermissionDenyError
                     || KernalError is NRUnSupportedHandtrackingCalculationError)
@@ -251,7 +251,7 @@ namespace NRKernal
                     }
                     else
                     {
-                        return KernalError.GetError();
+                        return KernalError.GetErrorMsg();
                     }
                 }
             }

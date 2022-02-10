@@ -15,7 +15,7 @@ namespace NRKernal
 
     public class NRTrackingModeChangedListener
     {
-        public delegate void OnTrackStateChangedDel(bool onSwitchingMode, RenderTexture rt);
+        public delegate void OnTrackStateChangedDel(bool trackChanging, RenderTexture rt);
         public event OnTrackStateChangedDel OnTrackStateChanged;
         private NRTrackingModeChangedTip m_LostTrackingTip;
         private Coroutine m_EnableRenderCamera;
@@ -30,7 +30,7 @@ namespace NRKernal
 
         private void OnChangeTrackingMode(NRHMDPoseTracker.TrackingType origin, NRHMDPoseTracker.TrackingType target)
         {
-            NRDebugger.Info("[NRTrackingLostListener] OnChangeTrackingMode origin:{0} target:{1}", origin, target);
+            NRDebugger.Info("[NRTrackingModeChangedListener] OnChangeTrackingMode origin:{0} target:{1}", origin, target);
             if (target == NRHMDPoseTracker.TrackingType.Tracking0Dof)
             {
                 return;
@@ -58,13 +58,15 @@ namespace NRKernal
             yield return endofFrame;
             yield return endofFrame;
             yield return endofFrame;
-            NRDebugger.Info("[NRTrackingLostListener] Enter tracking initialize mode...");
+            NRDebugger.Info("[NRTrackingModeChangedListener] Enter tracking initialize mode...");
             OnTrackStateChanged?.Invoke(true, m_LostTrackingTip.RT);
 
-            while ((NRFrame.LostTrackingReason != LostTrackingReason.NONE || (Time.realtimeSinceStartup - begin_time) < MinTimeLastLimited)
+            NRHMDPoseTracker postTracker = NRSessionManager.Instance.NRHMDPoseTracker;
+            while ((NRFrame.LostTrackingReason != LostTrackingReason.NONE || postTracker.IsTrackModeChanging || (Time.realtimeSinceStartup - begin_time) < MinTimeLastLimited)
                 && (Time.realtimeSinceStartup - begin_time) < MaxTimeLastLimited)
             {
-                NRDebugger.Info("[NRTrackingLostListener] Wait for tracking ready..." + NRFrame.LostTrackingReason);
+                NRDebugger.Info("[NRTrackingModeChangedListener] Wait for tracking: modeChanging={0}, lostTrackReason={1}",
+                    postTracker.IsTrackModeChanging, NRFrame.LostTrackingReason);
                 yield return endofFrame;
             }
 
@@ -78,16 +80,15 @@ namespace NRKernal
 
         public IEnumerator DisableTrackingInitializingRenderCamera()
         {
-            if (m_LostTrackingTip == null)
+            if (m_LostTrackingTip != null)
             {
-                m_LostTrackingTip = NRTrackingModeChangedTip.Create();
+                m_LostTrackingTip.gameObject.SetActive(false);
             }
-            m_LostTrackingTip.gameObject.SetActive(false);
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             yield return new WaitForEndOfFrame();
             OnTrackStateChanged?.Invoke(false, m_LostTrackingTip.RT);
-            NRDebugger.Info("[NRTrackingLostListener] Exit tracking initialize mode...");
+            NRDebugger.Info("[NRTrackingModeChangedListener] Exit tracking initialize mode...");
         }
     }
 }

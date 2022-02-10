@@ -31,7 +31,7 @@ namespace NRKernal
         /// </summary>
         public static event Action<Resolution> OnDisplayScreenChangedEvent;
         /// <summary> State of the system button. </summary>
-        internal static SystemInputState SystemButtonState = new SystemInputState();
+        [NonSerialized] public static SystemInputState SystemButtonState = new SystemInputState();
         /// <summary> The camera. </summary>
         [SerializeField] Camera m_UICamera;
         /// <summary> The virtual controller. </summary>
@@ -159,12 +159,12 @@ namespace NRKernal
                 var phoneScreenReplayceTool = FindObjectOfType<NRPhoneDisplayReplayceTool>();
                 if (phoneScreenReplayceTool == null)
                 {
-                    NRDebugger.Info("[NRMultiDisplayManager] Use default phone sceen provider.");
+                    NRDebugger.Info("[NRVirtualDisplayer] Use default phone sceen provider.");
                     this.BindVirtualDisplayProvider(new NRDefaultPhoneScreenProvider());
                 }
                 else
                 {
-                    NRDebugger.Info("[NRMultiDisplayManager] Use replayced phone sceen provider.");
+                    NRDebugger.Info("[NRVirtualDisplayer] Use replayced phone sceen provider.");
                     this.BindVirtualDisplayProvider(phoneScreenReplayceTool.CreatePhoneScreenProvider());
                 }
             }

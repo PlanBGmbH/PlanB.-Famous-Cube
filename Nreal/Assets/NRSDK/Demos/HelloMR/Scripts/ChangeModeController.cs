@@ -15,6 +15,7 @@ namespace NRKernal.NRExamples
     {
         public void ChangeTo0Dof()
         {
+            var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
             NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0Dof((result) =>
             {
                 NRDebugger.Info("[ChangeModeController] ChangeTo0Dof result:" + result.success);
@@ -28,10 +29,6 @@ namespace NRKernal.NRExamples
             NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo3Dof((result) =>
             {
                 NRDebugger.Info("[ChangeModeController] ChangeTo3Dof result:" + result.success);
-                if (result.success)
-                {
-                    hmdPoseTracker.CacheWorldMatrix();
-                }
             });
         }
 
@@ -41,10 +38,6 @@ namespace NRKernal.NRExamples
             NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof((result) =>
             {
                 NRDebugger.Info("[ChangeModeController] ChangeTo6Dof result:" + result.success);
-                if (result.success)
-                {
-                    hmdPoseTracker.CacheWorldMatrix();
-                }
             });
         }
     }

@@ -88,10 +88,9 @@ namespace NRKernal
       </intent-filter>
     </activity>
     <meta-data android:name='nreal_sdk' android:value='true'/>
+    <meta-data android:name='com.nreal.supportDevices' android:value=''/>
   </application>
   <uses-permission android:name='android.permission.BLUETOOTH'/>
-  <uses-permission android:name='android.permission.BLUETOOTH_ADMIN' />
-  <uses-permission android:name='android.permission.QUERY_ALL_PACKAGES' />
 </manifest>
         ";
 
@@ -124,19 +123,23 @@ namespace NRKernal
             }
 
             AutoGenerateAndroidManifest(xmlPath);
-            AssetDatabase.Refresh();
 
             ApplySettingsToConfig();
+            AutoGenerateAndroidGradleTemplate();
+            AssetDatabase.Refresh();
         }
 
         private static void ApplySettingsToConfig()
         {
+            NRProjectConfig projectConfig = NRProjectConfigHelper.GetProjectConfig();
+
             var sessionConfigGuids = AssetDatabase.FindAssets("t:NRSessionConfig");
             foreach (var item in sessionConfigGuids)
             {
                 var config = AssetDatabase.LoadAssetAtPath<NRSessionConfig>(
                     AssetDatabase.GUIDToAssetPath(item));
-                config.UseMultiThread = PlayerSettings.GetMobileMTRendering(BuildTargetGroup.Android);
+                config.SetUseMultiThread(PlayerSettings.GetMobileMTRendering(BuildTargetGroup.Android));
+                config.SetProjectConfig(projectConfig);
                 EditorUtility.SetDirty(config);
             }
             AssetDatabase.SaveAssets();
@@ -159,7 +162,7 @@ namespace NRKernal
             var androidManifest = new AndroidManifest(path);
             //bool needrequestLegacyExternalStorage = (GetAndroidTargetApiLevel() >= 29);
             //androidManifest.SetExternalStorage(needrequestLegacyExternalStorage);
-            androidManifest.SetPackageReadPermission();
+            // androidManifest.SetPackageReadPermission();
             //androidManifest.SetCameraPermission();
             androidManifest.SetBlueToothPermission();
             androidManifest.SetSDKMetaData();
@@ -197,14 +200,49 @@ namespace NRKernal
             }
         }
 
-        //public void OnPostGenerateGradleAndroidProject(string basePath)
-        //{
-        //    var pathBuilder = new StringBuilder(basePath);
-        //    pathBuilder.Append(Path.DirectorySeparatorChar).Append("src");
-        //    pathBuilder.Append(Path.DirectorySeparatorChar).Append("main");
-        //    pathBuilder.Append(Path.DirectorySeparatorChar).Append("AndroidManifest.xml");
-        //    NRDebugger.Error("OnPostGenerateGradleAndroidProject:" + pathBuilder.ToString());
-        //    AutoGenerateAndroidManifest(pathBuilder.ToString());
-        //}
+        /// In order to support 'queries' in manifest, gradle plugin must be higher than 3.4.3. 
+        /// For unity version lower than 2020, this can be modified by using 'Custom Gradle Template', then modify the gradle plugin version in template file
+        public static void AutoGenerateAndroidGradleTemplate()
+        {
+            string version = Application.unityVersion;
+            Debug.Log("UnityVersion: " + version);
+            string vMain = version.Substring(0, 4);
+            int nVersion = 0;
+            int.TryParse(vMain, out nVersion);
+            if (nVersion < 2018)
+                Debug.LogErrorFormat("NRSDK require unity version higher than 2018");
+            else if (nVersion == 2018)
+                AutoGenerateAndroidGradleTemplate("mainTemplate.gradle");
+            else if (nVersion == 2019)
+                AutoGenerateAndroidGradleTemplate("baseProjectTemplate.gradle");
+        }
+        
+
+        private static void AutoGenerateAndroidGradleTemplate(string templateFileName)
+        {
+            string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
+            if (!File.Exists(gradleInProject))
+            {
+                string unityEditorPath = EditorApplication.applicationPath;
+
+                string gradleReletPath = "/PlaybackEngines/AndroidPlayer/Tools/GradleTemplates/" + templateFileName;
+#if UNITY_EDITOR_WIN
+                gradleReletPath = "/data" + gradleReletPath;
+#endif
+                string gradleFullPath = unityEditorPath.Substring(0, unityEditorPath.LastIndexOf("/")) + gradleReletPath;
+                Debug.LogFormat("Copy gradle template : {0} --> {1}", gradleFullPath, gradleInProject);
+
+                if (File.Exists(gradleFullPath))
+                    File.Copy(gradleFullPath, gradleInProject);
+                else
+                {
+                    Debug.LogErrorFormat("GradleTemplate of unity not found : {0}", gradleFullPath);
+                    return;
+                }
+            }
+
+            AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
+            gradleTmp.SetGradlePluginVersion();
+        }
     }
 }

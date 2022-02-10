@@ -41,6 +41,11 @@ namespace NRKernal.Record
                 matrix_data = NRFrame.GetEyeProjectMatrix(out result, m_TargetCamera.nearClipPlane, m_TargetCamera.farClipPlane);
             }
 
+            if (m_DeviceType == NativeDevice.RGB_CAMERA && !NRKernal.NRDevice.Subsystem.IsFeatureSupported(NRSupportedFeature.NR_FEATURE_RGB_CAMERA))
+            {
+                NRDebugger.Warning("[NRCameraInitializer] Auto adaption for DevieType : {0} ==> {1}", m_DeviceType, NativeDevice.LEFT_DISPLAY);
+                m_DeviceType = NativeDevice.LEFT_DISPLAY;
+            }
             var eyeposFromHead = NRFrame.EyePoseFromHead;
             switch (m_DeviceType)
             {

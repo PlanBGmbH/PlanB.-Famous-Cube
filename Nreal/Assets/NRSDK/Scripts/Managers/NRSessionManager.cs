@@ -250,16 +250,31 @@ namespace NRKernal
             {
                 NRDevice.Instance.Init();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                NRDebugger.Error("[NRSessionManager] NRDevice Init failed: {0}", ex.Message);
                 return;
+            }
+            
+            var config = NRSessionBehaviour.SessionConfig;
+            if (config != null)
+            {
+                var deviceType = NRDevice.Subsystem.GetDeviceType();
+                NRDebugger.Info("[NRSessionManager] targetDeviceType : curDevice={0}, targetDevices={1}", deviceType, config.GetTargetDeviceTypesDesc());
+                if (!config.IsTargetDevice(deviceType))
+                {
+                    OprateInitException(new NRUnSupportDeviceError(string.Format("Unsuppport running on {0}!", deviceType)));
+                    return;
+                }
             }
 
             NativeAPI = new NativeInterface();
             TrackableFactory = new NRTrackableManager();
             AsyncTaskExecuter.Instance.RunAction(() =>
             {
-                NRDebugger.Debug("[NRSessionManager] Create tracking");
+                NRHMDPoseTracker.AutoAdaptTrackingType();
+                NRDebugger.Info("[NRSessionManager] Create tracking : {0}", NRHMDPoseTracker.TrackingMode);
+                this.AutoAdaptSessionConfig();
                 switch (NRHMDPoseTracker.TrackingMode)
                 {
                     case NRHMDPoseTracker.TrackingType.Tracking6Dof:
@@ -289,6 +304,11 @@ namespace NRKernal
 #endif
             NRKernalUpdater.OnPreUpdate -= OnPreUpdate;
             NRKernalUpdater.OnPreUpdate += OnPreUpdate;
+#if !UNITY_EDITOR && !USING_XR_SDK
+            if (NRSessionBehaviour.gameObject.GetComponent<NRRenderer>() == null)
+                NRRenderer = NRSessionBehaviour.gameObject.AddComponent<NRRenderer>();
+#endif
+            NRDebugger.Info("[NRSessionManager] CreateSession : AddComponent NRRenderer");
             SessionState = SessionState.Initialized;
 
             LoadNotification();
@@ -329,11 +349,31 @@ namespace NRKernal
             }
         }
 
-        private string GetErrorMsg(Exception error)
+        /// <summary>
+        /// Get error tip been shown for users.
+        /// </summary>
+        /// <param name="error"> The error exception.</param>
+        /// <returns> Error tip. </returns>
+        private string GetErrorTip(Exception error)
+        {
+            string tip = GetErrorTipDesc(error);
+            if (error is NRNativeError)
+            {
+                NativeResult result = (error as NRNativeError).result;
+                tip = string.Format("Error Code-{0}, {1}", (int)result, tip);
+            }
+            return tip;
+        }
+
+        private string GetErrorTipDesc(Exception error)
         {
             if (error is NRGlassesConnectError)
             {
                 return NativeConstants.GlassesDisconnectErrorTip;
+            }
+            else if (error is NRGlassesNotAvailbleError)
+            {
+                return NativeConstants.GlassesNotAvailbleErrorTip;
             }
             else if (error is NRSdkVersionMismatchError)
             {
@@ -342,6 +382,22 @@ namespace NRKernal
             else if (error is NRSdcardPermissionDenyError)
             {
                 return NativeConstants.SdcardPermissionDenyErrorTip;
+            }
+            else if (error is NRUnSupportDeviceError)
+            {
+                return NativeConstants.UnSupportDeviceErrorTip;
+            }
+            else if (error is NRDPDeviceNotFindError)
+            {
+                return NativeConstants.DPDeviceNotFindErrorTip;
+            }
+            else if (error is NRGetDisplayFailureError)
+            {
+                return NativeConstants.GetDisplayFailureErrorTip;
+            }
+            else if (error is NRDisplayModeMismatchError)
+            {
+                return NativeConstants.DisplayModeMismatchErrorTip;
             }
             else
             {
@@ -353,7 +409,7 @@ namespace NRKernal
         /// <param name="msg"> The message.</param>
         private void ShowErrorTips(NRKernalError error)
         {
-            string msg = GetErrorMsg(error);
+            string msg = GetErrorTip(error);
 
             var sessionbehaviour = GameObject.FindObjectOfType<NRSessionBehaviour>();
             NRGlassesInitErrorTip errortips;
@@ -381,7 +437,7 @@ namespace NRKernal
             {
                 GameObject.Destroy(virtualdisplay.gameObject);
             }
-
+            
             GameObject.DontDestroyOnLoad(errortips);
             errortips.Init(msg, () =>
             {
@@ -398,11 +454,15 @@ namespace NRKernal
                 return;
             }
 
+            if (NRHMDPoseTracker.IsTrackModeChanging || NRHMDPoseTracker.TrackingMode == NRHMDPoseTracker.TrackingType.Tracking0Dof)
+                return;
+
 #if USING_XR_SDK && !UNITY_EDITOR
             m_LostTrackingReason = GetLostTrackingReason();
 #else
             m_LostTrackingReason = TrackingSubSystem.GetTrackingLostReason();
-            NRFrame.OnUpdate();
+            if (NRRenderer == null || NRRenderer.CurrentState == NRRenderer.RendererState.Running)
+                NRFrame.OnPreUpdate();
 #endif
         }
 
@@ -466,13 +526,11 @@ namespace NRKernal
 
             AfterInitialized(() =>
             {
-                NRDebugger.Debug("[NRSessionManager] Start session after initialized");
+                NRDebugger.Info("[NRSessionManager] Start session after initialized");
 #if !UNITY_EDITOR && !USING_XR_SDK
-                if (NRSessionBehaviour.gameObject.GetComponent<NRRenderer>() == null)
-                {
+                if (NRRenderer == null)
                     NRRenderer = NRSessionBehaviour.gameObject.AddComponent<NRRenderer>();
-                    NRRenderer.Initialize(NRHMDPoseTracker.leftCamera, NRHMDPoseTracker.rightCamera);
-                }
+                NRRenderer.Initialize(NRHMDPoseTracker.leftCamera, NRHMDPoseTracker.rightCamera);
 #endif
 
 #if USING_XR_SDK && !UNITY_EDITOR
@@ -483,7 +541,7 @@ namespace NRKernal
                 TrackableFactory.Start();
                 AsyncTaskExecuter.Instance.RunAction(() =>
                 {
-                    NRDebugger.Debug("[NRSessionManager] Start tracking");
+                    NRDebugger.Info("[NRSessionManager] Start tracking");
                     TrackingSubSystem.Start();
                     SessionState = SessionState.Running;
                 });
@@ -579,6 +637,24 @@ namespace NRKernal
 #if USING_XR_SDK && !UNITY_EDITOR
             SetFrameRateMode(mode);
 #endif
+        }
+
+        /// <summary> Auto adaption for sessionConfig(PlaneFindingMode&ImageTrackingMode) based on supported feature on current device. </summary>
+        private void AutoAdaptSessionConfig()
+        {
+            if (NRDevice.Subsystem.GetDeviceType() == NRDeviceType.NrealAir)
+            {
+                if (NRSessionBehaviour.SessionConfig.PlaneFindingMode != TrackablePlaneFindingMode.DISABLE)
+                {
+                    NRDebugger.Warning("[NRSessionManager] AutoAdaptConfig PlaneFindingMode : {0} => {1}", NRSessionBehaviour.SessionConfig.PlaneFindingMode, TrackablePlaneFindingMode.DISABLE);
+                    NRSessionBehaviour.SessionConfig.PlaneFindingMode = TrackablePlaneFindingMode.DISABLE;
+                }
+                if (NRSessionBehaviour.SessionConfig.ImageTrackingMode != TrackableImageFindingMode.DISABLE)
+                {
+                    NRDebugger.Warning("[NRSessionManager] AutoAdaptConfig ImageTrackingMode : {0} => {1}", NRSessionBehaviour.SessionConfig.ImageTrackingMode, TrackableImageFindingMode.DISABLE);
+                    NRSessionBehaviour.SessionConfig.ImageTrackingMode = TrackableImageFindingMode.DISABLE;
+                }
+            }
         }
 
 #if USING_XR_SDK && !UNITY_EDITOR

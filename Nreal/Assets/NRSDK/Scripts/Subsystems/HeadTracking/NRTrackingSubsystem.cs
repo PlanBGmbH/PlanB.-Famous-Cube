@@ -77,6 +77,11 @@ namespace NRKernal
             return m_Provider.GetFramePresentHeadPose(ref pose, ref timestamp);
         }
 
+        public bool GetFramePresentTimeByCount(int count, ref ulong timestamp)
+        {
+            return m_Provider.GetFramePresentTimeByCount(count, ref timestamp);
+        }
+
         public bool GetHeadPose(ref UnityEngine.Pose pose, ulong timestamp)
         {
             return m_Provider.GetHeadPose(ref pose, timestamp);

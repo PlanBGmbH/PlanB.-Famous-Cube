@@ -17,8 +17,13 @@ namespace NRKernal
     [ScriptOrder(NativeConstants.NRSESSIONBEHAVIOUR_ORDER)]
     public class NRSessionBehaviour : SingletonBehaviour<NRSessionBehaviour>
     {
+        /// <summary> LogVevel of NRSDK should be while release. </summary>
+        [Tooltip("LogLevel of NRSDK.")]
+		[SerializeField]
+        LogLevel LogLevel = LogLevel.Info;
         /// <summary> The SessionConfig of nrsession. </summary>
         [Tooltip("A scriptable object specifying the NRSDK session configuration.")]
+		[SerializeField]
         public NRSessionConfig SessionConfig;
 
         /// <summary>
@@ -27,6 +32,15 @@ namespace NRKernal
         /// base.Awake() to ensure the static Instance reference is properly created. </summary>
         new void Awake()
         {
+#if NRDEBUG
+            NRDebugger.logLevel = LogLevel.All;
+#elif !UNITY_EDITOR
+            NRDebugger.logLevel = Debug.isDebugBuild ? LogLevel.Debug : LogLevel;
+#else
+            NRDebugger.logLevel = LogLevel;
+#endif
+            Debug.LogFormat("[SessionBehaviour] Awake:  logLevel={0}", NRDebugger.logLevel);
+
             base.Awake();
             if (isDirty) return;
 

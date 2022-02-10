@@ -482,6 +482,13 @@ namespace NRKernal
         /// <param name="inputSourceType"></param>
         private static void SetInputSourceSafely(InputSourceEnum inputSourceType)
         {
+            var adaptInputSourceType = AdaptInputSource(inputSourceType);
+            if (adaptInputSourceType != inputSourceType)
+            {
+                NRDebugger.Warning("[NRInput] AutoAdaptInputSource : {0} => {1}", inputSourceType, adaptInputSourceType);
+                inputSourceType = adaptInputSourceType;
+            }
+
             if (SetInputSource(inputSourceType))
             {
                 return;
@@ -489,6 +496,16 @@ namespace NRKernal
             var fallbackInputSourceType = InputSourceEnum.Controller;
             NRDebugger.Info("[NRInput] Set Input Source To {0} Failed. Now Set Input Source To Fallback: {1}", inputSourceType, fallbackInputSourceType);
             SetInputSource(fallbackInputSourceType);
+        }
+
+        /// <summary> Auto adaption for inputSource based on supported feature on current device. </summary>
+        /// <returns> Fallback inputSource. </returns>
+        private static InputSourceEnum AdaptInputSource(InputSourceEnum inputSourceType)
+        {
+            if (inputSourceType == InputSourceEnum.Hands && !NRDevice.Subsystem.IsFeatureSupported(NRSupportedFeature.NR_FEATURE_HANDTRACKING))
+                return InputSourceEnum.Controller;
+
+            return inputSourceType;
         }
 
         /// <summary>

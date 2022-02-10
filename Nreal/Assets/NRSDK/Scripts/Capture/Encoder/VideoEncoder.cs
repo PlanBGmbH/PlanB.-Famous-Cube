@@ -49,10 +49,10 @@ namespace NRKernal.Record
             {
                 NativeEncoder.Start();
             }
-            if (eventID == STOPENCODEEVENT)
-            {
-                NativeEncoder.Stop();
-            }
+            //if (eventID == STOPENCODEEVENT)
+            //{
+            //    NativeEncoder.Stop();
+            //}
         }
 #endif
 
@@ -112,7 +112,7 @@ namespace NRKernal.Record
         }
 
         /// <summary> Commits. </summary>
-        /// <param name="rt">        The right.</param>
+        /// <param name="rt">        The renderTexture.</param>
         /// <param name="timestamp"> The timestamp.</param>
         public void Commit(RenderTexture rt, UInt64 timestamp)
         {
@@ -147,11 +147,12 @@ namespace NRKernal.Record
                 return;
             }
 
+            NRDebugger.Info("[VideoEncoder] Stop");
             m_AudioEncodeTool?.StopRecord();
 #if !UNITY_EDITOR
-            GL.IssuePluginEvent(RenderThreadHandlePtr, STOPENCODEEVENT);
+            //GL.IssuePluginEvent(RenderThreadHandlePtr, STOPENCODEEVENT);
+            NativeEncoder.Stop();
 #endif
-            NRDebugger.Info("[VideoEncoder] Stop");
             m_IsStarted = false;
         }
 

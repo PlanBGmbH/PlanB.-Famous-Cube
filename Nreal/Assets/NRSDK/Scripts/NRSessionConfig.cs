@@ -11,6 +11,7 @@ namespace NRKernal
 {
     using UnityEngine;
     using UnityEngine.Serialization;
+	using System.Collections.Generic;
 
     /// <summary> A configuration used to track the world. </summary>
     [CreateAssetMenu(fileName = "NRKernalSessionConfig", menuName = "NRSDK/SessionConfig", order = 1)]
@@ -44,10 +45,17 @@ namespace NRKernal
         public NRTrackingModeChangedTip TrackingModeChangeTipPrefab;
 
         /// <summary> It will be read automatically from PlayerdSetting. </summary>
-        [Tooltip("It will be read automatically from PlayerdSetting. ")]
         [HideInInspector]
-        public bool UseMultiThread = false;
-
+        public bool UseMultiThread
+        {
+            get;
+            private set;
+        }
+        
+        /// <summary> The NRProjectConfig whick is global unique. All NRSessionConfig in project should refer to the same NRProjectConfig. </summary>
+        [SerializeField]
+        [Tooltip("Donot change this manually, it always refer to the NRProjectConfig whick is global unique.")]
+        NRProjectConfig ProjectConfig;
 
         /// <summary> ValueType check if two NRSessionConfig objects are equal. </summary>
         /// <param name="other"> .</param>
@@ -67,6 +75,9 @@ namespace NRKernal
             {
                 return false;
             }
+
+            if (ProjectConfig != otherConfig.ProjectConfig)
+                return false;
 
             return true;
         }
@@ -89,6 +100,29 @@ namespace NRKernal
             TrackingModeChangeTipPrefab = other.TrackingModeChangeTipPrefab;
             UseMultiThread = other.UseMultiThread;
             EnableNotification = other.EnableNotification;
+            ProjectConfig = other.ProjectConfig;
         }
+
+        public bool IsTargetDevice(NRDeviceType device)
+        {
+            return ProjectConfig ? ProjectConfig.targetDeviceTypes.Contains(device) : false;
+        }
+
+        public string GetTargetDeviceTypesDesc()
+        {
+            return ProjectConfig ? ProjectConfig.GetTargetDeviceTypesDesc() : string.Empty;
+        }
+        
+#if UNITY_EDITOR
+        public void SetProjectConfig(NRProjectConfig projectConfig)
+        {
+            ProjectConfig = projectConfig;
+        }
+
+        public void SetUseMultiThread(bool useMultiThread)
+        {
+            UseMultiThread = useMultiThread;
+        }
+#endif
     }
 }

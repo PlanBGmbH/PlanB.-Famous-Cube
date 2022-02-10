@@ -38,11 +38,9 @@ namespace NRKernal.Record
         {
             get
             {
-#if !UNITY_EDITOR
-                NativeResolution rgbResolution = NRFrame.GetDeviceResolution(NativeDevice.RGB_CAMERA);
-#else
                 NativeResolution rgbResolution = new NativeResolution(1280, 720);
-#endif
+                if (NRDevice.Subsystem.IsFeatureSupported(NRSupportedFeature.NR_FEATURE_RGB_CAMERA))
+                    rgbResolution = NRFrame.GetDeviceResolution(NativeDevice.RGB_CAMERA);
                 Resolution stand_resolution = new Resolution()
                 {
                     width = rgbResolution.width,
@@ -157,8 +155,18 @@ namespace NRKernal.Record
         /// <summary> Starts video mode asynchronous. </summary>
         /// <param name="setupParams">                Options for controlling the setup.</param>
         /// <param name="onVideoModeStartedCallback"> The on video mode started callback.</param>
-        public void StartVideoModeAsync(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback)
+        /// <param name="autoAdaptBlendMode"> Auto adaption for BlendMode based on supported feature on current device.</param>
+        public void StartVideoModeAsync(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback, bool autoAdaptBlendMode = false)
         {
+            if (autoAdaptBlendMode)
+            {
+                var blendMode = m_CaptureContext.AutoAdaptBlendMode(setupParams.blendMode);
+                if (blendMode != setupParams.blendMode)
+                {
+                    NRDebugger.Warning("[VideoCapture] AutoAdaptBlendMode : {0} => {1}", setupParams.blendMode, blendMode);
+                    setupParams.blendMode = blendMode;
+                }
+            }
             if (setupParams.audioState == AudioState.MicAudio)
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -186,20 +194,31 @@ namespace NRKernal.Record
             }
         }
 
-        private void StartVideoMode(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback)
+        private void StartVideoMode(CameraParameters setupParams, OnVideoModeStartedCallback onVideoModeStartedCallback, bool autoAdaptBlendMode = false)
         {
             setupParams.camMode = CamMode.VideoMode;
             setupParams.hologramOpacity = 1;
+            if (autoAdaptBlendMode)
+            {
+                var blendMode = m_CaptureContext.AutoAdaptBlendMode(setupParams.blendMode);
+                if (blendMode != setupParams.blendMode)
+                {
+                    NRDebugger.Warning("[VideoCapture] AutoAdaptBlendMode : {0} => {1}", setupParams.blendMode, blendMode);
+                    setupParams.blendMode = blendMode;
+                }
+            }
+            if (setupParams.frameRate <= 0)
+                NRDebugger.Warning("[PhotoCapture] frameRate need to be bigger than zero");
             m_CaptureContext.StartCaptureMode(setupParams);
             var result = new VideoCaptureResult();
             result.resultType = CaptureResultType.Success;
             onVideoModeStartedCallback?.Invoke(result);
         }
 
-        public void StartVideoModeAsync(CameraParameters setupParams, AudioState audioState, OnVideoModeStartedCallback onVideoModeStartedCallback)
+        public void StartVideoModeAsync(CameraParameters setupParams, AudioState audioState, OnVideoModeStartedCallback onVideoModeStartedCallback, bool autoAdaptBlendMode = false)
         {
             setupParams.audioState = audioState;
-            StartVideoModeAsync(setupParams, onVideoModeStartedCallback);
+            StartVideoModeAsync(setupParams, onVideoModeStartedCallback, autoAdaptBlendMode);
         }
 
         /// <summary> Stops recording asynchronous. </summary>

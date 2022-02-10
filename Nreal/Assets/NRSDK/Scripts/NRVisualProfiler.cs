@@ -332,7 +332,6 @@ using Windows.System;
                 if (defaultInstancedMaterial != null)
                 {
                     // Create a quad mesh with artificially large bounds to disable culling for instanced rendering.
-                    // TODO: Use shared mesh with normal bounds once Unity allows for more control over instance culling.
                     quadMesh = quadMeshFilter.mesh;
                     quadMesh.bounds = new Bounds(Vector3.zero, Vector3.one * float.MaxValue);
                 }

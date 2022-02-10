@@ -54,13 +54,23 @@ namespace NRKernal
 
         #region error tips
         /// <summary> The glasses disconnect error tip. </summary>
-        public static string GlassesDisconnectErrorTip = "Please connect your Nreal Light Glasses.";
+        public static string GlassesDisconnectErrorTip = "Please connect your Nreal Glasses.";
+        /// <summary> The glasses disconnect error tip. </summary>
+        public static string GlassesNotAvailbleErrorTip = "Please make sure your Nreal Glasses is available";
         /// <summary> The sdk version mismatch error tip. </summary>
         public static string SdkVersionMismatchErrorTip = "Please update to the latest version of NRSDK.";
         /// <summary> The sdcard permission deny error tip. </summary>
         public static string SdcardPermissionDenyErrorTip = "There is no read permission for sdcard. Please go to the authorization management page of the device to authorize.";
         /// <summary> The unknow error tip. </summary>
         public static string UnknowErrorTip = "Unkown error! \nPlease contact Nreal's customer service.";
+        /// <summary> The error tip of running on unsupported device. </summary>
+        public static string UnSupportDeviceErrorTip = "App doesn't suppport to run on current glass! \nPlease contact App developer's customer service.";
+        /// <summary> The error tip of running on unsupported device. </summary>
+        public static string DPDeviceNotFindErrorTip = "Nreal Glasses display device not find! \nPlease contact Nreal's customer service.";
+        /// <summary> The error tip of running on unsupported device. </summary>
+        public static string GetDisplayFailureErrorTip = "MRSpace display device not find! \nPlease contact Nreal's customer service.";
+        /// <summary> The error tip of running on unsupported device. </summary>
+        public static string DisplayModeMismatchErrorTip = "Display mode mismatch, as MRSpace mode is needed! \nPlease contact Nreal's customer service.";
         public static string AudioPermissionDenyErrorTip = "Record audio needs the permission of \n" +
                             "'android.permission.RECORD_AUDIO', Add it to the 'AndroidManifest.xml'";
         public static string RGBCameraDeviceNotFindErrorTip = "Please check the FAQ on the Nreal's official website to enable the RGB Camera.";

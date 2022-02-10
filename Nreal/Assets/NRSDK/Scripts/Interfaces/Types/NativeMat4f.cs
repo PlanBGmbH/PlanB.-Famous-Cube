@@ -12,21 +12,18 @@ namespace NRKernal
 
     using System.Runtime.InteropServices;
     using UnityEngine;
+    using UnityEngine.Assertions;
 
     /// <summary> A native matrix 4f. </summary>
     [StructLayout(LayoutKind.Sequential)]
     public struct NativeMat4f
     {
-        /// <summary> The column 0. </summary>
         [MarshalAs(UnmanagedType.Struct)]
         public NativeVector4f column0;
-        /// <summary> The first column. </summary>
         [MarshalAs(UnmanagedType.Struct)]
         public NativeVector4f column1;
-        /// <summary> The second column. </summary>
         [MarshalAs(UnmanagedType.Struct)]
         public NativeVector4f column2;
-        /// <summary> The third column. </summary>
         [MarshalAs(UnmanagedType.Struct)]
         public NativeVector4f column3;
 
@@ -38,6 +35,15 @@ namespace NRKernal
             column1 = new NativeVector4f(m.GetColumn(1));
             column2 = new NativeVector4f(m.GetColumn(2));
             column3 = new NativeVector4f(m.GetColumn(3));
+        }
+
+        public NativeMat4f(float[] source)
+        {
+            Assert.IsTrue(source != null && source.Length == 16);
+            column0 = new NativeVector4f(source[0], source[1], source[2], source[3]);
+            column1 = new NativeVector4f(source[4], source[5], source[6], source[7]);
+            column2 = new NativeVector4f(source[8], source[9], source[10], source[11]);
+            column3 = new NativeVector4f(source[12], source[13], source[14], source[15]);
         }
 
         /// <summary> Converts this object to an unity matrix 4f. </summary>
@@ -60,6 +66,16 @@ namespace NRKernal
             {
                 return new NativeMat4f(Matrix4x4.identity);
             }
+        }
+
+        public float[] ToFloats()
+        {
+            return new float[] {
+                column0.X,column0.Y,column0.Z,column0.W,
+                column1.X,column1.Y,column1.Z,column1.W,
+                column2.X,column2.Y,column2.Z,column2.W,
+                column3.X,column3.Y,column3.Z,column3.W,
+            };
         }
 
         /// <summary> Convert this object into a string representation. </summary>

@@ -17,6 +17,15 @@ namespace NRKernal
     using System.Runtime.InteropServices;
     using UnityEngine;
 
+    public interface IFrameProcessor
+    {
+        UInt64 GetFrameHandle();
+        void SubmitFrame();
+        void Update();
+        void Initialize(NativeRenderring nativeRenderer);
+        void Destroy();
+    }
+
     /// <summary>
     /// NRNativeRender operate rendering-related things, provides the feature of optimized rendering
     /// and low latency. </summary>
@@ -35,7 +44,8 @@ namespace NRKernal
         private const int STARTNATIVERENDEREVENT = 0x0002;
         private const int RESUMENATIVERENDEREVENT = 0x0003;
         private const int PAUSENATIVERENDEREVENT = 0x0004;
-        private const int STOPNATIVERENDEREVENT = 0x0005;
+        // private const int STOPNATIVERENDEREVENT = 0x0005;
+        private const int SUBMIT_EVENT = 0x0006;
 
         public enum Eyes
         {
@@ -84,6 +94,8 @@ namespace NRKernal
         private RenderTexture[] eyeTextures;
         /// <summary> Dictionary of rights. </summary>
         private Dictionary<RenderTexture, IntPtr> m_RTDict = new Dictionary<RenderTexture, IntPtr>();
+        /// <summary> Frame process. </summary>
+        private IFrameProcessor m_FrameProcessor;
 
         /// <summary> Values that represent renderer states. </summary>
         public enum RendererState
@@ -95,7 +107,7 @@ namespace NRKernal
             Destroyed
         }
 
-        private bool m_IsTrackingLost = false;
+        private bool m_IsTrackChanging = false;
         private RenderTexture m_HijackRenderTexture;
 
         /// <summary> The current state. </summary>
@@ -107,6 +119,10 @@ namespace NRKernal
             get
             {
                 return m_CurrentState;
+            }
+            set
+            {
+                m_CurrentState = value;
             }
         }
 
@@ -166,16 +182,16 @@ namespace NRKernal
             }
         }
 
-        private void OnTrackStateChanged(bool onSwitchingMode, RenderTexture rt)
+        private void OnTrackStateChanged(bool trackChanging, RenderTexture rt)
         {
-            if (onSwitchingMode)
+            if (trackChanging)
             {
-                m_IsTrackingLost = true;
+                m_IsTrackChanging = true;
                 m_HijackRenderTexture = rt;
             }
             else
             {
-                m_IsTrackingLost = false;
+                m_IsTrackChanging = false;
                 m_HijackRenderTexture = null;
             }
         }
@@ -200,13 +216,22 @@ namespace NRKernal
             yield return new WaitForEndOfFrame();
 
             NRDebugger.Info("[NRRender] StartUp");
-            CreateRenderTextures();
 #if !UNITY_EDITOR
             NativeRenderring.Create();
             StartCoroutine(RenderCoroutine());
 #endif
-            m_CurrentState = RendererState.Running;
             GL.IssuePluginEvent(RenderThreadHandlePtr, STARTNATIVERENDEREVENT);
+            if (m_FrameProcessor == null)
+                CreateRenderTextures();
+            NRDebugger.Info("[NRRender] StartUp Finish");
+        }
+
+        /// <summary> Set frame processor. </summary>
+        /// <param name="processor"> Frame processor.</param>
+        public void SetFrameProcessor(IFrameProcessor processor)
+        {
+            NRDebugger.Info("[NRRender] SetFrameProcessor");
+            m_FrameProcessor = processor;
         }
 
         /// <summary> Pause render. </summary>
@@ -217,7 +242,6 @@ namespace NRKernal
             {
                 return;
             }
-            m_CurrentState = RendererState.Paused;
             GL.IssuePluginEvent(RenderThreadHandlePtr, PAUSENATIVERENDEREVENT);
         }
 
@@ -235,23 +259,29 @@ namespace NRKernal
             {
                 return;
             }
-            m_CurrentState = RendererState.Running;
             GL.IssuePluginEvent(RenderThreadHandlePtr, RESUMENATIVERENDEREVENT);
         }
 
 #if !UNITY_EDITOR
         void Update()
         {
-            if (m_CurrentState == RendererState.Running && !m_IsTrackingLost)
+            if (m_CurrentState == RendererState.Running && !m_IsTrackChanging)
             {
-                leftCamera.targetTexture = eyeTextures[currentEyeTextureIdx];
-                rightCamera.targetTexture = eyeTextures[currentEyeTextureIdx + 1];
-                currentEyeTextureIdx = nextEyeTextureIdx;
-                nextEyeTextureIdx = (nextEyeTextureIdx + 2) % EyeTextureCount;
+                if (m_FrameProcessor == null)
+                {
+                    leftCamera.targetTexture = eyeTextures[currentEyeTextureIdx];
+                    rightCamera.targetTexture = eyeTextures[currentEyeTextureIdx + 1];
+                    currentEyeTextureIdx = nextEyeTextureIdx;
+                    nextEyeTextureIdx = (nextEyeTextureIdx + 2) % EyeTextureCount;
+                }
+                else
+                {
+                    m_FrameProcessor.Update();
+                }
                 leftCamera.enabled = true;
                 rightCamera.enabled = true;
             }
-            else if(m_IsTrackingLost) 
+            else if(m_IsTrackChanging) 
             {
                 leftCamera.enabled = false;
                 rightCamera.enabled = false;
@@ -306,6 +336,7 @@ namespace NRKernal
             {
                 yield return delay;
 
+                // NRDebugger.Info("[NRRender] RenderCoroutine: state={0}, isTrackingChanging={1}, frameProcessor={2}", m_CurrentState, m_IsTrackChanging, m_FrameProcessor != null);
                 if (m_CurrentState != RendererState.Running)
                 {
                     continue;
@@ -315,21 +346,38 @@ namespace NRKernal
                 Pose unityPose = NRFrame.HeadPose;
                 ConversionUtility.UnityPoseToApiPose(unityPose, out apiPose);
                 FrameInfo info = new FrameInfo(IntPtr.Zero, IntPtr.Zero, apiPose, new Vector3(0, 0, -m_FocusDistance),
-                       Vector3.forward, NRFrame.CurrentPoseTimeStamp, m_FrameChangedType, NRTextureType.NR_TEXTURE_2D);
-                if (!m_IsTrackingLost)
+                       Vector3.forward, NRFrame.CurrentPoseTimeStamp, m_FrameChangedType, NRTextureType.NR_TEXTURE_2D, 0);
+                
+                if (m_FrameProcessor == null)
                 {
-                    IntPtr left_target, right_target;
-                    if (!m_RTDict.TryGetValue(leftCamera.targetTexture, out left_target)) continue;
-                    if (!m_RTDict.TryGetValue(rightCamera.targetTexture, out right_target)) continue;
-                    info.leftTex = left_target;
-                    info.rightTex = right_target;
+                    if (m_IsTrackChanging)
+                    {
+                        info.leftTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                        info.rightTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                    }
+                    else 
+                    {
+                        IntPtr left_target, right_target;
+                        if (!m_RTDict.TryGetValue(leftCamera.targetTexture, out left_target)) continue;
+                        if (!m_RTDict.TryGetValue(rightCamera.targetTexture, out right_target)) continue;
+                        info.leftTex = left_target;
+                        info.rightTex = right_target;
+                    }
+
+                    UInt64 frame_handle = NativeRenderring.CreateFrameHandle();
+                    info.frameHandle = frame_handle;
+                    // NRDebugger.Info("[NRRender] RenderCoroutine: frameHandle={0}", frame_handle);
+                    NativeRenderring?.WriteFrameData(info, true);
+                    GL.IssuePluginEvent(RenderThreadHandlePtr, SETRENDERTEXTUREEVENT);
                 }
                 else
                 {
-                    info.leftTex = m_HijackRenderTexture.GetNativeTexturePtr();
-                    info.rightTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                    info.frameHandle = m_FrameProcessor.GetFrameHandle();
+                    // NRDebugger.Info("[NRRender] RenderCoroutine FrameProcessor: frameHandle={0}", info.frameHandle);
+                    NativeRenderring?.WriteFrameData(info, false);
+                    GL.IssuePluginEvent(RenderThreadHandlePtr, SUBMIT_EVENT);
                 }
-                SetRenderFrameInfo(info);
+                
                 // reset focuse distance and frame changed type to default value every frame.
                 m_FocusDistance = m_DefaultFocusDistance;
                 m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_NONE;
@@ -350,36 +398,44 @@ namespace NRKernal
         [MonoPInvokeCallback(typeof(RenderEventDelegate))]
         private static void RunOnRenderThread(int eventID)
         {
+            if (eventID != SETRENDERTEXTUREEVENT && eventID != SUBMIT_EVENT)
+                NRDebugger.Info("[NRRender] RunOnRenderThread : eventID={0}", eventID);
+
             if (eventID == STARTNATIVERENDEREVENT)
             {
                 NativeRenderring?.Start();
+                var renderer = NRSessionManager.Instance.NRRenderer;
+                renderer.CurrentState = RendererState.Running;
+
+                if (renderer.m_FrameProcessor != null)
+                    renderer.m_FrameProcessor.Initialize(NativeRenderring);
             }
             else if (eventID == RESUMENATIVERENDEREVENT)
             {
                 NativeRenderring?.Resume();
+                NRSessionManager.Instance.NRRenderer.CurrentState = RendererState.Running;
             }
             else if (eventID == PAUSENATIVERENDEREVENT)
             {
+                NRSessionManager.Instance.NRRenderer.CurrentState = RendererState.Paused;
                 NativeRenderring?.Pause();
             }
-            else if (eventID == STOPNATIVERENDEREVENT)
-            {
-                NativeRenderring?.Destroy();
-                NativeRenderring = null;
-                NRDevice.Instance.Destroy();
-            }
+            // else if (eventID == STOPNATIVERENDEREVENT)
+            // {
+            //     NativeRenderring?.Destroy();
+            //     NativeRenderring = null;
+            //     NRDevice.Instance.Destroy();
+            // }
             else if (eventID == SETRENDERTEXTUREEVENT)
             {
                 NativeRenderring?.DoExtendedRenderring();
             }
-        }
-
-        /// <summary> Sets render frame information. </summary>
-        /// <param name="frame"> The frame.</param>
-        private static void SetRenderFrameInfo(FrameInfo frame)
-        {
-            NativeRenderring.WriteFrameData(frame);
-            GL.IssuePluginEvent(RenderThreadHandlePtr, SETRENDERTEXTUREEVENT);
+            else if (eventID == SUBMIT_EVENT)
+            {
+                var renderer = NRSessionManager.Instance.NRRenderer;
+                NativeRenderring?.PrepareForFrame();
+                renderer.m_FrameProcessor.SubmitFrame();
+            }
         }
 
         public void Destroy()
@@ -391,6 +447,8 @@ namespace NRKernal
             m_CurrentState = RendererState.Destroyed;
             //GL.IssuePluginEvent(RenderThreadHandlePtr, STOPNATIVERENDEREVENT);
 
+            if (m_FrameProcessor != null)
+                m_FrameProcessor.Destroy();
             NativeRenderring?.Destroy();
             NativeRenderring = null;
         }

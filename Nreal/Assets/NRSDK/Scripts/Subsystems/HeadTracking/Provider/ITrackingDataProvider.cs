@@ -20,6 +20,8 @@ namespace NRKernal
 
         bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp);
 
+        bool GetFramePresentTimeByCount(int count, ref UInt64 timestamp);
+
         LostTrackingReason GetTrackingLostReason();
 
         bool InitTrackingMode(TrackingMode mode);

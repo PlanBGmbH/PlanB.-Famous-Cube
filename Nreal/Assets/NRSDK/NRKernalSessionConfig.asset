@@ -21,4 +21,4 @@ MonoBehaviour:
     type: 3}
   TrackingModeChangeTipPrefab: {fileID: 114429345346749554, guid: 03ffa16cba025c844b778902a3170680,
     type: 3}
-  UseMultiThread: 1
+  ProjectConfig: {fileID: 11400000, guid: c66f5f1413c2e471aa0c410731aa0a78, type: 2}

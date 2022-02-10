@@ -86,13 +86,34 @@ namespace NRKernal
         public bool GetProjectionMatrix(ref EyeProjectMatrixData outEyesProjectionMatrix, float znear, float zfar)
         {
             NativeFov4f fov = new NativeFov4f();
-            NativeResult result_left = NativeApi.NRHMDGetEyeFov(m_HmdHandle, (int)NativeDevice.LEFT_DISPLAY, ref fov);
+            NativeResult result_left = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.LEFT_DISPLAY, ref fov);
+            NativeErrorListener.Check(result_left, this, "GetProjectionMatrix-L");
             outEyesProjectionMatrix.LEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
-            NativeResult result_right = NativeApi.NRHMDGetEyeFov(m_HmdHandle, (int)NativeDevice.RIGHT_DISPLAY, ref fov);
+            
+            NativeResult result_right = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RIGHT_DISPLAY, ref fov);
+            NativeErrorListener.Check(result_right, this, "GetProjectionMatrix-R");
             outEyesProjectionMatrix.REyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
-            NativeResult result_RGB = NativeApi.NRHMDGetEyeFov(m_HmdHandle, (int)NativeDevice.RGB_CAMERA, ref fov);
+            
+            NativeResult result_RGB = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RGB_CAMERA, ref fov);
+            NativeErrorListener.Check(result_RGB, this, "GetProjectionMatrix-RGB");
             outEyesProjectionMatrix.RGBEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
+
             return (result_left == NativeResult.Success && result_right == NativeResult.Success && result_RGB == NativeResult.Success);
+        }
+
+        [Obsolete("Use 'GetEyeFovInCoord' to replace.")]
+        public NativeFov4f GetEyeFov(NativeEye eye)
+        {
+            NativeFov4f fov = new NativeFov4f();
+            NativeApi.NRHMDGetEyeFov(m_HmdHandle, (int)eye, ref fov);
+            return fov;
+        }
+
+        public NativeFov4f GetEyeFovInCoord(NativeDevice eye)
+        {
+            NativeFov4f fov = new NativeFov4f();
+            NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)eye, ref fov);
+            return fov;
         }
 
         /// <summary> Gets camera intrinsic matrix. </summary>
@@ -130,6 +151,18 @@ namespace NRKernal
 #endif
         }
 
+        /// <summary> Gets device type of running device. </summary>
+        /// <returns> The device type. </returns>
+        public NRDeviceType GetDeviceType()
+        {
+            NRDeviceType deviceType = NRDeviceType.NrealLight;
+            NativeApi.NRHMDGetDeviceType(m_HmdHandle, ref deviceType);
+            return deviceType;
+        }
+
+        /// <summary> Gets device type of running device. </summary>
+        /// <param name="feature"> The request feature.</param>
+        /// <returns> Is the feature supported. </returns>
         public bool IsFeatureSupported(NRSupportedFeature feature)
         {
             bool result = false;
@@ -154,6 +187,13 @@ namespace NRKernal
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
             public static extern NativeResult NRHMDCreate(ref UInt64 out_hmd_handle);
+
+            /// <summary> Nrhmd get device type. </summary>
+            /// <param name="hmd_handle">         Handle of the hmd.</param>
+            /// <param name="out_device_type"> [in,out] The out device type.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDGetDeviceType(UInt64 hmd_handle, ref NRDeviceType out_device_type);
 
             /// <summary>
             /// Check whether the current feature is supported.
@@ -191,7 +231,16 @@ namespace NRKernal
             /// <param name="out_eye_fov"> [in,out] The out eye fov.</param>
             /// <returns> A NativeResult. </returns>
             [DllImport(NativeConstants.NRNativeLibrary)]
+            [Obsolete]
             public static extern NativeResult NRHMDGetEyeFov(UInt64 hmd_handle, int eye, ref NativeFov4f out_eye_fov);
+
+            /// <summary> Nrhmd get eye fov. </summary>
+            /// <param name="hmd_handle">  Handle of the hmd.</param>
+            /// <param name="eye">         The eye.</param>
+            /// <param name="out_eye_fov"> [in,out] The out eye fov.</param>
+            /// <returns> A NativeResult. </returns>
+            [DllImport(NativeConstants.NRNativeLibrary)]
+            public static extern NativeResult NRHMDGetEyeFovInCoord(UInt64 hmd_handle, int eye, ref NativeFov4f out_eye_fov);
 
             /// <summary> Nrhmd get camera intrinsic matrix. </summary>
             /// <param name="hmd_handle">           Handle of the hmd.</param>

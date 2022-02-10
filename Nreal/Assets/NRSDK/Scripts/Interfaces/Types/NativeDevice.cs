@@ -29,13 +29,13 @@ namespace NRKernal
 
         /// <summary> 
         ///  The left grayscale camera.
-        ///  Only supported in the version of preview.
+        ///  Only supported in the version of Enterprise.
         /// </summary>
         LEFT_GRAYSCALE_CAMERA = 3,
 
         /// <summary> 
         ///  The right grayscale camera.
-        ///  Only supported in the version of preview.
+        ///  Only supported in the version of Enterprise.
         /// </summary>
         RIGHT_GRAYSCALE_CAMERA = 4,
     }

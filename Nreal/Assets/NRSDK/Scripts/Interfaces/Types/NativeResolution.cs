@@ -31,11 +31,22 @@ namespace NRKernal
             this.height = h;
         }
 
+        public NativeResolution(UnityEngine.Vector2 size)
+        {
+            this.width = (int)size.x;
+            this.height = (int)size.y;
+        }
+
+        public static NativeResolution operator *(NativeResolution val, float aspect)
+        {
+            return new NativeResolution((int)(aspect * val.width), (int)(aspect * val.height));
+        }
+
         /// <summary> Convert this object into a string representation. </summary>
         /// <returns> A string that represents this object. </returns>
         public override string ToString()
         {
-            return string.Format("Screen width : {0}  height:{1}", width, height);
+            return string.Format("width:{0} height:{1}", width, height);
         }
     }
 }

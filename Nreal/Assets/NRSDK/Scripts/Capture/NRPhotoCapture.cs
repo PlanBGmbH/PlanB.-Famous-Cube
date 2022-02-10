@@ -30,9 +30,11 @@ namespace NRKernal.Record
                 {
                     var resolutions = new List<Resolution>();
                     var resolution = new Resolution();
-                    var rgbcamera_resolution = NRDevice.Subsystem.GetDeviceResolution(NativeDevice.RGB_CAMERA);
-                    resolution.width = rgbcamera_resolution.width;
-                    resolution.height = rgbcamera_resolution.height;
+                    NativeResolution rgbResolution = new NativeResolution(1280, 720);
+                    if (NRDevice.Subsystem.IsFeatureSupported(NRSupportedFeature.NR_FEATURE_RGB_CAMERA))
+                        rgbResolution = NRFrame.GetDeviceResolution(NativeDevice.RGB_CAMERA);
+                    resolution.width = rgbResolution.width;
+                    resolution.height = rgbResolution.height;
                     resolutions.Add(resolution);
                     m_SupportedResolutions = resolutions;
                 }
@@ -86,12 +88,24 @@ namespace NRKernal.Record
         /// <summary> Starts photo mode asynchronous. </summary>
         /// <param name="setupParams">                Options for controlling the setup.</param>
         /// <param name="onPhotoModeStartedCallback"> The on photo mode started callback.</param>
-        public void StartPhotoModeAsync(CameraParameters setupParams, OnPhotoModeStartedCallback onPhotoModeStartedCallback)
+        /// <param name="autoAdaptBlendMode"> Auto adaption for BlendMode based on supported feature on current device.</param>
+        public void StartPhotoModeAsync(CameraParameters setupParams, OnPhotoModeStartedCallback onPhotoModeStartedCallback, bool autoAdaptBlendMode = false)
         {
             PhotoCaptureResult result = new PhotoCaptureResult();
             try
             {
                 setupParams.camMode = CamMode.PhotoMode;
+                if (autoAdaptBlendMode)
+                {
+                    var blendMode = m_CaptureContext.AutoAdaptBlendMode(setupParams.blendMode);
+                    if (blendMode != setupParams.blendMode)
+                    {
+                        NRDebugger.Warning("[PhotoCapture] AutoAdaptBlendMode : {0} => {1}", setupParams.blendMode, blendMode);
+                        setupParams.blendMode = blendMode;
+                    }
+                }
+                if (setupParams.frameRate <= 0)
+                    NRDebugger.Warning("[PhotoCapture] frameRate need to be bigger than zero");
                 m_CaptureContext.StartCaptureMode(setupParams);
                 m_CaptureContext.StartCapture();
 

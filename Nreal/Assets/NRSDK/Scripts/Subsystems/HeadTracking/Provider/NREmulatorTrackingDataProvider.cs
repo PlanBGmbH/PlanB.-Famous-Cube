@@ -83,7 +83,13 @@ namespace NRKernal
         }
 
         public void Recenter() { }
-
+		
+        public bool GetFramePresentTimeByCount(int count, ref ulong timestamp)
+        {
+            timestamp = NRTools.GetTimeStamp();
+			return true;
+		}
+		
         public ulong GetHMDTimeNanos()
         {
             return 0;

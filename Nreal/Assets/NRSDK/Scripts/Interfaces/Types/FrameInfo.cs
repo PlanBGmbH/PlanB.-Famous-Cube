@@ -68,8 +68,10 @@ namespace NRKernal
         public NRFrameFlags changeFlag;
         [MarshalAs(UnmanagedType.U4)]
         public NRTextureType textureType;
-
-        public FrameInfo(IntPtr left, IntPtr right, NativeMat4f p, Vector3 focuspos, Vector3 normal, UInt64 timestamp, NRFrameFlags flag, NRTextureType texturetype)
+        // local cache for frameHandle
+        [MarshalAs(UnmanagedType.U8)]
+        public UInt64 frameHandle;
+        public FrameInfo(IntPtr left, IntPtr right, NativeMat4f p, Vector3 focuspos, Vector3 normal, UInt64 timestamp, NRFrameFlags flag, NRTextureType texturetype, UInt64 frameHandle)
         {
             this.leftTex = left;
             this.rightTex = right;
@@ -79,11 +81,13 @@ namespace NRKernal
             this.presentTime = timestamp;
             this.changeFlag = flag;
             this.textureType = texturetype;
+            this.frameHandle = frameHandle;
         }
 
         public override string ToString()
         {
-            return string.Format("lefttex:{0} righttex:{1} headPose:{2} presentTime:{3} changeFlag:{4}", leftTex, rightTex, headPose, presentTime, changeFlag);
+            return string.Format("lefttex:{0} righttex:{1} headPose:{2} presentTime:{3} changeFlag:{4}, frameHandle:{5}", 
+                leftTex, rightTex, headPose, presentTime, changeFlag, frameHandle);
         }
     }
 }

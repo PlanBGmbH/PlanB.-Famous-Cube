@@ -29,7 +29,11 @@ namespace NRKernal
         ///                                                  condition occurs.</exception>
         /// <exception cref="NRRGBCameraDeviceNotFindError"> Raised when a NRRGB Camera Device Not Find
         ///                                                  error condition occurs.</exception>
-        /// <exception cref="NRDPDeviceNotFindError">        Raised when a NRDP Device Not Find error
+        /// <exception cref="NRDPDeviceNotFindError">        Raised when the Display device not find
+        ///                                                  error condition occurs.</exception>
+        /// <exception cref="NRGetDisplayFailureError">      Raised when the MRSpace Display device not find
+        ///                                                  error condition occurs.</exception>
+        /// <exception cref="NRDisplayModeMismatchError">    Raised when display mode mismatch, as MRSpace mode is needed
         ///                                                  condition occurs.</exception>
         /// <exception cref="Exception">                     Thrown when an exception error condition
         ///                                                  occurs.</exception>
@@ -53,29 +57,29 @@ namespace NRKernal
                     switch (result)
                     {
                         case NativeResult.Failure:
-                            throw new NRKernalError(module_tag + "Failed!");
+                            throw new NRNativeError(result, module_tag + "Failed!");
                         case NativeResult.InvalidArgument:
-                            throw new NRInvalidArgumentError(module_tag + "InvalidArgument error!");
+                            throw new NRInvalidArgumentError(result, module_tag + "InvalidArgument error!");
                         case NativeResult.NotEnoughMemory:
-                            throw new NRNotEnoughMemoryError(module_tag + "NotEnoughMemory error!");
+                            throw new NRNotEnoughMemoryError(result, module_tag + "NotEnoughMemory error!");
                         case NativeResult.UnSupported:
-                            throw new NRUnSupportedError(module_tag + "UnSupported error!");
+                            throw new NRUnSupportedError(result, module_tag + "UnSupported error!");
                         case NativeResult.GlassesDisconnect:
-                            throw new NRGlassesConnectError(module_tag + "Glasses connect error!");
+                            throw new NRGlassesConnectError(result, module_tag + "Glasses connect error!");
                         case NativeResult.SdkVersionMismatch:
-                            throw new NRSdkVersionMismatchError(module_tag + "SDK version mismatch error!");
+                            throw new NRSdkVersionMismatchError(result, module_tag + "SDK version mismatch error!");
                         case NativeResult.SdcardPermissionDeny:
-                            throw new NRSdcardPermissionDenyError(module_tag + "Sdcard permission deny error!");
+                            throw new NRSdcardPermissionDenyError(result, module_tag + "Sdcard permission deny error!");
                         case NativeResult.RGBCameraDeviceNotFind:
-                            throw new NRRGBCameraDeviceNotFindError(module_tag + "Can not find the rgb camera device error!");
+                            throw new NRRGBCameraDeviceNotFindError(result, module_tag + "Can not find the rgb camera device error!");
                         case NativeResult.DPDeviceNotFind:
-                            throw new NRDPDeviceNotFindError(module_tag + "Can not find the dp device error!");
+                            throw new NRDPDeviceNotFindError(result, module_tag + "Display device Not Find!");
                         case NativeResult.GetDisplayFailure:
-                            throw new NRDPDeviceNotFindError(module_tag + "Can not find the glasses display!");
+                            throw new NRGetDisplayFailureError(result, module_tag + "MRSpace display device Not Find!");
                         case NativeResult.GetDisplayModeMismatch:
-                            throw new NRDPDeviceNotFindError(module_tag + "Glasses display mode mismatch!");
+                            throw new NRDisplayModeMismatchError(result, module_tag + "Display mode mismatch, as MRSpace mode is needed!");
                         case NativeResult.UnSupportedHandtrackingCalculation:
-                            throw new NRUnSupportedHandtrackingCalculationError(module_tag + "Not support hand tracking calculation!");
+                            throw new NRUnSupportedHandtrackingCalculationError(result, module_tag + "Not support hand tracking calculation!");
                         default:
                             break;
                     }

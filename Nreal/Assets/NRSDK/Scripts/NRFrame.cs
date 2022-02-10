@@ -155,7 +155,7 @@ namespace NRKernal
             return NRDevice.Subsystem.GetDeviceIntrinsicMatrix(device);
         }
 
-        /// <summary> Get the intrinsic matrix of device. </summary>
+        /// <summary> Get the distortion param of device. </summary>
         /// <returns> The device intrinsic matrix. </returns>
         public static NRDistortionParams GetDeviceDistortion(NativeDevice device)
         {
@@ -176,12 +176,21 @@ namespace NRKernal
             return GetDeviceDistortion(NativeDevice.RGB_CAMERA);
         }
 
-        /// <summary> Get the resolution of device. </summary>
+        /// <summary> Gets the resolution of device. </summary>
         /// <param name="eye"> device index.</param>
         /// <returns> The device resolution. </returns>
         public static NativeResolution GetDeviceResolution(NativeDevice device)
         {
             return NRDevice.Subsystem.GetDeviceResolution(device);
+        }
+
+        /// <summary> Gets device fov. </summary>
+        /// <param name="eye">         The display index.</param>
+        /// <param name="fov"> [in,out] The out device fov.</param>
+        /// <returns> A NativeResult. </returns>
+        public static void GetEyeFov(NativeDevice eye, ref NativeFov4f fov)
+        {
+            NRDevice.Subsystem.GetEyeFov(eye, ref fov);
         }
 
         private static UInt64 m_CurrentPoseTimeStamp = 0;
@@ -196,15 +205,17 @@ namespace NRKernal
 #endif
             }
         }
-        /// <summary> Executes the 'update' action. </summary>
-        internal static void OnUpdate()
+
+        internal static void OnPreUpdate()
         {
             // Update head pos
             Pose pose = Pose.identity;
-            if (GetFramePresentHeadPose(ref pose, ref m_CurrentPoseTimeStamp) && LostTrackingReason != LostTrackingReason.INITIALIZING)
+            bool result = GetFramePresentHeadPose(ref pose, ref m_CurrentPoseTimeStamp);
+            if (result && LostTrackingReason != LostTrackingReason.INITIALIZING)
             {
                 m_HeadPose = pose;
             }
+            // NRDebugger.Info("[NRFrame] OnPreUpdate: pos={0}, headPos={1}, result={2}, LostTrackReason={3}", pose.ToString("F2"), m_HeadPose.ToString("F2"), result, LostTrackingReason);
         }
 
         /// <summary> Get the list of trackables with specified filter. </summary>

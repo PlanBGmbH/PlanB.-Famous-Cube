@@ -58,6 +58,7 @@ namespace NRKernal.NRExamples
                 cameraParameters.cameraResolutionWidth = m_CameraResolution.width;
                 cameraParameters.cameraResolutionHeight = m_CameraResolution.height;
                 cameraParameters.pixelFormat = CapturePixelFormat.BGRA32;
+                cameraParameters.frameRate = NativeConstants.RECORD_FPS_DEFAULT;
                 cameraParameters.blendMode = BlendMode.Blend;
 
                 // Activate the camera
@@ -74,7 +75,7 @@ namespace NRKernal.NRExamples
                         this.Close();
                         NRDebugger.Error("Start PhotoMode faild." + result.resultType);
                     }
-                });
+                }, true);
             });
         }
 

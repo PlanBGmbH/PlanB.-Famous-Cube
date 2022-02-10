@@ -112,6 +112,17 @@ namespace NRKernal.Record
             this.m_IsInitialized = true;
         }
 
+        /// <summary> Auto adaption for BlendMode based on supported feature on current device. </summary>
+        /// <param name="blendMode"> source blendMode.</param>
+        /// <returns> Fallback blendMode. </returns>
+        public BlendMode AutoAdaptBlendMode(BlendMode blendMode)
+        {
+            if (!NRDevice.Subsystem.IsFeatureSupported(NRSupportedFeature.NR_FEATURE_RGB_CAMERA))
+                return BlendMode.VirtualOnly;
+                
+            return blendMode;
+        }
+
         private FrameCaptureContext Sequence(IFrameConsumer consummer)
         {
             this.m_FrameConsumerList.Add(consummer);
@@ -248,7 +259,7 @@ namespace NRKernal.Record
             stopwatch.Start();
             if (m_FrameProvider != null)
             {
-                m_FrameProvider.OnUpdate -= this.m_CaptureBehaviour.OnFrame;
+                m_FrameProvider.OnUpdate -= UpdateFrame;
                 m_FrameProvider?.Release();
             }
 

@@ -47,7 +47,7 @@ namespace NRKernal
                 return false;
             }
             NativeResult result = NativeApi.NRTrackingInitSetTrackingMode(m_TrackingHandle, mode);
-            NativeErrorListener.Check(result, this, "SetTrackingMode");
+            NativeErrorListener.Check(result, this, "InitTrackingMode");
             return result == NativeResult.Success;
         }
 

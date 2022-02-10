@@ -41,6 +41,7 @@ namespace NRKernal
 
         public UInt64 NativeGlassesHandler => m_NativeGlassesController.GlassesControllerHandle;
         public UInt64 NativeHMDHandler => m_NativeHMD.HmdHandle;
+        public NativeHMD NativeHMD => m_NativeHMD;
         public bool IsAvailable => !m_IsGlassesPlugOut && running && m_InitException == null;
 
         public NRDeviceSubsystem(NRDeviceSubsystemDescriptor descriptor) : base(descriptor)
@@ -152,6 +153,7 @@ namespace NRKernal
 #if !UNITY_EDITOR
             m_NativeGlassesController?.Stop();
             m_NativeGlassesController?.Destroy();
+            m_NativeHMD.Destroy();
 #endif
         }
         #endregion
@@ -165,7 +167,7 @@ namespace NRKernal
             {
                 if (!IsAvailable)
                 {
-                    throw new NRGlassesConnectError("Device is not available.");
+                    throw new NRGlassesNotAvailbleError("Device is not available.");
                 }
 #if !UNITY_EDITOR
                 return m_NativeGlassesController.GetTempratureLevel();
@@ -177,11 +179,25 @@ namespace NRKernal
         #endregion
 
         #region HMD
+        public NRDeviceType GetDeviceType()
+        {
+            if (!IsAvailable)
+            {
+                throw new NRGlassesNotAvailbleError("Device is not available.");
+            }
+
+#if !UNITY_EDITOR
+            return m_NativeHMD.GetDeviceType();
+#else
+            return NRDeviceType.NrealLight;
+#endif
+        }
+
         public bool IsFeatureSupported(NRSupportedFeature feature)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
 
 #if !UNITY_EDITOR
@@ -191,11 +207,14 @@ namespace NRKernal
 #endif
         }
 
+		/// <summary> Gets the resolution of device. </summary>
+        /// <param name="eye"> device index.</param>
+        /// <returns> The device resolution. </returns>
         public NativeResolution GetDeviceResolution(NativeDevice device)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
 #if !UNITY_EDITOR
             return m_NativeHMD.GetEyeResolution((int)device);
@@ -204,11 +223,30 @@ namespace NRKernal
 #endif
         }
 
+        /// <summary> Gets device fov. </summary>
+        /// <param name="eye">         The display index.</param>
+        /// <param name="fov"> [in,out] The out device fov.</param>
+        /// <returns> A NativeResult. </returns>
+        public void GetEyeFov(NativeDevice device, ref NativeFov4f fov)
+        {
+            if (!IsAvailable || (device != NativeDevice.LEFT_DISPLAY && device != NativeDevice.RIGHT_DISPLAY))
+            {
+                throw new NRGlassesNotAvailbleError("Device is not available.");
+            }
+#if !UNITY_EDITOR
+            fov = m_NativeHMD.GetEyeFovInCoord(device);
+#else
+            fov = new NativeFov4f(0, 0, 1, 1);
+#endif
+        }
+
+        /// <summary> Get the intrinsic matrix of device. </summary>
+        /// <returns> The device intrinsic matrix. </returns>
         public NRDistortionParams GetDeviceDistortion(NativeDevice device)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
             NRDistortionParams result = new NRDistortionParams();
 #if !UNITY_EDITOR
@@ -217,11 +255,13 @@ namespace NRKernal
             return result;
         }
 
+        /// <summary> Get the intrinsic matrix of device. </summary>
+        /// <returns> The device intrinsic matrix. </returns>
         public NativeMat3f GetDeviceIntrinsicMatrix(NativeDevice device)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
             NativeMat3f result = new NativeMat3f();
 #if !UNITY_EDITOR
@@ -230,11 +270,16 @@ namespace NRKernal
             return result;
         }
 
+        /// <summary> Get the project matrix of camera in unity. </summary>
+        /// <param name="result"> [out] True to result.</param>
+        /// <param name="znear">  The znear.</param>
+        /// <param name="zfar">   The zfar.</param>
+        /// <returns> project matrix of camera. </returns>
         public EyeProjectMatrixData GetEyeProjectMatrix(out bool result, float znear, float zfar)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
             result = false;
             EyeProjectMatrixData m_EyeProjectMatrix = new EyeProjectMatrixData();
@@ -244,18 +289,19 @@ namespace NRKernal
             return m_EyeProjectMatrix;
         }
 
+        /// <summary> Get the offset position between device and head. </summary>
+        /// <value> The device pose from head. </value>
         public Pose GetDevicePoseFromHead(NativeDevice device)
         {
             if (!IsAvailable)
             {
-                throw new NRGlassesConnectError("Device is not available.");
+                throw new NRGlassesNotAvailbleError("Device is not available.");
             }
 #if !UNITY_EDITOR
             return m_NativeHMD.GetDevicePoseFromHead(device);
 #else
             return Pose.identity;
 #endif
-
         }
         #endregion
     }
