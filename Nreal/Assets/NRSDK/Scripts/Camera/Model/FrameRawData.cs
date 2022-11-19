@@ -24,6 +24,10 @@ namespace NRKernal
     {
         /// <summary> The time stamp. </summary>
         public UInt64 timeStamp;
+        /// <summary> The gain </summary>
+        public UInt32 gain;
+        /// <summary> The exposureTime </summary>
+        public UInt32 exposureTime;
         /// <summary> The texture. </summary>
         public Texture texture;
     }
@@ -33,6 +37,10 @@ namespace NRKernal
         public TextureType textureType;
         /// <summary> The time stamp. </summary>
         public UInt64 timeStamp;
+        /// <summary> The gain </summary>
+        public UInt32 gain;
+        /// <summary> The exposureTime </summary>
+        public UInt32 exposureTime;
         /// <summary> The textures. </summary>
         public Texture[] textures;
     }
@@ -42,6 +50,10 @@ namespace NRKernal
     {
         /// <summary> The time stamp. </summary>
         public UInt64 timeStamp;
+        /// <summary> The gain </summary>
+        public UInt32 gain;
+        /// <summary> The exposureTime </summary>
+        public UInt32 exposureTime;
         /// <summary> The data. </summary>
         public byte[] data;
         public IntPtr nativeTexturePtr;
@@ -63,6 +75,8 @@ namespace NRKernal
                 frame.data = new byte[size];
             }
             frame.timeStamp = timestamp;
+            frame.gain = 0;
+            frame.exposureTime = 0;
             frame.nativeTexturePtr = textureptr;
             Marshal.Copy(textureptr, frame.data, 0, size);
             return true;

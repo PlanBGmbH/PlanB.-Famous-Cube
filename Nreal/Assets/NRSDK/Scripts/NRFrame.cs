@@ -38,6 +38,16 @@ namespace NRKernal
                 return NRSessionManager.Instance.LostTrackingReason;
             }
         }
+        
+        /// <summary> Gets the nr renderer. </summary>
+        /// <value> The nr renderer. </value>
+        public static NRRenderer NRRenderer
+        {
+            get
+            {
+                return NRSessionManager.Instance.NRRenderer;
+            }
+        }
 
         /// <summary> The head pose. </summary>
         private static Pose m_HeadPose;
@@ -86,11 +96,12 @@ namespace NRKernal
         /// <param name="pose"></param>
         /// <param name="timestamp">current timestamp to the pose.</param>
         /// <returns></returns>
-        public static bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp)
+        public static bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timestamp)
         {
-            if (SessionStatus == SessionState.Running)
+            if (SessionStatus == SessionState.Running &&
+                (NRRenderer == null || NRRenderer.CurrentState == NRRenderer.RendererState.Running))
             {
-                isHeadPoseReady = NRSessionManager.Instance.TrackingSubSystem.GetFramePresentHeadPose(ref pose, ref timestamp);
+                isHeadPoseReady = NRSessionManager.Instance.TrackingSubSystem.GetFramePresentHeadPose(ref pose, ref lostReason, ref timestamp);
                 return isHeadPoseReady;
             }
             return false;
@@ -206,16 +217,33 @@ namespace NRKernal
             }
         }
 
-        internal static void OnPreUpdate()
+        internal static void ResetHeadPose()
         {
-            // Update head pos
+            m_CurrentPoseTimeStamp = 0;
+            m_HeadPose = Pose.identity;
+        }
+
+        internal static void OnPreUpdate(ref LostTrackingReason lostTrackReason)
+        {
             Pose pose = Pose.identity;
-            bool result = GetFramePresentHeadPose(ref pose, ref m_CurrentPoseTimeStamp);
-            if (result && LostTrackingReason != LostTrackingReason.INITIALIZING)
+            LostTrackingReason lostReason = LostTrackingReason.NONE;
+            ulong timeStamp = 0;
+            bool result = GetFramePresentHeadPose(ref pose, ref lostReason, ref timeStamp);
+            if (result)
             {
-                m_HeadPose = pose;
+                lostTrackReason = lostReason;
+                if (lostReason != LostTrackingReason.PRE_INITIALIZING && lostReason != LostTrackingReason.INITIALIZING)
+                {
+                    m_HeadPose = pose;
+                    m_CurrentPoseTimeStamp = timeStamp;
+                }
+                else
+                {
+                    NRDebugger.Info("[NRFrame] OnPreUpdate: LostTrackReason={0}, pose={1}, timeStamp={2}, lastHeadPose={3}, lastTimeStamp={4}",
+                        lostReason, pose.ToString("F4"), timeStamp, m_HeadPose.ToString("F4"), m_CurrentPoseTimeStamp);
+                }
             }
-            // NRDebugger.Info("[NRFrame] OnPreUpdate: pos={0}, headPos={1}, result={2}, LostTrackReason={3}", pose.ToString("F2"), m_HeadPose.ToString("F2"), result, LostTrackingReason);
+            // NRDebugger.Info("[NRFrame] OnPreUpdate: result={2}, LostTrackReason={3}, pos={0}, headPos={1}, ", pose.ToString("F4"), m_HeadPose.ToString("F4"), result, LostTrackingReason);
         }
 
         /// <summary> Get the list of trackables with specified filter. </summary>

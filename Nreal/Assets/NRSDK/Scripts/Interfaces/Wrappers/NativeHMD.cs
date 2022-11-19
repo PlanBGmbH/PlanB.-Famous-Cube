@@ -88,10 +88,12 @@ namespace NRKernal
             NativeFov4f fov = new NativeFov4f();
             NativeResult result_left = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.LEFT_DISPLAY, ref fov);
             NativeErrorListener.Check(result_left, this, "GetProjectionMatrix-L");
+            NRDebugger.Info("[GetProjectionMatrix] LEFT_DISPLAY: {0}", fov.ToString());
             outEyesProjectionMatrix.LEyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
             
             NativeResult result_right = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RIGHT_DISPLAY, ref fov);
             NativeErrorListener.Check(result_right, this, "GetProjectionMatrix-R");
+            NRDebugger.Info("[GetProjectionMatrix] RIGHT_DISPLAY: {0}", fov.ToString());
             outEyesProjectionMatrix.REyeMatrix = ConversionUtility.GetProjectionMatrixFromFov(fov, znear, zfar).ToUnityMat4f();
             
             NativeResult result_RGB = NativeApi.NRHMDGetEyeFovInCoord(m_HmdHandle, (int)NativeDevice.RGB_CAMERA, ref fov);

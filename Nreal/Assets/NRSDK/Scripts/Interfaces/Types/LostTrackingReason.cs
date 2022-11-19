@@ -12,6 +12,9 @@ namespace NRKernal
     /// <summary> The reason of HMD untracked. </summary>
     public enum LostTrackingReason
     {
+        /// <summary> Preinitializing.. </summary>
+        PRE_INITIALIZING = -1,
+
         NONE = 0,
 
         /// <summary> Initializing.. </summary>

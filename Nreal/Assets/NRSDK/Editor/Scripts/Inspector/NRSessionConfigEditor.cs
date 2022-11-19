@@ -18,6 +18,7 @@ namespace NRKernal
 		SerializedProperty ImageTrackingMode;
 		SerializedProperty TrackingImageDatabase;
 		SerializedProperty EnableNotification;
+		SerializedProperty ForceKillWhileGlassSwitchMode;
 		SerializedProperty GlassesErrorTipPrefab;
 		SerializedProperty TrackingModeChangeTipPrefab;
 		SerializedProperty ProjectConfig;
@@ -32,6 +33,7 @@ namespace NRKernal
 			ImageTrackingMode 			= serializedObject.FindProperty("ImageTrackingMode");
 			TrackingImageDatabase 		= serializedObject.FindProperty("TrackingImageDatabase");
 			EnableNotification 			= serializedObject.FindProperty("EnableNotification");
+			ForceKillWhileGlassSwitchMode 			= serializedObject.FindProperty("ForceKillWhileGlassSwitchMode");
 			GlassesErrorTipPrefab 		= serializedObject.FindProperty("GlassesErrorTipPrefab");
 			TrackingModeChangeTipPrefab = serializedObject.FindProperty("TrackingModeChangeTipPrefab");
 			ProjectConfig				= serializedObject.FindProperty("ProjectConfig");
@@ -43,13 +45,14 @@ namespace NRKernal
 
 			// EditorGUILayout.PropertyField(ProjectConfig);
 			NRProjectConfig projectConfig = NRProjectConfigHelper.GetProjectConfig();
-			NRProjectConfigEditor.DrawTargetDevice(projectConfig);
+			//NRProjectConfigEditor.DrawUniqueProjectConfig(projectConfig);
 			EditorGUILayout.Space();
 
 			EditorGUILayout.PropertyField(PlaneFindingMode);
 			EditorGUILayout.PropertyField(ImageTrackingMode);
 			EditorGUILayout.PropertyField(TrackingImageDatabase);
 			EditorGUILayout.PropertyField(EnableNotification);
+			EditorGUILayout.PropertyField(ForceKillWhileGlassSwitchMode);
 
 			EditorGUILayout.Space();
 			EditorGUILayout.PropertyField(GlassesErrorTipPrefab);
@@ -57,6 +60,12 @@ namespace NRKernal
 
 			// Apply values to the target
 			serializedObject.ApplyModifiedProperties();
+
+			//Provide link to the unique NRProjectConfig
+			if (GUILayout.Button("Open NRProjectConfig"))
+			{
+				Selection.activeObject = sessionConfig.GlobalProjectConfig;
+			}
 		}
 	}
 }

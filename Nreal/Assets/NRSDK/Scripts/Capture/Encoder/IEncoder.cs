@@ -12,8 +12,12 @@ namespace NRKernal.Record
     using System;
     using UnityEngine;
 
+    public interface IEncoderBase
+    {
+        
+    }
     /// <summary> Interface for encoder. </summary>
-    public interface IEncoder
+    public interface IEncoder : IEncoderBase
     {
         /// <summary> Configurations the given parameter. </summary>
         /// <param name="param"> The parameter.</param>

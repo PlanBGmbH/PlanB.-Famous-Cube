@@ -290,6 +290,11 @@ namespace NRKernal
                         NRSessionBehaviour.SessionConfig.ImageTrackingMode = TrackableImageFindingMode.DISABLE;
                         TrackingSubSystem.InitTrackingMode(TrackingMode.MODE_0DOF);
                         break;
+                    case NRHMDPoseTracker.TrackingType.Tracking0DofStable:
+                        NRSessionBehaviour.SessionConfig.PlaneFindingMode = TrackablePlaneFindingMode.DISABLE;
+                        NRSessionBehaviour.SessionConfig.ImageTrackingMode = TrackableImageFindingMode.DISABLE;
+                        TrackingSubSystem.InitTrackingMode(TrackingMode.MODE_0DOF_STAB);
+                        break;
                     default:
                         break;
                 }
@@ -460,9 +465,7 @@ namespace NRKernal
 #if USING_XR_SDK && !UNITY_EDITOR
             m_LostTrackingReason = GetLostTrackingReason();
 #else
-            m_LostTrackingReason = TrackingSubSystem.GetTrackingLostReason();
-            if (NRRenderer == null || NRRenderer.CurrentState == NRRenderer.RendererState.Running)
-                NRFrame.OnPreUpdate();
+            NRFrame.OnPreUpdate(ref m_LostTrackingReason);
 #endif
         }
 

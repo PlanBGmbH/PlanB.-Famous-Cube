@@ -121,7 +121,7 @@ namespace NRKernal
             return timestamp;
         }
 
-        public bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp)
+        public bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timestamp)
         {
             if (m_HeadTrackingHandle == 0 || m_NativeInterface.TrackingHandle == 0)
             {
@@ -135,23 +135,25 @@ namespace NRKernal
             var acquireTrackingPoseResult = NativeApi.NRHeadTrackingAcquireTrackingPose(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, timestamp, ref headPoseHandle);
             if (acquireTrackingPoseResult != NativeResult.Success)
             {
-                NRDebugger.Warning("[NativeTrack] GetFramePresentHeadPose: acquireTrackingPoseResult={0}", acquireTrackingPoseResult);
-                return false;
+                // NRDebugger.Warning("[NativeTrack] GetFramePresentHeadPose: acquireTrackingPoseResult={0}", acquireTrackingPoseResult);
+                lostReason = LostTrackingReason.PRE_INITIALIZING;
+                return true;
             }
+
+            var trackReasonRst = NativeApi.NRTrackingPoseGetTrackingReason(m_NativeInterface.TrackingHandle, headPoseHandle, ref lostReason);
+            NativeErrorListener.Check(trackReasonRst, this, "GetFramePresentHeadPose-LostReason");
+            // NRDebugger.Info("[NativeTrack] GetFramePresentHeadPose: getPoseResult={0}, lost_tracking_reason={1}, result={2}", getPoseResult, lost_tracking_reason, result);
 
             NativeMat4f headpos_native = new NativeMat4f(Matrix4x4.identity);
             var getPoseResult = NativeApi.NRTrackingPoseGetPose(m_NativeInterface.TrackingHandle, headPoseHandle, ref headpos_native);
+            NativeErrorListener.Check(getPoseResult, this, "GetFramePresentHeadPose");
 
-            // LostTrackingReason lost_tracking_reason = LostTrackingReason.INITIALIZING;
-            // var result = NativeApi.NRTrackingPoseGetTrackingReason(m_NativeInterface.TrackingHandle, headPoseHandle, ref lost_tracking_reason);
-            // NRDebugger.Info("[NativeTrack] GetFramePresentHeadPose: getPoseResult={0}, lost_tracking_reason={1}, result={2}", getPoseResult, lost_tracking_reason, result);
-
-            if (getPoseResult != NativeResult.Success)
-            {
-                NRDebugger.Warning("[NativeTrack] GetFramePresentHeadPose: getPoseResult={0}", getPoseResult);
-                return false;
-            }
             ConversionUtility.ApiPoseToUnityPose(headpos_native, out pose);
+            if (float.IsNaN(pose.position.x) || float.IsNaN(pose.position.y) || float.IsNaN(pose.position.z) ||
+                float.IsNaN(pose.rotation.x) || float.IsNaN(pose.rotation.y) || float.IsNaN(pose.rotation.z) || float.IsNaN(pose.rotation.w))
+            {
+                NRDebugger.Error("[NativeTrack] GetFramePresentHeadPose invalid: lostReason={0}, unityPose=\n{1}\nnativePose=\n{2}", lostReason, pose.ToString("F6"), headpos_native.ToString());
+            }
             NativeApi.NRTrackingPoseDestroy(m_NativeInterface.TrackingHandle, headPoseHandle);
             return true;
         }
@@ -159,21 +161,6 @@ namespace NRKernal
         public bool GetFramePresentTimeByCount(int count, ref UInt64 timestamp)
         {
             return m_NativeInterface.NativeRenderring.GetFramePresentTimeByCount(ref timestamp, count);
-        }
-
-        /// <summary> Gets tracking lost reason. </summary>
-        /// <returns> The tracking lost reason. </returns>
-        public LostTrackingReason GetTrackingLostReason()
-        {
-            if (m_HeadTrackingHandle == 0)
-            {
-                return LostTrackingReason.INITIALIZING;
-            }
-            LostTrackingReason lost_tracking_reason = LostTrackingReason.INITIALIZING;
-            var result = NativeApi.NRTrackingPoseGetTrackingReason(m_NativeInterface.TrackingHandle, m_HeadTrackingHandle, ref lost_tracking_reason);
-            // NRDebugger.Info("[NativeTrack] GetTrackingLostReason: {0}, trackingHandle={1}, result={2}", lost_tracking_reason, m_HeadTrackingHandle, result);
-            NativeErrorListener.Check(result, this, "GetTrackingLostReason");
-            return lost_tracking_reason;
         }
 
         /// <summary> Destroys this object. </summary>

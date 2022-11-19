@@ -13,15 +13,14 @@ namespace NRKernal.NRExamples
 {
     public class ChangeModeController : MonoBehaviour
     {
-        public void ChangeTo0Dof()
+        public void ChangeTo6Dof()
         {
             var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
-            NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0Dof((result) =>
+            NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof((result) =>
             {
-                NRDebugger.Info("[ChangeModeController] ChangeTo0Dof result:" + result.success);
+                NRDebugger.Info("[ChangeModeController] ChangeTo6Dof result:" + result.success);
             });
         }
-
 
         public void ChangeTo3Dof()
         {
@@ -32,12 +31,21 @@ namespace NRKernal.NRExamples
             });
         }
 
-        public void ChangeTo6Dof()
+        public void ChangeTo0Dof()
         {
             var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
-            NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo6Dof((result) =>
+            NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0Dof((result) =>
             {
-                NRDebugger.Info("[ChangeModeController] ChangeTo6Dof result:" + result.success);
+                NRDebugger.Info("[ChangeModeController] ChangeTo0Dof result:" + result.success);
+            });
+        }
+
+        public void ChangeTo0DofStable()
+        {
+            var hmdPoseTracker = NRSessionManager.Instance.NRHMDPoseTracker;
+            NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0DofStable((result) =>
+            {
+                NRDebugger.Info("[ChangeModeController] ChangeTo0DofStable result:" + result.success);
             });
         }
     }

@@ -11,16 +11,26 @@ namespace NRKernal
 {
     using UnityEngine;
     using UnityEngine.UI;
+    using System.Collections;
+    using System.IO;
 
     public class NRTrackingModeChangedTip : MonoBehaviour
     {
         [SerializeField]
-        private Camera m_RenderCamera;
+        private Camera m_LeftCamera;
+        [SerializeField]
+        private Camera m_RightCamera;
+        [SerializeField]
+        private Transform m_Plane;
+        [SerializeField]
+        private float m_Distance = 25;
+
         [SerializeField]
         private Text m_Lable;
         [SerializeField]
         private Transform m_LoadingUI;
-        public RenderTexture RT { get; private set; }
+        public RenderTexture LeftRT { get; private set; }
+        public RenderTexture RightRT { get; private set; }
 
         private static NativeResolution resolution = new NativeResolution(1920, 1080);
 
@@ -40,8 +50,11 @@ namespace NRKernal
 #if !UNITY_EDITOR
             resolution = NRFrame.GetDeviceResolution(NativeDevice.LEFT_DISPLAY);
 #endif
-            lostTrackingTip.RT = UnityExtendedUtility.CreateRenderTexture(resolution.width, resolution.height, 24, RenderTextureFormat.Default);
-            lostTrackingTip.m_RenderCamera.targetTexture = lostTrackingTip.RT;
+            lostTrackingTip.LeftRT = UnityExtendedUtility.CreateRenderTexture(resolution.width, resolution.height, 24, RenderTextureFormat.Default);
+            lostTrackingTip.m_LeftCamera.targetTexture = lostTrackingTip.LeftRT;
+
+            lostTrackingTip.RightRT = UnityExtendedUtility.CreateRenderTexture(resolution.width, resolution.height, 24, RenderTextureFormat.Default);
+            lostTrackingTip.m_RightCamera.targetTexture = lostTrackingTip.RightRT;
             return lostTrackingTip;
         }
 
@@ -55,25 +68,55 @@ namespace NRKernal
             m_LoadingUI.Rotate(-Vector3.forward, 2f, Space.Self);
         }
 
+        void LateUpdate()
+        {
+            var leftCameraPosition = m_LeftCamera.transform.localPosition;
+            var rightCameraPosition = m_RightCamera.transform.localPosition;
+            var leftCameraRotation = m_LeftCamera.transform.localRotation;
+            var rightCameraRotation = m_RightCamera.transform.localRotation;
+            var leftCameraForward = m_LeftCamera.transform.forward;
+            var rightCameraForward = m_RightCamera.transform.forward;
+
+            var centerPos = (leftCameraPosition + rightCameraPosition) * 0.5f;
+            var forward = (leftCameraForward + rightCameraForward) * 0.5f;
+            var centerRotation = Quaternion.Lerp(leftCameraRotation, rightCameraRotation, 0.5f);
+
+            m_Plane.localPosition = centerPos + forward * m_Distance;
+            m_Plane.localRotation = centerRotation;
+        }
+
         void Start()
         {
-            m_RenderCamera.aspect = (float)resolution.width / resolution.height;
-            m_RenderCamera.targetTexture = RT;
+            m_LeftCamera.aspect = (float)resolution.width / resolution.height;
+            m_RightCamera.aspect = (float)resolution.width / resolution.height;
         }
 
         void OnEnable()
         {
-            m_RenderCamera.enabled = true;
+            m_LeftCamera.enabled = true;
+            m_RightCamera.enabled = true;
         }
 
         void OnDisable()
         {
-            m_RenderCamera.enabled = false;
+            m_LeftCamera.enabled = false;
+            m_RightCamera.enabled = false;
         }
 
         void OnDestroy()
         {
-            RT?.Release();
+            if (LeftRT != null)
+            {
+                LeftRT.Release();
+                Destroy(LeftRT);
+                LeftRT = null;
+            }
+            if (RightRT != null)
+            {
+                RightRT.Release();
+                Destroy(RightRT);
+                RightRT = null;
+            }
         }
     }
 }

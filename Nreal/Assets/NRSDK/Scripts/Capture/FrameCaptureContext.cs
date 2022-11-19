@@ -261,6 +261,7 @@ namespace NRKernal.Record
             {
                 m_FrameProvider.OnUpdate -= UpdateFrame;
                 m_FrameProvider?.Release();
+                m_FrameProvider = null;
             }
 
             m_Blender?.Dispose();

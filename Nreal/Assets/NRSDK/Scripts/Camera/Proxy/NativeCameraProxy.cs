@@ -145,7 +145,7 @@ namespace NRKernal
             {
                 return;
             }
-            NRDebugger.Info("[CameraController] Initialize");
+            NRDebugger.Info("[NativeCameraProxy] Initialize");
             if (FramePool == null)
             {
                 FramePool = new ObjectPool();
@@ -225,7 +225,7 @@ namespace NRKernal
             }
 
             m_IsImageFormatSet = CameraDataProvider.SetImageFormat(format);
-            NRDebugger.Info("[CameraController] SetImageFormat : " + format.ToString());
+            NRDebugger.Info("[NativeCameraProxy] SetImageFormat : " + format.ToString());
         }
 
         /// <summary> Start to play camera. </summary>
@@ -243,12 +243,12 @@ namespace NRKernal
 
             m_IsPlaying = true;
 
-            NRDebugger.Info("[CameraController] StartCapture begin.");
+            NRDebugger.Info("[NativeCameraProxy] StartCapture begin.");
             //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
             //stopwatch.Start();
             CameraDataProvider.StartCapture();
-            NRDebugger.Info("[CameraController] StartCapture end.");
-            //NRDebugger.Info("[CameraController] Start to play, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
+            NRDebugger.Info("[NativeCameraProxy] StartCapture end.");
+            //NRDebugger.Info("[NativeCameraProxy] Start to play, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
         }
 
         /// <summary> Query if this object has frame. </summary>
@@ -318,12 +318,12 @@ namespace NRKernal
             if (m_ActiveTextures.Count == 0)
             {
                 m_IsPlaying = false;
-                NRDebugger.Info("[CameraController] StopCapture begin.");
+                NRDebugger.Info("[NativeCameraProxy] StopCapture begin.");
                 //System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
                 //stopwatch.Start();
                 CameraDataProvider.StopCapture();
-                NRDebugger.Info("[CameraController] StopCapture end.");
-                //NRDebugger.Info("[CameraController] Stop rgbcamera, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
+                NRDebugger.Info("[NativeCameraProxy] StopCapture end.");
+                //NRDebugger.Info("[NativeCameraProxy] Stop rgbcamera, result:{0} cost:{1}ms", m_IsPlaying, stopwatch.ElapsedMilliseconds);
                 Release();
             }
         }
@@ -336,7 +336,7 @@ namespace NRKernal
                 return;
             }
 
-            NRDebugger.Info("[CameraController] Start to Release");
+            NRDebugger.Info("[NativeCameraProxy] Release");
             CameraDataProvider.Release();
             m_CameraFrames.Clear();
             m_CameraFrames = null;

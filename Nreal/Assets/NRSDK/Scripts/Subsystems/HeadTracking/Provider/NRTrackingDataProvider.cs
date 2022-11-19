@@ -60,19 +60,14 @@ namespace NRKernal
             return m_NativeTracking.SwitchTrackingMode(mode);
         }
 
-        public bool GetFramePresentHeadPose(ref Pose pose, ref ulong timestamp)
+        public bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref ulong timestamp)
         {
-            return m_NativeHeadTracking.GetFramePresentHeadPose(ref pose, ref timestamp);
+            return m_NativeHeadTracking.GetFramePresentHeadPose(ref pose, ref lostReason, ref timestamp);
         }
 
         public bool GetHeadPose(ref Pose pose, ulong timestamp)
         {
             return m_NativeHeadTracking.GetHeadPose(ref pose, timestamp);
-        }
-
-        public LostTrackingReason GetTrackingLostReason()
-        {
-            return m_NativeHeadTracking.GetTrackingLostReason();
         }
 
         public bool InitTrackingMode(TrackingMode mode)

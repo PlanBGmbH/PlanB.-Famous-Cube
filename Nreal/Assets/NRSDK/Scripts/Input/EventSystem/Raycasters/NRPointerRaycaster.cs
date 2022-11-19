@@ -130,7 +130,9 @@ namespace NRKernal
             breakPoints.Add(firstHit.isValid ? firstHit.worldPosition : ray.GetPoint(distance));
 #if UNITY_EDITOR
             if (showDebugRay)
+            {
                 Debug.DrawLine(breakPoints[0], breakPoints[1], firstHit.isValid ? Color.green : Color.red);
+            }
 #endif
         }
 
@@ -185,7 +187,9 @@ namespace NRKernal
         {
             var results = new List<RaycastResult>();
             if (enablePhysicsRaycast)
+            {
                 PhysicsRaycast(ray, distance, results);
+            }
             if (enableGraphicRaycast)
             {
                 var tempCanvases = CanvasTargetCollector.GetCanvases();
@@ -199,7 +203,9 @@ namespace NRKernal
             }
             var comparer = GetRaycasterResultComparer();
             if (comparer != null)
+            {
                 results.Sort(comparer);
+            }
             for (int i = 0, imax = results.Count; i < imax; ++i)
             {
                 raycastResults.Add(results[i]);
@@ -239,7 +245,8 @@ namespace NRKernal
         /// <param name="raycastResults">         The raycast results.</param>
         public virtual void GraphicRaycast(Canvas canvas, bool ignoreReversedGraphics, Ray ray, float distance, NRPointerRaycaster raycaster, List<RaycastResult> raycastResults)
         {
-            if (canvas == null) { return; }
+            if (canvas == null)
+                return;
 
             var eventCamera = raycaster.eventCamera;
             var screenCenterPoint = NRInputModule.ScreenCenterPoint;
@@ -250,17 +257,22 @@ namespace NRKernal
                 var graphic = graphics[i];
 
                 // -1 means it hasn't been processed by the canvas, which means it isn't actually drawn
-                if (graphic.depth == -1 || !graphic.raycastTarget) { continue; }
+                if (graphic.depth == -1 || !graphic.raycastTarget)
+                    continue;
 
-                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, screenCenterPoint, eventCamera)) { continue; }
+                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, screenCenterPoint, eventCamera))
+                    continue;
 
-                if (ignoreReversedGraphics && Vector3.Dot(ray.direction, graphic.transform.forward) <= 0f) { continue; }
+                if (ignoreReversedGraphics && Vector3.Dot(ray.direction, graphic.transform.forward) <= 0f)
+                    continue;
 
-                if (!graphic.Raycast(screenCenterPoint, eventCamera)) { continue; }
+                if (!graphic.Raycast(screenCenterPoint, eventCamera))
+                    continue;
 
                 float dist;
                 new Plane(graphic.transform.forward, graphic.transform.position).Raycast(ray, out dist);
-                if (dist > distance) { continue; }
+                if (float.IsNaN(dist) || dist > distance)
+                    continue;
 
                 raycastResults.Add(new RaycastResult
                 {

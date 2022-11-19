@@ -42,13 +42,14 @@ namespace NRKernal
 
         public void Stop() { }
 
-        public bool GetFramePresentHeadPose(ref Pose pose, ref ulong timestamp)
+        public bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref ulong timestamp)
         {
             if (m_NREmulatorHeadPose == null)
             {
                 return false;
             }
             pose = m_NREmulatorHeadPose.headPose;
+            lostReason = LostTrackingReason.NONE;
             timestamp = NRTools.GetTimeStamp();
             return true;
         }
@@ -61,15 +62,6 @@ namespace NRKernal
             }
             pose = m_NREmulatorHeadPose.headPose;
             return true;
-        }
-
-        public LostTrackingReason GetTrackingLostReason()
-        {
-            if (m_NREmulatorHeadPose == null)
-            {
-                return LostTrackingReason.INITIALIZING;
-            }
-            return LostTrackingReason.NONE;
         }
 
         public bool InitTrackingMode(TrackingMode mode)

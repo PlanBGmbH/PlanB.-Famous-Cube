@@ -56,5 +56,11 @@ namespace NRKernal
                 top_tan,
             };
         }
+
+        public override string ToString()
+        {
+            return string.Format("left_tan:{0}, right_tan:{1}, top_tan:{2}, bottom_tan:{3}",
+                left_tan, right_tan, top_tan, bottom_tan);
+        }
     }
 }

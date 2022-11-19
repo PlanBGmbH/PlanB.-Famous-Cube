@@ -47,6 +47,18 @@ namespace NRKernal
         /// <returns> The hmd time nanos. </returns>
         UInt64 GetHMDTimeNanos(UInt64 imageHandle, int eye);
 
+        /// <summary> Get exposure time. </summary>
+        /// <param name="imageHandle"> Handle of the image. </param>
+        /// <param name="eye">         The eye. </param>
+        /// <returns> Exposure time of the image. </returns>
+        UInt32 GetExposureTime(UInt64 imageHandle, int eye);
+
+        /// <summary> Get Gain. </summary>
+        /// <param name="imageHandle"> Handle of the image. </param>
+        /// <param name="eye">         The eye. </param>
+        /// <returns> Gain of the image. </returns>
+        UInt32 GetGain(UInt64 imageHandle, int eye);
+
         /// <summary> Callback, called when the set capture. </summary>
         /// <param name="callback"> The callback.</param>
         /// <param name="userdata"> (Optional) The userdata.</param>

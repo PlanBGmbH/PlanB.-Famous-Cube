@@ -27,7 +27,8 @@ namespace NRKernal.Record
 
             this.pixelFormat = CapturePixelFormat.BGRA32;
             this.blendMode = mode;
-            this.audioState = NRVideoCapture.AudioState.MicAudio;
+            this.audioState = NRVideoCapture.AudioState.ApplicationAndMicAudio;
+            this.mediaProjection = null;
         }
 
         /// <summary> The opacity of captured holograms. </summary>
@@ -55,6 +56,11 @@ namespace NRKernal.Record
 
         /// <summary> The audio state of capture. </summary>
         public NRVideoCapture.AudioState audioState { get; set; }
+        public bool CaptureAudioMic { get { return audioState == NRVideoCapture.AudioState.MicAudio || audioState == NRVideoCapture.AudioState.ApplicationAndMicAudio; }}
+        public bool CaptureAudioApplication { get { return audioState == NRVideoCapture.AudioState.ApplicationAudio || audioState == NRVideoCapture.AudioState.ApplicationAndMicAudio; }}
+
+        /// <summary> The android MediaProjection object. </summary>
+        public UnityEngine.AndroidJavaObject mediaProjection { get; set; }
 
         /// <summary> The blend mode of camera output. </summary>
         public BlendMode blendMode { get; set; }

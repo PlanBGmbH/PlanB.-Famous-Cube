@@ -11,6 +11,7 @@ namespace NRKernal.Record
 {
     using System;
     using UnityEngine;
+    using NRKernal;
 
     /// <summary> A capture behaviour base. </summary>
     public class CaptureBehaviourBase : MonoBehaviour, IFrameConsumer
@@ -77,10 +78,10 @@ namespace NRKernal.Record
         private void UpdateHeadPoseByTimestamp(UInt64 timestamp)
         {
             Pose head_pose = Pose.identity;
-            var result = NRFrame.GetHeadPoseByTime(ref head_pose, timestamp);
-            head_pose = ConversionUtility.ApiWorldToUnityWorld(head_pose);
+            var result = NRSessionManager.Instance.NRHMDPoseTracker.GetHeadPoseByTimeInUnityWorld(ref head_pose, timestamp);
             if (result)
             {
+                // NRDebugger.Info("UpdateHeadPoseByTimestamp: timestamp={0}, pos={1}", timestamp, head_pose.ToString("F2"));
                 RGBCameraRig.transform.position = head_pose.position;
                 RGBCameraRig.transform.rotation = head_pose.rotation;
             }

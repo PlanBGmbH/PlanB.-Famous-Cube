@@ -36,6 +36,15 @@ namespace NRKernal.Record
         WidescreenBlend
     }
 
+    /// <summary> Values that represent record type index. </summary>
+    public enum RecorderIndex
+    {
+        /// <summary> Recorder index of mic. </summary>
+        REC_MIC = 0,
+        /// <summary> Recorder index of application. </summary>
+        REC_APP = 1,
+    }
+
     /// <summary> Callback, called when the capture task. </summary>
     /// <param name="task"> The task.</param>
     /// <param name="data"> The data.</param>
@@ -101,7 +110,7 @@ namespace NRKernal.Record
 
         public bool addMicphoneAudio { get; private set; }
 
-        public bool audioUseExternalData { get; private set; }
+        public bool addInternalAudio { get; private set; }
 
         public int audioSampleRate { get; private set; }
 
@@ -119,8 +128,8 @@ namespace NRKernal.Record
             this.codecType = GetCodecTypeByPath(path);
             this.outPutPath = path;
             this.useStepTime = 0;
-            this.addMicphoneAudio = cameraparam.audioState == NRVideoCapture.AudioState.MicAudio ? true : false;
-            this.audioUseExternalData = cameraparam.audioState == NRVideoCapture.AudioState.ApplicationAudio ? true : false;
+            this.addMicphoneAudio = cameraparam.CaptureAudioMic;
+            this.addInternalAudio = cameraparam.CaptureAudioApplication;
             this.useAlpha = cameraparam.hologramOpacity < float.Epsilon;
             this.useLinnerTexture = NRRenderer.isLinearColorSpace;
             this.audioBitRate = NativeConstants.RECORD_AUDIO_BITRATE_DEFAULT;

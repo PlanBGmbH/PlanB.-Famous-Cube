@@ -18,11 +18,9 @@ namespace NRKernal
 
         ulong GetHMDTimeNanos();
 
-        bool GetFramePresentHeadPose(ref Pose pose, ref UInt64 timestamp);
+        bool GetFramePresentHeadPose(ref Pose pose, ref LostTrackingReason lostReason, ref UInt64 timestamp);
 
         bool GetFramePresentTimeByCount(int count, ref UInt64 timestamp);
-
-        LostTrackingReason GetTrackingLostReason();
 
         bool InitTrackingMode(TrackingMode mode);
 

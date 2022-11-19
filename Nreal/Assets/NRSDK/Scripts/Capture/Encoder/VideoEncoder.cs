@@ -20,7 +20,7 @@ namespace NRKernal.Record
 #if !UNITY_EDITOR
         private const int STARTENCODEEVENT = 0x1001;
         private const int STOPENCODEEVENT = 0x1002;
-        public static NativeEncoder NativeEncoder { get; set; }
+        private NativeEncoder mNativeEncoder;
         private delegate void RenderEventDelegate(int eventID);
         private static RenderEventDelegate RenderThreadHandle = new RenderEventDelegate(RunOnRenderThread);
         private static IntPtr RenderThreadHandlePtr = Marshal.GetFunctionPointerForDelegate(RenderThreadHandle);
@@ -28,6 +28,8 @@ namespace NRKernal.Record
 
         private AudioRecordTool m_AudioEncodeTool;
         public NativeEncodeConfig EncodeConfig;
+        private IntPtr androidMediaProjection { get; set; }
+        
         private IntPtr m_TexPtr = IntPtr.Zero;
         private byte[] m_AudioRawData;
         private bool m_IsStarted = false;
@@ -36,8 +38,8 @@ namespace NRKernal.Record
         public VideoEncoder()
         {
 #if !UNITY_EDITOR
-            NativeEncoder = new NativeEncoder();
-            NativeEncoder.Create();
+            mNativeEncoder = NativeEncoder.GetInstance();
+            mNativeEncoder.Register(this);
 #endif
         }
 
@@ -47,7 +49,7 @@ namespace NRKernal.Record
         {
             if (eventID == STARTENCODEEVENT)
             {
-                NativeEncoder.Start();
+                NativeEncoder.GetInstance().Start();
             }
             //if (eventID == STOPENCODEEVENT)
             //{
@@ -61,6 +63,18 @@ namespace NRKernal.Record
         public void Config(CameraParameters param)
         {
             EncodeConfig = new NativeEncodeConfig(param);
+            androidMediaProjection = (param.mediaProjection != null) ? param.mediaProjection.GetRawObject() : IntPtr.Zero;
+        }
+
+
+        /// <summary> Adjust the volume of encoder.</summary>
+        /// <param name="recordIdx"> Recorder index.</param>
+        /// <param name="factor"> The factor of volume.</param>
+        public void AdjustVolume(RecorderIndex recordIdx, float factor)
+        {
+#if !UNITY_EDITOR
+            mNativeEncoder.AdjustVolume(recordIdx, factor);
+#endif
         }
 
         /// <summary> Starts this object. </summary>
@@ -70,18 +84,20 @@ namespace NRKernal.Record
             {
                 return;
             }
+            NRDebugger.Info("[VideoEncoder] Start");
 
-            if (EncodeConfig.audioUseExternalData)
-            {
-                InitAudioEncodeTool();
-                m_AudioEncodeTool?.StartRecord();
-            }
+            // if (EncodeConfig.audioUseExternalData)
+            // {
+            //     InitAudioEncodeTool();
+            //     m_AudioEncodeTool?.StartRecord();
+            // }
 
+            NRDebugger.Info("[VideoEncoder] Config {0}", EncodeConfig.ToString());
 #if !UNITY_EDITOR
-            NativeEncoder.SetConfigration(EncodeConfig);
+            mNativeEncoder.SetConfigration(EncodeConfig, androidMediaProjection);
+            //mNativeEncoder.Start();
             GL.IssuePluginEvent(RenderThreadHandlePtr, STARTENCODEEVENT);
 #endif
-            NRDebugger.Info("[VideoEncoder] Start");
             m_IsStarted = true;
         }
 
@@ -126,14 +142,14 @@ namespace NRKernal.Record
             }
 
 #if !UNITY_EDITOR
-            NativeEncoder.UpdateSurface(m_TexPtr, timestamp);
+            mNativeEncoder.UpdateSurface(m_TexPtr, timestamp);
 
             if (m_AudioEncodeTool != null)
             {
                 bool result = m_AudioEncodeTool.Flush(ref m_AudioRawData);
                 if (result)
                 {
-                    NativeEncoder.UpdateAudioData(m_AudioRawData, m_AudioEncodeTool.SampleRate,2,1);
+                    mNativeEncoder.UpdateAudioData(m_AudioRawData, m_AudioEncodeTool.SampleRate,2,1);
                 }
             }
 #endif
@@ -151,7 +167,7 @@ namespace NRKernal.Record
             m_AudioEncodeTool?.StopRecord();
 #if !UNITY_EDITOR
             //GL.IssuePluginEvent(RenderThreadHandlePtr, STOPENCODEEVENT);
-            NativeEncoder.Stop();
+            mNativeEncoder.Stop();
 #endif
             m_IsStarted = false;
         }
@@ -161,7 +177,8 @@ namespace NRKernal.Record
         {
             NRDebugger.Info("[VideoEncoder] Release...");
 #if !UNITY_EDITOR
-            NativeEncoder.Destroy();
+            mNativeEncoder.UnRegister(this);
+            mNativeEncoder.Destroy();
 #endif
             if (m_AudioEncodeTool != null)
             {

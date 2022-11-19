@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEditor;
 using System.Diagnostics;
+using Object = UnityEngine.Object;
 
 public static class NREditorUtility 
 {
@@ -19,6 +21,25 @@ public static class NREditorUtility
         {
             Undo.RecordObject(target, "Changed " + name);
             member = value;
+            modified = true;
+        }
+    }
+
+    [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+    public static void Popup(Object target, string name, ref Enum select, ref bool modified)
+    {
+        Popup(target, new GUIContent(name), ref select, ref modified);
+    }
+
+    [Conditional("UNITY_EDITOR_WIN"), Conditional("UNITY_STANDALONE_WIN"), Conditional("UNITY_ANDROID")]
+    public static void Popup(Object target, GUIContent name, ref Enum select, ref bool modified)
+    {
+        EditorGUI.BeginChangeCheck();
+        var value = EditorGUILayout.EnumPopup(name, select);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(target, "Changed " + name);
+            select = value;
             modified = true;
         }
     }

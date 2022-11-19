@@ -72,9 +72,9 @@ namespace NRKernal
             m_Provider.Stop();
         }
 
-        public bool GetFramePresentHeadPose(ref UnityEngine.Pose pose, ref ulong timestamp)
+        public bool GetFramePresentHeadPose(ref UnityEngine.Pose pose, ref LostTrackingReason lostReason, ref ulong timestamp)
         {
-            return m_Provider.GetFramePresentHeadPose(ref pose, ref timestamp);
+            return m_Provider.GetFramePresentHeadPose(ref pose, ref lostReason, ref timestamp);
         }
 
         public bool GetFramePresentTimeByCount(int count, ref ulong timestamp)
@@ -90,11 +90,6 @@ namespace NRKernal
         public ulong GetHMDTimeNanos()
         {
             return m_Provider.GetHMDTimeNanos();
-        }
-
-        public LostTrackingReason GetTrackingLostReason()
-        {
-            return m_Provider.GetTrackingLostReason();
         }
 
         public bool InitTrackingMode(TrackingMode mode)

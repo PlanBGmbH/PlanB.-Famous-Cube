@@ -23,8 +23,13 @@ namespace NRKernal
         private static AndroidJavaObject _permissionService;
         /// <summary> The current request. </summary>
         private static AsyncTask<AndroidPermissionsRequestResult> _currentRequest = null;
-        /// <summary> The on permissions request finished. </summary>
+        /// <summary> The action on permissions request finished. </summary>
         private static Action<AndroidPermissionsRequestResult> _onPermissionsRequestFinished;
+        /// <summary> The current screen capture request. </summary>
+        private static AsyncTask<AndroidJavaObject> _curScreenCaptureRequest = null;
+        /// <summary> The action on screen capture request finished. </summary>
+        private static Action<AndroidJavaObject> _onScreenCaptureRequestFinished;
+        private static AndroidJavaObject _mediaProjection;
 
         /// <summary> Constructs a new AndroidPermissionsManager. </summary>
         public NRAndroidPermissionsManager() : base(
@@ -72,10 +77,10 @@ namespace NRKernal
                 return null;
             }
 
-            GetPermissionsService().Call("RequestPermissionAsync", GetUnityActivity(),
-                new[] { permissionName }, GetInstance());
             _currentRequest =
                 new AsyncTask<AndroidPermissionsRequestResult>(out _onPermissionsRequestFinished);
+            GetPermissionsService().Call("RequestPermissionAsync", GetUnityActivity(),
+                new[] { permissionName }, GetInstance());
 
             return _currentRequest;
         }
@@ -105,13 +110,6 @@ namespace NRKernal
         public virtual void OnPermissionDenied(string permissionName)
         {
             OnPermissionResult(permissionName, false);
-        }
-
-        /// <summary>
-        /// Callback fired on an Android activity result (unused part of UnityAndroidPermissions
-        /// interface). </summary>
-        public virtual void OnActivityResult()
-        {
         }
 
         /// <summary> Gets the instance. </summary>
@@ -173,6 +171,69 @@ namespace NRKernal
 
             onRequestFinished(new AndroidPermissionsRequestResult(new string[] { permissionName },
                 new bool[] { granted }));
+        }
+
+
+        /// <summary> Requests Android screen capture from the user. </summary>
+        /// <returns>
+        /// An asynchronous task that completes when the user has approved or rejected the requested
+        /// ScreenCapture and yields a <see cref="AndroidJavaObject"/> that store the Android MediaProjection
+        /// result. If this method is called when another screen capture request is pending, <c>null</c>
+        /// will be returned instead. </returns>
+        public AsyncTask<AndroidJavaObject> RequestScreenCapture()
+        {
+            Debug.LogFormat("AndroidPermissionsManager RequestScreenCapture: cache={0}", _mediaProjection != null);
+            if (_mediaProjection != null)
+            {
+                return new AsyncTask<AndroidJavaObject>(_mediaProjection);
+            }
+
+            if (_curScreenCaptureRequest != null)
+            {
+                NRDebugger.Error("Attempted to make simultaneous Android permissions requests.");
+                return null;
+            }
+
+            _curScreenCaptureRequest =
+                new AsyncTask<AndroidJavaObject>(out _onScreenCaptureRequestFinished);
+            GetPermissionsService().Call("RequestScreenCaptureAsync", GetUnityActivity(), GetInstance());
+
+            return _curScreenCaptureRequest;
+        }
+
+        /// <summary> Callback is fired when screen capture is granted. </summary>
+        public virtual void OnScreenCaptureGranted(AndroidJavaObject mediaProjection)
+        {
+            OnScreenCaptureResult(true, mediaProjection);
+        }
+
+        /// <summary> Callback is fired when screen capture is denied. </summary>
+        public virtual void OnScreenCaptureDenied()
+        {
+            OnScreenCaptureResult(false, null);
+        }
+
+        /// <summary> Callback fired on an Android screen capture result. </summary>
+        /// <param name="granted">          If screen capture is granted or not.</param>
+        /// <param name="mediaProjection">  The android MediaProjection object.</param>
+        private void OnScreenCaptureResult(bool granted, AndroidJavaObject mediaProjection)
+        {
+            Debug.LogFormat("AndroidPermissionsManager OnScreenCaptureGranted: granted={0}, mediaProjection={1}", granted, mediaProjection!=null);
+            if (_onScreenCaptureRequestFinished == null)
+            {
+                Debug.LogError("AndroidPermissionsManager received an unexpected screencapture result");
+                return;
+            }
+
+            // Cache completion method and reset request state.
+            var onRequestFinished = _onScreenCaptureRequestFinished;
+            _curScreenCaptureRequest = null;
+            _onScreenCaptureRequestFinished = null;
+            
+            if (granted)
+                _mediaProjection = mediaProjection;
+
+            onRequestFinished(mediaProjection);
         }
     }
 }

@@ -35,6 +35,13 @@ namespace NRKernal.NRExamples
                     yield return waitForEndOfFrame;
                 }
             }
+            else if (m_TrackingType == NRHMDPoseTracker.TrackingType.Tracking0DofStable && NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode != m_TrackingType)
+            {
+                while (!NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo0DofStable(null))
+                {
+                    yield return waitForEndOfFrame;
+                }
+            }
             else if (m_TrackingType == NRHMDPoseTracker.TrackingType.Tracking3Dof && NRSessionManager.Instance.NRHMDPoseTracker.TrackingMode != m_TrackingType)
             {
                 while (!NRSessionManager.Instance.NRHMDPoseTracker.ChangeTo3Dof(null))

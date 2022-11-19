@@ -30,7 +30,6 @@ namespace NRKernal
 
 			EditorGUILayout.PropertyField(LogLevel);
 			EditorGUILayout.PropertyField(SessionConfig);
-
 			EditorGUILayout.Space();
 
 			// if (GUILayout.Button("Open NRSDK Configuration"))
@@ -40,6 +39,12 @@ namespace NRKernal
 
 			// Apply values to the target
 			serializedObject.ApplyModifiedProperties();
+
+			//Provide link to the unique NRProjectConfig
+			if (GUILayout.Button("Open NRProjectConfig"))
+			{
+				Selection.activeObject = (sessionBehav.SessionConfig).GlobalProjectConfig;
+			}
 		}
 	}
 }

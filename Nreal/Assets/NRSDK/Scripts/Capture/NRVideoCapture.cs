@@ -126,6 +126,24 @@ namespace NRKernal.Record
         /// <param name="onStartedRecordingVideoCallback"> The on started recording video callback.</param>
         public void StartRecordingAsync(string filename, OnStartedRecordingVideoCallback onStartedRecordingVideoCallback)
         {
+            float volumeFactorMic = 1.0f;
+            float volumeFactorApp = 1.0f;
+            if (NRDevice.Subsystem.GetDeviceType() == NRDeviceType.NrealLight)
+            {
+                volumeFactorMic = NativeConstants.RECORD_VOLUME_MIC;
+                volumeFactorApp = NativeConstants.RECORD_VOLUME_APP;
+            }
+            StartRecordingAsync(filename, onStartedRecordingVideoCallback, volumeFactorMic, volumeFactorApp);
+        }
+
+        /// <summary> Starts recording asynchronous. </summary>
+        /// <param name="filename">                         Filename of the file.</param>
+        /// <param name="onStartedRecordingVideoCallback">  The on started recording video callback.</param>
+        /// <param name="volumeFactorMic">                  The volume factor of mic.</param>
+        /// <param name="volumeFactorApp">                  The volume factor of application.</param>
+        public void StartRecordingAsync(string filename, OnStartedRecordingVideoCallback onStartedRecordingVideoCallback, float volumeFactorMic, float volumeFactorApp)
+        {
+            NRDebugger.Info("[VideoCapture] StartRecordingAsync: IsRecording={0}, volFactorMic={1}, volFactorApp={2}", IsRecording, volumeFactorMic, volumeFactorApp);
             var result = new VideoCaptureResult();
             if (IsRecording)
             {
@@ -136,6 +154,13 @@ namespace NRKernal.Record
             {
                 try
                 {
+                    VideoEncoder encoder = m_CaptureContext.GetEncoder() as VideoEncoder;
+                    if (encoder != null)
+                    {
+                        encoder.AdjustVolume(RecorderIndex.REC_MIC, volumeFactorMic);
+                        encoder.AdjustVolume(RecorderIndex.REC_APP, volumeFactorApp);
+                    }
+                    
                     var behaviour = m_CaptureContext.GetBehaviour();
                     ((NRRecordBehaviour)behaviour).SetOutPutPath(filename);
                     m_CaptureContext.StartCapture();
@@ -143,8 +168,9 @@ namespace NRKernal.Record
                     result.resultType = CaptureResultType.Success;
                     onStartedRecordingVideoCallback?.Invoke(result);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    NRDebugger.Warning("[VideoCapture] StartRecordingAsync: {0}\n{1}", ex.Message, ex.StackTrace);
                     result.resultType = CaptureResultType.UnknownError;
                     onStartedRecordingVideoCallback?.Invoke(result);
                     throw;
@@ -167,9 +193,49 @@ namespace NRKernal.Record
                     setupParams.blendMode = blendMode;
                 }
             }
-            if (setupParams.audioState == AudioState.MicAudio)
+
+            if (Application.isEditor || Application.platform != RuntimePlatform.Android)
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
+                StartVideoMode(setupParams, onVideoModeStartedCallback);
+                return;
+            }
+            
+            bool recordMic = setupParams.CaptureAudioMic;
+            bool recordApp = setupParams.CaptureAudioApplication;            
+            if (recordApp)
+            {
+                NRAndroidPermissionsManager.GetInstance().RequestAndroidPermission("android.permission.RECORD_AUDIO").ThenAction((requestResult) =>
+                {
+                    if (requestResult.IsAllGranted)
+                    {
+                        NRAndroidPermissionsManager.GetInstance().RequestScreenCapture().ThenAction((AndroidJavaObject mediaProjection) => 
+                        {
+                            if (mediaProjection != null)
+                            {
+                                setupParams.mediaProjection = mediaProjection;
+                                StartVideoMode(setupParams, onVideoModeStartedCallback);
+                            }
+                            else
+                            {
+                                NRDebugger.Error("[VideoCapture] Screen capture is denied by user.");
+                                var result = new VideoCaptureResult();
+                                result.resultType = CaptureResultType.UnknownError;
+                                onVideoModeStartedCallback?.Invoke(result);
+                                NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.ScreenCaptureDenyErrorTip));
+                            }
+                        });
+                    }
+                    else {
+                        NRDebugger.Error("[VideoCapture] Record audio need the permission of 'android.permission.RECORD_AUDIO'.");
+                        var result = new VideoCaptureResult();
+                        result.resultType = CaptureResultType.UnknownError;
+                        onVideoModeStartedCallback?.Invoke(result);
+                        NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
+                    }
+                });
+            }
+            else if (recordMic)
+            {
                 NRAndroidPermissionsManager.GetInstance().RequestAndroidPermission("android.permission.RECORD_AUDIO").ThenAction((requestResult) =>
                 {
                     if (requestResult.IsAllGranted)
@@ -177,16 +243,13 @@ namespace NRKernal.Record
                         StartVideoMode(setupParams, onVideoModeStartedCallback);
                     }
                     else {
-                        NRDebugger.Error("Record audio need the permission of 'android.permission.RECORD_AUDIO'.");
+                        NRDebugger.Error("[VideoCapture] Record audio need the permission of 'android.permission.RECORD_AUDIO'.");
                         var result = new VideoCaptureResult();
                         result.resultType = CaptureResultType.UnknownError;
                         onVideoModeStartedCallback?.Invoke(result);
                         NRSessionManager.Instance.OprateInitException(new NRPermissionDenyError(NativeConstants.AudioPermissionDenyErrorTip));
                     }
                 });
-#else
-                StartVideoMode(setupParams, onVideoModeStartedCallback);
-#endif
             }
             else
             {
@@ -291,7 +354,7 @@ namespace NRKernal.Record
             ///// <summary>
             ///// Include both the application audio as well as the mic audio in the video recording.
             ///// </summary>
-            //ApplicationAndMicAudio = 2,
+            ApplicationAndMicAudio = 2,
 
             /// <summary>
             /// Do not include any audio in the video recording.

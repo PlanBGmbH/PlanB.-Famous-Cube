@@ -20,8 +20,6 @@ namespace NRKernal
 				NRDeviceType.NrealAir,  
 			};
 
-		bool autoAdaptTrackingMode = true;
-
         public string GetTargetDeviceTypesDesc()
         {
             string devices = string.Empty;

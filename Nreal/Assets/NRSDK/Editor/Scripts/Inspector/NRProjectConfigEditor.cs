@@ -16,13 +16,15 @@ public class NRProjectConfigEditor : Editor
 	override public void OnInspectorGUI()
 	{
 		NRProjectConfig projectConfig = (NRProjectConfig)target;
-		DrawTargetDevice(projectConfig);
+		DrawUniqueProjectConfig(projectConfig);
 		EditorGUILayout.Space();
 	}
 
-	public static void DrawTargetDevice(NRProjectConfig projectConfig)
-	{
+	public static void DrawUniqueProjectConfig(NRProjectConfig projectConfig)
+    {
+		//Target Devices properties
 		EditorGUILayout.LabelField("Target Devices", EditorStyles.boldLabel);
+		EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 		bool modify = false;
 		foreach (NRDeviceType deviceType in System.Enum.GetValues(typeof(NRDeviceType)))
 		{
@@ -33,14 +35,13 @@ public class NRProjectConfigEditor : Editor
 			if (newSupport && !curSupport)
 			{
 				projectConfig.targetDeviceTypes.Add(deviceType);
-				modify = true;
 			}
 			else if (curSupport && !newSupport)
 			{
 				projectConfig.targetDeviceTypes.Remove(deviceType);
-				modify = true;
 			}
 		}
+		EditorGUILayout.EndVertical();
 
 		if (modify)
 		{

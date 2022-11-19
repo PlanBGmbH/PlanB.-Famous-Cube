@@ -46,5 +46,10 @@ namespace NRKernal
         /// 0Dof mode.  
         /// </summary>
         MODE_0DOF = 2,
+
+        /// <summary>
+        /// 0Dof stable mode. 
+        /// </summary>
+        MODE_0DOF_STAB = 3
     }
 }

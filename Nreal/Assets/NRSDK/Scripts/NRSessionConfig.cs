@@ -35,6 +35,10 @@ namespace NRKernal
         /// <summary> Chooses whether notification will be used. </summary>
         [Tooltip("Chooses whether notification will be used.")]
         public bool EnableNotification = false;
+        
+        /// <summary> Chooses whether to kill process while receive OnGlassesDisconnectEvent for NOTIFY_TO_QUIT_APP reason. </summary>
+        [Tooltip("Chooses whether to force kill while receive OnGlassesDisconnectEvent for NOTIFY_TO_QUIT_APP reason.")]
+        public bool ForceKillWhileGlassSwitchMode = true;
 
         /// <summary> An error prompt will pop up when the device fails to connect. </summary>
         [Tooltip("An error prompt will pop up when the device fails to connect.")]
@@ -56,6 +60,14 @@ namespace NRKernal
         [SerializeField]
         [Tooltip("Donot change this manually, it always refer to the NRProjectConfig whick is global unique.")]
         NRProjectConfig ProjectConfig;
+
+        public NRProjectConfig GlobalProjectConfig
+        {
+            get
+            {
+                return ProjectConfig;
+            }
+        }
 
         /// <summary> ValueType check if two NRSessionConfig objects are equal. </summary>
         /// <param name="other"> .</param>
@@ -100,6 +112,7 @@ namespace NRKernal
             TrackingModeChangeTipPrefab = other.TrackingModeChangeTipPrefab;
             UseMultiThread = other.UseMultiThread;
             EnableNotification = other.EnableNotification;
+            ForceKillWhileGlassSwitchMode = other.ForceKillWhileGlassSwitchMode;
             ProjectConfig = other.ProjectConfig;
         }
 

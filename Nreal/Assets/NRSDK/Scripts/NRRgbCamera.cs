@@ -60,7 +60,7 @@ namespace NRKernal
             var controller = CameraProxyFactory.GetInstance(NRRgbCamera.ID);
             if (controller == null)
             {
-                NRDebugger.Error("[CameraController] get controller instance faild.");
+                NRDebugger.Error("[NRRgbCamera] get controller instance faild.");
                 return;
             }
             controller.UpdateFrame(camera_handle, camera_image_handle, userdata);

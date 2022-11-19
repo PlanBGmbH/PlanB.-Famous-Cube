@@ -73,6 +73,7 @@ namespace NRKernal
         public static string DisplayModeMismatchErrorTip = "Display mode mismatch, as MRSpace mode is needed! \nPlease contact Nreal's customer service.";
         public static string AudioPermissionDenyErrorTip = "Record audio needs the permission of \n" +
                             "'android.permission.RECORD_AUDIO', Add it to the 'AndroidManifest.xml'";
+        public static string ScreenCaptureDenyErrorTip = "Screen capture needs to be approved.";
         public static string RGBCameraDeviceNotFindErrorTip = "Please check the FAQ on the Nreal's official website to enable the RGB Camera.";
         public static string UnSupportedHandtrackingCalculationErrorTip = "The device in use does not support hand tracking calculation.";
         #endregion
@@ -97,6 +98,10 @@ namespace NRKernal
         public const int RECORD_VIDEO_BITRATE_DEFAULT = 10240000;
         public const int RECORD_AUDIO_BITRATE_DEFAULT = 128000;
         public const int RECORD_AUDIO_SAMPLERATE_DEFAULT = 16000;
+        public const int RECORD_AUDIO_BYTES_PER_SAMPLE = 2;
+        public const int RECORD_AUDIO_CHANNEL = 1;
+        public const float RECORD_VOLUME_MIC = 5;
+        public const float RECORD_VOLUME_APP = 1;
         #endregion
 
         #region XR

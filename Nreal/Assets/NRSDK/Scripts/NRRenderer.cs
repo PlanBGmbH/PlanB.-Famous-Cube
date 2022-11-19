@@ -47,6 +47,9 @@ namespace NRKernal
         // private const int STOPNATIVERENDEREVENT = 0x0005;
         private const int SUBMIT_EVENT = 0x0006;
 
+        //When application resumed, frame data must be updated in Update before submited in RenderCoroutine.
+        private bool frameReady = false;
+
         public enum Eyes
         {
             /// <summary> Left Display. </summary>
@@ -86,6 +89,10 @@ namespace NRKernal
         public static float ScaleFactor = 1f;
         private const float m_DefaultFocusDistance = 1.4f;
         private float m_FocusDistance = 1.4f;
+        public float FocusDistance
+        {
+            get { return m_FocusDistance; }
+        }
 
         private static int _TextureBufferSize = 4;
         /// <summary> Number of eye textures. </summary>
@@ -108,7 +115,8 @@ namespace NRKernal
         }
 
         private bool m_IsTrackChanging = false;
-        private RenderTexture m_HijackRenderTexture;
+        private RenderTexture m_HijackRenderTextureLeft;
+        private RenderTexture m_HijackRenderTextureRight;
 
         /// <summary> The current state. </summary>
         private RendererState m_CurrentState = RendererState.UnInitialized;
@@ -182,17 +190,19 @@ namespace NRKernal
             }
         }
 
-        private void OnTrackStateChanged(bool trackChanging, RenderTexture rt)
+        private void OnTrackStateChanged(bool trackChanging, RenderTexture leftRT, RenderTexture rightRT)
         {
             if (trackChanging)
             {
                 m_IsTrackChanging = true;
-                m_HijackRenderTexture = rt;
+                m_HijackRenderTextureLeft = leftRT;
+                m_HijackRenderTextureRight = rightRT;
             }
             else
             {
                 m_IsTrackChanging = false;
-                m_HijackRenderTexture = null;
+                m_HijackRenderTextureLeft = null;
+                m_HijackRenderTextureRight = null;
             }
         }
 
@@ -242,6 +252,7 @@ namespace NRKernal
             {
                 return;
             }
+            frameReady = false;
             GL.IssuePluginEvent(RenderThreadHandlePtr, PAUSENATIVERENDEREVENT);
         }
 
@@ -265,7 +276,7 @@ namespace NRKernal
 #if !UNITY_EDITOR
         void Update()
         {
-            if (m_CurrentState == RendererState.Running && !m_IsTrackChanging)
+            if (m_CurrentState == RendererState.Running)
             {
                 if (m_FrameProcessor == null)
                 {
@@ -280,11 +291,11 @@ namespace NRKernal
                 }
                 leftCamera.enabled = true;
                 rightCamera.enabled = true;
+                frameReady = true;
             }
-            else if(m_IsTrackChanging) 
+            else
             {
-                leftCamera.enabled = false;
-                rightCamera.enabled = false;
+                frameReady = false;
             }
         }
 #endif
@@ -337,7 +348,7 @@ namespace NRKernal
                 yield return delay;
 
                 // NRDebugger.Info("[NRRender] RenderCoroutine: state={0}, isTrackingChanging={1}, frameProcessor={2}", m_CurrentState, m_IsTrackChanging, m_FrameProcessor != null);
-                if (m_CurrentState != RendererState.Running)
+                if (m_CurrentState != RendererState.Running || !frameReady)
                 {
                     continue;
                 }
@@ -345,6 +356,7 @@ namespace NRKernal
                 NativeMat4f apiPose;
                 Pose unityPose = NRFrame.HeadPose;
                 ConversionUtility.UnityPoseToApiPose(unityPose, out apiPose);
+                // NRDebugger.Info("[NRRender] unityPos={0}\napiPos={1}", unityPose.ToString("F6"), apiPose.ToString());
                 FrameInfo info = new FrameInfo(IntPtr.Zero, IntPtr.Zero, apiPose, new Vector3(0, 0, -m_FocusDistance),
                        Vector3.forward, NRFrame.CurrentPoseTimeStamp, m_FrameChangedType, NRTextureType.NR_TEXTURE_2D, 0);
                 
@@ -352,8 +364,8 @@ namespace NRKernal
                 {
                     if (m_IsTrackChanging)
                     {
-                        info.leftTex = m_HijackRenderTexture.GetNativeTexturePtr();
-                        info.rightTex = m_HijackRenderTexture.GetNativeTexturePtr();
+                        info.leftTex = m_HijackRenderTextureLeft.GetNativeTexturePtr();
+                        info.rightTex = m_HijackRenderTextureRight.GetNativeTexturePtr();
                     }
                     else 
                     {
@@ -377,10 +389,9 @@ namespace NRKernal
                     NativeRenderring?.WriteFrameData(info, false);
                     GL.IssuePluginEvent(RenderThreadHandlePtr, SUBMIT_EVENT);
                 }
-                
                 // reset focuse distance and frame changed type to default value every frame.
-                m_FocusDistance = m_DefaultFocusDistance;
-                m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_NONE;
+                // m_FocusDistance = m_DefaultFocusDistance;
+                // m_FrameChangedType = NRFrameFlags.NR_FRAME_CHANGED_NONE;
             }
         }
 

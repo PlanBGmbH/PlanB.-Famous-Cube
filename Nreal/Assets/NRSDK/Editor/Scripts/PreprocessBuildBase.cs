@@ -155,6 +155,47 @@ namespace NRKernal
             androidManifest.Save();
         }
 
+        [MenuItem("NRSDK/InitVideoPlayerDemoEnv")]
+        public static void InitVideoPlayerDemoEnv()
+        {
+            string javaDir = "";
+            string[] assets = AssetDatabase.FindAssets("AndroidMediaPlayer");
+            foreach (var asset in assets)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(asset);
+                if (path.Contains("NRSDKExperimental") && path.EndsWith(".java"))
+                {
+                    javaDir = Path.GetDirectoryName(path);
+                    break;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(javaDir))
+            {
+                string[] files = Directory.GetFiles(javaDir, "*.java");
+                foreach (var file in files)
+                {
+                    PluginImporter importer = (PluginImporter)AssetImporter.GetAtPath(file);
+                    if (importer != null)
+                    {
+                        importer.SetCompatibleWithPlatform(BuildTarget.Android, true);
+                        importer.SaveAndReimport();
+                    }
+                }
+            }
+
+            //set project dependency
+            string gradleFile = "mainTemplate.gradle";
+            if (UseCustomGradleFile(gradleFile))
+            {
+                string gradleInProject = Application.dataPath + "/Plugins/Android/" + gradleFile;
+                AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
+                gradleTmp.AddDenpendency("implementation 'com.google.android.exoplayer:exoplayer:2.13.2'");
+                gradleTmp.PreprocessGradleFile();
+            }
+            EditorUtility.DisplayDialog("Tips", "Added ExoPlayer library dependency. The scene Overlay-VideoPlayer now supports DRM video playback.", "OK");
+        }
+
         /// <summary> Automatic generate android manifest. </summary>
         /// <param name="path"> Full pathname of the file.</param>
         public static void AutoGenerateAndroidManifest(string path)
@@ -213,12 +254,21 @@ namespace NRKernal
                 Debug.LogErrorFormat("NRSDK require unity version higher than 2018");
             else if (nVersion == 2018)
                 AutoGenerateAndroidGradleTemplate("mainTemplate.gradle");
-            else if (nVersion == 2019)
+            else
                 AutoGenerateAndroidGradleTemplate("baseProjectTemplate.gradle");
-        }
-        
 
-        private static void AutoGenerateAndroidGradleTemplate(string templateFileName)
+            //unity2020 should add support android.useAndroidX manually
+            if (nVersion >= 2020)
+            {
+                AutoGenerateGradleProperties("gradleTemplate.properties");
+            }
+        }
+
+        /// <summary>
+        /// Use custom gradle file, copy from unity install directory to project directory.
+        /// </summary>
+        /// <param name="templateFileName"> gradle file name. </param>
+        private static bool UseCustomGradleFile(string templateFileName)
         {
             string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
             if (!File.Exists(gradleInProject))
@@ -237,12 +287,39 @@ namespace NRKernal
                 else
                 {
                     Debug.LogErrorFormat("GradleTemplate of unity not found : {0}", gradleFullPath);
-                    return;
+                    return false;
                 }
             }
+            return true;
+        }
 
+        /// <summary>
+        /// Generate custom gradle file, set minal
+        /// </summary>
+        /// <param name="templateFileName"> Gradle file name. </param>
+        private static void AutoGenerateAndroidGradleTemplate(string templateFileName)
+        {
+            if(!UseCustomGradleFile(templateFileName))
+            {
+                return;
+            }
+            string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
             AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
-            gradleTmp.SetGradlePluginVersion();
+            gradleTmp.SetMinPluginVersion(3, 4, 3);
+            gradleTmp.PreprocessGradleFile();
+        }
+
+
+        private static void AutoGenerateGradleProperties(string templateFileName)
+        {
+            if (!UseCustomGradleFile(templateFileName))
+            {
+                return;
+            }
+            string gradleInProject = Application.dataPath + "/Plugins/Android/" + templateFileName;
+            AndroidGradleTemplate gradleTmp = new AndroidGradleTemplate(gradleInProject);
+            gradleTmp.AddSupport("android.useAndroidX");
+            gradleTmp.PreprocessGradleFile();
         }
     }
 }

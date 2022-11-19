@@ -15,9 +15,13 @@ namespace NRKernal
     /// <typeparam name="T"> Generic type parameter.</typeparam>
     public class SingleTon<T> where T : new()
     {
-        private class SingletonHoledr
+        private static T instane = default(T);
+        public static void CreateInstance()
         {
-            public static readonly T instance = new T();
+            if(instane == null)
+            {
+                instane = new T();
+            }
         }
 
         /// <summary> Gets the instance. </summary>
@@ -26,7 +30,11 @@ namespace NRKernal
         {
             get
             {
-                return SingletonHoledr.instance;
+                if(instane == null)
+                {
+                    CreateInstance();
+                }
+                return instane;
             }
         }
     }

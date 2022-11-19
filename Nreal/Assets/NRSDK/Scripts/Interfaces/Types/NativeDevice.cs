@@ -38,5 +38,11 @@ namespace NRKernal
         ///  Only supported in the version of Enterprise.
         /// </summary>
         RIGHT_GRAYSCALE_CAMERA = 4,
+
+        /// <summary> 
+        ///  The magnetic of HMD.
+        ///  Only supported in the version of Enterprise.
+        /// </summary>
+        MAGENTICE = 5,
     }
 }

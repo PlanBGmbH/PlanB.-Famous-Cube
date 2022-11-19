@@ -21,6 +21,9 @@ namespace NRKernal
         public CameraTextureFrame CurrentFrame;
         /// <summary> The texture. </summary>
         private Texture2D m_Texture;
+        /// <summary> Information describing the raw. </summary>
+        private byte[] m_RawData;
+        public byte[] RawData { get { return m_RawData; } }
 
         /// <summary> Default constructor. </summary>
         public NRRGBCamTexture() : base(CameraImageFormat.RGB_888)
@@ -50,16 +53,25 @@ namespace NRKernal
 
         /// <summary> Load raw texture data. </summary>
         /// <param name="rgbRawDataFrame"> .</param>
-        protected override void OnRawDataUpdate(FrameRawData rgbRawDataFrame)
+        protected override void OnRawDataUpdate(FrameRawData frame)
         {
             if (m_Texture == null)
             {
                 this.m_Texture = CreateTexture();
             }
-            m_Texture.LoadRawTextureData(rgbRawDataFrame.data);
+            int dataSize = frame.data.Length;
+            if (m_RawData == null || m_RawData.Length != dataSize)
+            {
+                m_RawData = new byte[dataSize];
+            }
+            Array.Copy(frame.data, 0, m_RawData, 0, dataSize);
+             
+            m_Texture.LoadRawTextureData(m_RawData);
             m_Texture.Apply();
 
-            CurrentFrame.timeStamp = rgbRawDataFrame.timeStamp;
+            CurrentFrame.timeStamp = frame.timeStamp;
+            CurrentFrame.gain = frame.gain;
+            CurrentFrame.exposureTime = frame.exposureTime;
             CurrentFrame.texture = m_Texture;
 
             OnUpdate?.Invoke(CurrentFrame);
@@ -70,6 +82,7 @@ namespace NRKernal
         {
             GameObject.Destroy(m_Texture);
             this.m_Texture = null;
+            m_RawData = null;
             this.CurrentFrame.texture = null;
         }
     }
