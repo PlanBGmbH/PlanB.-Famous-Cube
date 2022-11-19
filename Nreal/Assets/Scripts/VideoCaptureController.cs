@@ -26,7 +26,7 @@ namespace NrealExt.Functions.Record
 #endif
     /// <summary> A video capture 2 local example. </summary>
     [HelpURL("https://developer.nreal.ai/develop/unity/video-capture")]
-    public class VideoCapture2Local : MonoBehaviour
+    public class VideoCaptureController : MonoBehaviour
     {
         [SerializeField] private Button m_PlayButton;
         [SerializeField] private NRPreviewer m_Previewer;
@@ -41,6 +41,8 @@ namespace NrealExt.Functions.Record
         public LayerMask cullingMask = -1;
         public NRVideoCapture.AudioState audioState = NRVideoCapture.AudioState.ApplicationAudio;
         public bool useGreenBackGround = false;
+        public GameObject ShareDialog;
+        private string SharePath;
 
         public enum ResolutionLevel
         {
@@ -62,6 +64,7 @@ namespace NrealExt.Functions.Record
         }
 
         GalleryDataProvider galleryDataTool;
+
 
         void Awake()
         {
@@ -147,7 +150,7 @@ namespace NrealExt.Functions.Record
         void RefreshUIState()
         {
             bool flag = m_VideoCapture == null || !m_VideoCapture.IsRecording;
-            RecordingIndicator.color = flag ? Color.green : Color.red;
+            RecordingIndicator.color = flag ? Color.white : Color.red;
         }
 
         /// <summary> Starts video capture. </summary>
@@ -273,9 +276,28 @@ namespace NrealExt.Functions.Record
             
             StartCoroutine(DelayInsertVideoToGallery(path, filename, "Record"));
 
+            SharePath = path;
+            ShareDialog.SetActive(true);
+
             // Release video capture resource.
             m_VideoCapture.Dispose();
             m_VideoCapture = null;
+        }
+
+        public void OnClickShareNo()
+        {
+            ShareDialog.SetActive(false);
+        }
+
+        public void OnClickShareYes()
+        {
+            new NativeShare()
+                .AddFile(SharePath)
+                .SetSubject("Watch my AR experience").SetText("PlanB. Famous Cube on nreal:").SetUrl("https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal")
+                .SetCallback((result, shareTarget) => Debug.Log("Share result: " + result + ", selected app: " + shareTarget))
+                .Share();
+
+            ShareDialog.SetActive(false);
         }
 
         void OnDestroy()
