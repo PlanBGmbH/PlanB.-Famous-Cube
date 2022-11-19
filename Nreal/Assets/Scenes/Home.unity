@@ -16254,6 +16254,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1773568996}
     m_Modifications:
+    - target: {fileID: 2616499008055510584, guid: ff701e0e2b3328e49ac48cd30676ea31,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 2616499008966165095}
+    - target: {fileID: 2616499008055510584, guid: ff701e0e2b3328e49ac48cd30676ea31,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OnClickPlayButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 2616499008055510584, guid: ff701e0e2b3328e49ac48cd30676ea31,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: NrealExt.Functions.Record.VideoCapture2Local, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 2616499008055510586, guid: ff701e0e2b3328e49ac48cd30676ea31,
         type: 3}
       propertyPath: m_Pivot.x
@@ -16359,13 +16374,31 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2616499008055510587, guid: ff701e0e2b3328e49ac48cd30676ea31,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2616499008055510589, guid: ff701e0e2b3328e49ac48cd30676ea31,
         type: 3}
       propertyPath: m_Name
       value: BuRecord
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2616499008055510587, guid: ff701e0e2b3328e49ac48cd30676ea31, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: ff701e0e2b3328e49ac48cd30676ea31, type: 3}
+--- !u!114 &2616499008966165095 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8353675521435871486, guid: ff701e0e2b3328e49ac48cd30676ea31,
+    type: 3}
+  m_PrefabInstance: {fileID: 2616499008966165094}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ee1b910643d9854994626f5b170172c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &6364563259237651490 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6364563258831008498, guid: d092e18be9b873f4ea809c276aa8792b,

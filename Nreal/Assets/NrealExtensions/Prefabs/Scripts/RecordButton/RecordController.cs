@@ -86,13 +86,13 @@ public class RecordController : MonoBehaviour
         if (!recordingInProgress)
         {
             recordingInProgress = true;
-            this.Recoder.StartVideoCapture();
+            this.Recoder.OnClickPlayButton();
             RecordingIndicator.color = Color.red;
         }
         else
         {
             recordingInProgress = false;
-            this.Recoder.StopVideoCapture();
+            this.Recoder.OnClickPlayButton();
             RecordingIndicator.color = new Color(1f, 1f, 1f, 0.3921569f);
         }
     }

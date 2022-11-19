@@ -35,6 +35,7 @@ namespace NrealExt.Functions.Record
         [SerializeField] private Slider m_SliderApp;
         [SerializeField] private Text m_TextApp;
 
+        public Image RecordingIndicator;
         public BlendMode blendMode = BlendMode.Blend;
         public ResolutionLevel resolutionLevel;
         public LayerMask cullingMask = -1;
@@ -146,12 +147,7 @@ namespace NrealExt.Functions.Record
         void RefreshUIState()
         {
             bool flag = m_VideoCapture == null || !m_VideoCapture.IsRecording;
-            m_PlayButton.GetComponent<Image>().color = flag ? Color.red : Color.green;
-
-            if (m_TextMic != null && m_SliderMic != null)
-                m_TextMic.text = m_SliderMic.value.ToString();
-            if (m_TextApp != null && m_SliderApp != null)
-                m_TextApp.text = m_SliderApp.value.ToString();
+            RecordingIndicator.color = flag ? Color.green : Color.red;
         }
 
         /// <summary> Starts video capture. </summary>
@@ -211,7 +207,6 @@ namespace NrealExt.Functions.Record
 
             NRDebugger.Info("Stop Video Capture!");
             m_VideoCapture.StopRecordingAsync(OnStoppedRecordingVideo);
-            m_Previewer.SetData(null, false);
         }
 
         /// <summary> Executes the 'started video capture mode' action. </summary>
@@ -228,8 +223,6 @@ namespace NrealExt.Functions.Record
             float volumeMic = m_SliderMic != null ? m_SliderMic.value : NativeConstants.RECORD_VOLUME_MIC;
             float volumeApp = m_SliderApp != null ? m_SliderApp.value : NativeConstants.RECORD_VOLUME_APP;
             m_VideoCapture.StartRecordingAsync(VideoSavePath, OnStartedRecordingVideo, volumeMic, volumeApp);
-            // Set preview texture.
-            m_Previewer.SetData(m_VideoCapture.PreviewTexture, true);
         }
 
         /// <summary> Executes the 'started recording video' action. </summary>
