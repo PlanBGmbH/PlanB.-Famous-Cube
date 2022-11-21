@@ -154,13 +154,13 @@ namespace NRKernal
         internal void SetPackageReadPermission()
         {
             var manifest = SelectSingleNode("/manifest");
-            if (!manifest.InnerXml.Contains("android.permission.QUERY_ALL_PACKAGES"))
-            {
-                XmlElement child = CreateElement("uses-permission");
-                manifest.AppendChild(child);
-                XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.QUERY_ALL_PACKAGES");
-                child.Attributes.Append(newAttribute);
-            }
+            //if (!manifest.InnerXml.Contains("android.permission.QUERY_ALL_PACKAGES"))
+            //{
+            //    XmlElement child = CreateElement("uses-permission");
+            //    manifest.AppendChild(child);
+            //    XmlAttribute newAttribute = CreateAndroidAttribute("name", "android.permission.QUERY_ALL_PACKAGES");
+            //    child.Attributes.Append(newAttribute);
+            //}
             //else
             //{
             //    NRDebugger.Info("Already has the permission of 'android.permission.QUERY_ALL_PACKAGES'.");
