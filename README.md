@@ -7,8 +7,8 @@ The following platforms are implemented:
 - Oculus Quest 2 (by [calebcram](https://github.com/calebcram))
 
 ## Nreal Light/ Nebula
-[On YouTube:](https://www.youtube.com/watch?v=tKOeiG5e5WA)\
-[![Watch the video](https://img.youtube.com/vi/tKOeiG5e5WA/hqdefault.jpg)](https://www.youtube.com/watch?v=tKOeiG5e5WA)
+[On YouTube:](https://www.youtube.com/watch?v=DhieQ9ALxb4)\
+[![Watch the video](https://img.youtube.com/vi/DhieQ9ALxb4/hqdefault.jpg)](https://www.youtube.com/watch?v=DhieQ9ALxb4)
 
 Play Store Link:\
 https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
