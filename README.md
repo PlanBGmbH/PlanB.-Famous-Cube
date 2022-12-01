@@ -7,7 +7,8 @@ The following platforms are implemented:
 - Oculus Quest 2 (by [calebcram](https://github.com/calebcram))
 
 ## Nreal Light/ Nebula
-https://user-images.githubusercontent.com/46566137/153757311-655d603e-0aa8-4d56-98b4-f9a1606172ea.mp4
+[On YouTube:](https://www.youtube.com/watch?v=tKOeiG5e5WA)\
+[![Watch the video](https://img.youtube.com/vi/tKOeiG5e5WA/hqdefault.jpg)](https://www.youtube.com/watch?v=tKOeiG5e5WA)
 
 Play Store Link:\
 https://play.google.com/store/apps/details?id=com.PlanB.PFC.Nreal
@@ -27,7 +28,7 @@ https://www.microsoft.com/en-us/hololens/
 
 
 ## Oculus Quest 2 (by [calebcram](https://github.com/calebcram))
-
+[On YouTube:](https://www.youtube.com/watch?v=zgBqRHd4jSQ)\
 [![Watch the video](https://img.youtube.com/vi/zgBqRHd4jSQ/hqdefault.jpg)](https://www.youtube.com/watch?v=zgBqRHd4jSQ)
 
 More informations about Oculus Quest 2 you find here:\
