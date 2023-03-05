@@ -2,10 +2,10 @@
 PlanB. Famous Cube is a implementation of the all known puzzle Rubiks Cube/ Magic Cube as Mixed Reality/ Augmented Reality game on several devices. Goal is comparison of MR/ AR platforms in point of possibilities, behavior, stability and implementation.
 
 The following platforms are implemented:
-- Nreal Light/ Nebula
-- Microsoft HoloLens 2
-- Oculus Quest 2 
-- Meta Quest VR and Luma Labs AI
+- [Nreal Light/ Nebula](https://github.com/PlanBGmbH/PlanB.-Famous-Cube#nreal-light-nebula)
+- [Microsoft HoloLens 2](https://github.com/PlanBGmbH/PlanB.-Famous-Cube#microsoft-hololens-2)
+- [Oculus Quest 2](https://github.com/PlanBGmbH/PlanB.-Famous-Cube#oculus-quest-2-by-calebcram)
+- [Meta Quest VR and Luma Labs AI](https://github.com/PlanBGmbH/PlanB.-Famous-Cube#meta-quest-vr-and-luma-labs-ai-by-calebcram)
 
 ## Nreal Light/ Nebula
 [On YouTube:](https://www.youtube.com/watch?v=DhieQ9ALxb4)\
