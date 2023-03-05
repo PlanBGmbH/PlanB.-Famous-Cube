@@ -40,8 +40,8 @@ https://www.oculus.com/quest-2
 [![Watch the video](https://img.youtube.com/vi/MZow3M_Qk40/hqdefault.jpg)](https://www.youtube.com/shorts/MZow3M_Qk40)
 
 More information:\
-https://www.lumalabs.ai\
-https://www.meta.com/de/en/quest/\
+https://www.lumalabs.ai \
+https://www.meta.com/de/en/quest/ \
 
 ## Share it on
 [<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/twitter.jpg" width="30px;"/>](https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube&text=PlanB.%20Famous%20Cube%20for%20Mixed%20Reality%20Devices&hashtags=mixed-reality%2CHoloLens%2CNreal%2CPlanB)&nbsp; &nbsp; [<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/reddit.jpg" width="30px;"/>](https://reddit.com/submit?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube&title=PlanB.%20Famous%20Cube%20for%20Mixed%20Reality%20Devices)&nbsp; &nbsp; [<img src="https://github.com/bradvin/social-share-urls/blob/master/images/logo-icons-white-background/linkedin.jpg" width="30px;"/>](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2FPlanBGmbH%2FPlanB.-Famous-Cube)
