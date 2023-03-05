@@ -4,7 +4,8 @@ PlanB. Famous Cube is a implementation of the all known puzzle Rubiks Cube/ Magi
 The following platforms are implemented:
 - Nreal Light/ Nebula
 - Microsoft HoloLens 2
-- Oculus Quest 2 (by [calebcram](https://github.com/calebcram))
+- Oculus Quest 2 
+- Meta Quest VR and Luma Labs AI
 
 ## Nreal Light/ Nebula
 [On YouTube:](https://www.youtube.com/watch?v=DhieQ9ALxb4)\
